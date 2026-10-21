@@ -65,6 +65,13 @@
 - 에디터: Visual Studio Code
 - 에디터 + AI
   - Visual Studio Code(MS) + 코파일럿 AI(MS)
+  - Visual Studio Code(MS) + 코덱스 AI(OPENAI)
   - Visual Studio Code(MS) + 클로드 AI(앤트로픽)
   - Cursor = Visual Studio Code(MS) + 다양한 AI
-  - Codex = Visual Studio Code(MS) + 챗지피티 AI(OPEN AI)
+
+# npm
+
+- 예시: prettier를 사용해봅시다.
+- 다운로드: npm install prettier
+- 설치위치: node_modules 폴더
+- 사용방법: package.json의 scripts에 커맨드를 등록 후 npm run [커맨드]
