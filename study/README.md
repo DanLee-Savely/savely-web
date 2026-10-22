@@ -69,9 +69,28 @@
   - Visual Studio Code(MS) + 클로드 AI(앤트로픽)
   - Cursor = Visual Studio Code(MS) + 다양한 AI
 
-# npm
+# JS 런타임
 
-- 예시: prettier를 사용해봅시다.
-- 다운로드: npm install prettier
-- 설치위치: node_modules 폴더
-- 사용방법: package.json의 scripts에 커맨드를 등록 후 npm run [커맨드]
+- 런타임은 프로그램이(을) 실행되는(시키는) 환경을 의미합니다.
+- JS 런타임은 JS 코드를 실행시킬 수 있는 엔진(V8)을 포함하고 있습니다.
+- JS 런타임은 두 종류가 있습니다.
+  - 브라우저
+    - 브라우저에서 실행시킬 HTML(웹 페이지를 구성하는 문서)
+    - 브라우저에서 실행시킬 CSS(웹 페이지를 꾸미는 문서)
+    - 브라우저에서 실행시킬 JS(웹 페이지를 조작하는 코드)
+  - Node.js
+    - 서버에서 실행시킬 JS(웹 페이지를 조작하는 것 이외의 모든 일)
+
+# Node와 NPM
+
+- Node: 서버에서 실행시킬 JS(웹 페이지를 조작하는 것 이외의 모든 일)
+- NPM: JS 오픈소스 패키지 매니저(다운로드, 기록) 프로그램
+  - 예시: prettier를 사용해봅시다.
+  - 다운로드 및 설치: npm install prettier
+    - 다운로드 위치: node_modules 폴더
+    - 설치 히스토리 기록: package.json, package-lock.json
+  - 사용방법: package.json의 scripts에 커맨드를 등록 후 npm run [커맨드] 실행
+  - node_modules는 깃허브에 업로드하지 않습니다.
+    - 용량이 매우 큼
+    - npm install 명령어를 통해서 package.json에 있는 패키지 설치 히스토리를 보고 node_modules를 복구할 수 있다.
+    - 따라서 굳이 업로드할 이유가 없다.

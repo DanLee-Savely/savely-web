@@ -1,4 +1,10 @@
 {
   "name": "codeit-it-5-basic",
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "format": "npx prettier . --write"
+  },
+  "dependencies": {
+    "prettier": "^3.9.10"
+  }
 }
