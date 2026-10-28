@@ -72,6 +72,12 @@
   html {
     @apply font-sans antialiased;
   }
+  /* I10 섹션 이동은 부드럽게 — reduced-motion이면 바로 이동 */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   body {
     @apply bg-background text-foreground;
     word-break: keep-all;
