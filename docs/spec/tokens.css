@@ -1,0 +1,144 @@
+/*
+ * 세이블리 디자인 토큰 — Figma 변수(Savely / Color, Savely / Size)와 텍스트 스타일에서 자동 생성
+ * 원본: docs/figma/tokens.json (Figma 파일 Yzb7zX5G3QrRlxhTzkZzS0)
+ * 사용: src/styles/tokens.css 로 옮긴 뒤 globals.css 에서 @import 한다.
+ * 규칙: 색 · 간격 · 모서리 값은 이 변수만 쓴다. 16진수 색을 컴포넌트에 직접 쓰지 않는다.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- 색 (라이트 = 기본) ---------- */
+  --sv-accent: #006039;
+  --sv-accent-strong: #00553b;
+  --sv-accent-deep: #003d26;
+  --sv-accent-tint: rgb(0 96 57 / 6%);
+  --sv-accent-tint-2: rgb(0 96 57 / 10%);
+  --sv-on-accent: #ffffff;
+  --sv-bg: #fafafa;
+  --sv-page-bg: #f0efeb;
+  --sv-surface: #ffffff;
+  --sv-surface-2: #f8f8f6;
+  --sv-surface-3: #f0efeb;
+  --sv-text: #0f1a14;
+  --sv-text-2: #4a5550;
+  --sv-text-3: #6a766f;
+  --sv-border: #d4d4d0;
+  --sv-border-2: #eaeae6;
+  --sv-grid-line: rgb(15 76 58 / 4%);
+  --sv-warning: #b45309;
+  --sv-warning-tint: rgb(180 83 9 / 10%);
+  --sv-success: #15803d;
+  --sv-success-tint: rgb(21 128 61 / 10%);
+  --sv-danger: #b91c1c;
+  --sv-info: #1e40af;
+
+  /* ---------- 간격 · 레이아웃 ---------- */
+  --sv-space-4: 4px;
+  --sv-space-8: 8px;
+  --sv-space-12: 12px;
+  --sv-space-16: 16px;
+  --sv-space-20: 20px;
+  --sv-space-24: 24px;
+  --sv-space-32: 32px;
+  --sv-content-max: 1120px;
+  --sv-gutter-min: 20px;
+  --sv-section-gap-mobile: 40px;
+  --sv-section-gap-desktop-min: 64px;
+  --sv-section-gap-desktop-max: 96px;
+
+  /* ---------- 모서리 ---------- */
+  --sv-radius-sm: 8px;
+  --sv-radius-md: 12px;
+  --sv-radius-lg: 16px;
+  --sv-radius-pill: 999px;
+
+  /* ---------- 그림자 (Figma 효과값) ---------- */
+  --sv-shadow-phone: 0 0 80px rgb(0 96 57 / 14%), 0 24px 48px rgb(0 0 0 / 14%);
+  --sv-shadow-floating-cta: 0 12px 32px rgb(0 31 18 / 16%);
+  --sv-backdrop: rgb(8 20 15 / 45%);
+  --sv-gnb-bg: rgb(250 250 250 / 86%);
+  --sv-gnb-blur: 20px;
+
+  /* ---------- 글꼴 ---------- */
+  --sv-font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --sv-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---------- shadcn/ui 변수 대응 (shadcn init 후 globals.css의 같은 이름 변수를 이 값으로 맞춘다) ---------- */
+  --background: var(--sv-bg);
+  --foreground: var(--sv-text);
+  --card: var(--sv-surface);
+  --card-foreground: var(--sv-text);
+  --popover: var(--sv-surface);
+  --popover-foreground: var(--sv-text);
+  --primary: var(--sv-accent);
+  --primary-foreground: var(--sv-on-accent);
+  --secondary: var(--sv-surface-2);
+  --secondary-foreground: var(--sv-text);
+  --muted: var(--sv-surface-2);
+  --muted-foreground: var(--sv-text-3);
+  --accent: var(--sv-accent-tint-2);
+  --accent-foreground: var(--sv-accent);
+  --destructive: var(--sv-danger);
+  --border: var(--sv-border);
+  --input: var(--sv-border);
+  --ring: var(--sv-accent);
+  --radius: var(--sv-radius-md);
+}
+
+/* 다크 토큰 — 정의만 둔다. 자동 전환(prefers-color-scheme)은 사용자 승인 후 켠다 (00-decisions D2) */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --sv-accent: #ead9a8;
+  --sv-accent-strong: #d4c28a;
+  --sv-accent-deep: #a88e5c;
+  --sv-accent-tint: rgb(234 217 168 / 10%);
+  --sv-accent-tint-2: rgb(234 217 168 / 15%);
+  --sv-on-accent: #0a0a0a;
+  --sv-bg: #0a0a0a;
+  --sv-page-bg: #050505;
+  --sv-surface: #141414;
+  --sv-surface-2: #1f1f1f;
+  --sv-surface-3: #262626;
+  --sv-text: #fafafa;
+  --sv-text-2: #a3a3a3;
+  --sv-text-3: #8a8a8a;
+  --sv-border: #2a2a2a;
+  --sv-border-2: #1f1f1f;
+  --sv-grid-line: rgb(255 255 255 / 3%);
+  --sv-warning: #fbbf24;
+  --sv-warning-tint: rgb(251 191 36 / 12%);
+  --sv-success: #4ade80;
+  --sv-success-tint: rgb(74 222 128 / 12%);
+  --sv-danger: #f87171;
+  --sv-info: #60a5fa;
+  --sv-gnb-bg: rgb(10 10 10 / 86%);
+}
+
+/* ---------- 텍스트 스타일 (Figma 이름 그대로) ---------- */
+/* Hero/Web 56 — Noto Sans KR Bold (코드에서는 Pretendard) */
+.sv-text-hero-web-56 { font-family: var(--sv-font-sans); font-size: 56px; font-weight: 700; line-height: 1.1; letter-spacing: -0.035em; }
+/* Hero/34 — Noto Sans KR Bold (코드에서는 Pretendard) */
+.sv-text-hero-34 { font-family: var(--sv-font-sans); font-size: 34px; font-weight: 700; line-height: 1.2; letter-spacing: -0.035em; }
+/* Amount/44 — JetBrains Mono ExtraBold (코드에서는 JetBrains Mono) */
+.sv-text-amount-44 { font-family: var(--sv-font-mono); font-size: 44px; font-weight: 800; line-height: 1.1; letter-spacing: -0.045em; }
+/* Amount/40 — JetBrains Mono ExtraBold (코드에서는 JetBrains Mono) */
+.sv-text-amount-40 { font-family: var(--sv-font-mono); font-size: 40px; font-weight: 800; line-height: 1.1; letter-spacing: -0.045em; }
+/* Title/Section 20 — Noto Sans KR Bold (코드에서는 Pretendard) */
+.sv-text-title-section-20 { font-family: var(--sv-font-sans); font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -0.025em; }
+/* Body/15 — Noto Sans KR Regular (코드에서는 Pretendard) */
+.sv-text-body-15 { font-family: var(--sv-font-sans); font-size: 15px; font-weight: 400; line-height: 1.6; letter-spacing: 0.0em; }
+/* Support/14.5 — Noto Sans KR Regular (코드에서는 Pretendard) */
+.sv-text-support-14_5 { font-family: var(--sv-font-sans); font-size: 14.5px; font-weight: 400; line-height: 1.6; letter-spacing: 0.0em; }
+/* Support/13 — Noto Sans KR Regular (코드에서는 Pretendard) */
+.sv-text-support-13 { font-family: var(--sv-font-sans); font-size: 13px; font-weight: 400; line-height: 1.6; letter-spacing: 0.0em; }
+/* Eyebrow/12.5 — Noto Sans KR Medium (코드에서는 Pretendard) */
+.sv-text-eyebrow-12_5 { font-family: var(--sv-font-sans); font-size: 12.5px; font-weight: 500; line-height: 1.6; letter-spacing: 0.0em; }
+/* Label/15 — Noto Sans KR Bold (코드에서는 Pretendard) */
+.sv-text-label-15 { font-family: var(--sv-font-sans); font-size: 15px; font-weight: 700; line-height: 1.6; letter-spacing: 0.0em; }
+/* Label/13 — Noto Sans KR Medium (코드에서는 Pretendard) */
+.sv-text-label-13 { font-family: var(--sv-font-sans); font-size: 13px; font-weight: 500; line-height: 1.6; letter-spacing: 0.0em; }
+/* Mono/15 — JetBrains Mono Medium (코드에서는 JetBrains Mono) */
+.sv-text-mono-15 { font-family: var(--sv-font-mono); font-size: 15px; font-weight: 500; line-height: 1.6; letter-spacing: 0.0em; }
+/* Mono/13 — JetBrains Mono Regular (코드에서는 JetBrains Mono) */
+.sv-text-mono-13 { font-family: var(--sv-font-mono); font-size: 13px; font-weight: 400; line-height: 1.6; letter-spacing: 0.0em; }
