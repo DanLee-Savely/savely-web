@@ -44,6 +44,10 @@ try {
 
     await page.goto(BASE_URL, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
+    // 고정 GNB · 떠 있는 CTA · Next 개발 표시가 섹션 캡처에 겹치지 않게 한다 (시안 섹션 이미지에는 없음)
+    await page.addStyleTag({
+      content: 'header[data-section]{position:static!important} main ~ .fixed, nextjs-portal{display:none!important}',
+    });
     await mkdir(path.join(OUT, vp.name), { recursive: true });
 
     const sections = await page.$$('[data-section]');

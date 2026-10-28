@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { XIcon } from "lucide-react";
+import { ArrowRightIcon, XIcon } from "lucide-react";
 import { AppButton } from "@/components/common/AppButton";
 import { Logo } from "@/components/common/Logo";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -45,9 +45,7 @@ export function MobileMenu() {
             className="flex items-center justify-between border-b border-sv-border px-1 py-4 sv-text-title-section-20 text-sv-text"
           >
             {item.label}
-            <span aria-hidden className="text-sv-text-3">
-              →
-            </span>
+            <ArrowRightIcon aria-hidden strokeWidth={1.75} className="size-5 text-sv-text-3" />
           </a>
         ))}
         <AppButton
