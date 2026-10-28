@@ -62,7 +62,7 @@
 
   /* ---------- 글꼴 ---------- */
   --sv-font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --sv-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sv-font-mono: var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* ---------- shadcn/ui 변수 대응 (shadcn init 후 globals.css의 같은 이름 변수를 이 값으로 맞춘다) ---------- */
   --background: var(--sv-bg);
