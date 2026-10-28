@@ -1,5 +1,6 @@
 import { WaitlistButton } from "@/components/interactive/WaitlistButton";
 import { WaitlistDialogProvider } from "@/components/interactive/WaitlistDialogProvider";
+import { HeroSection } from "@/components/sections/HeroSection";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 import { homeContent } from "@/content/home.content";
 
@@ -7,7 +8,9 @@ export default function Home() {
   return (
     <WaitlistDialogProvider>
       <SiteHeader />
-      <main className="flex-1" />
+      <main className="flex-1">
+        <HeroSection />
+      </main>
       <WaitlistButton
         source="floating"
         size="l"

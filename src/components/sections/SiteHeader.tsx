@@ -16,7 +16,7 @@ export function SiteHeader() {
         <a href="#">
           <Logo className="h-7 lg:h-9" priority />
         </a>
-        <nav aria-label="주요 메뉴" className="hidden lg:block">
+        <nav aria-label={homeContent.a11y.mainNav} className="hidden lg:block">
           {gnb.menu.map((item) => (
             <a key={item.target} href={item.target} className="sv-text-support-14_5 text-sv-text-2 hover:text-sv-text">
               {item.label}

@@ -11,7 +11,8 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.13",
@@ -29,7 +30,7 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -38,6 +39,7 @@
     "prettier": "^3.9.10",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vitest": "^5.0.5",
     "wrangler": "^4.154.0"
   }
 }

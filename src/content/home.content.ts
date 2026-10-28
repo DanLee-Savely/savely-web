@@ -1,6 +1,6 @@
 // 화면 문구 원본: docs/spec/content.json (Figma 라이트 시안). 문구를 바꿀 때는 사용자 확인 후 두 파일을 함께 고친다.
 // \n은 Figma의 수동 줄바꿈이다. pc/mobile 값이 나뉜 문구는 BreakText로 그린다.
-// 초안(사용자 확인 필요): meta, hero.device.screens[].alt, waitlistDialog.submitting · errors
+// 초안(사용자 확인 필요): meta, hero.device.screens[].alt, waitlistDialog.submitting · errors, a11y
 // 확정 필요(배포 전): waitlistDialog.consentSummary 보관 기간, footer.company
 export const homeContent = {
   meta: {
@@ -334,6 +334,17 @@ export const homeContent = {
     copyright: "© SAVELY. All rights reserved.",
   },
   floatingCta: "출시 알림 받기",
+  a11y: {
+    logo: "세이블리",
+    mainNav: "주요 메뉴",
+    menu: "메뉴",
+    menuOpen: "메뉴 열기",
+    menuClose: "메뉴 닫기",
+    heroCarousel: "세이블리 앱 화면",
+    prevScreen: "이전 화면",
+    nextScreen: "다음 화면",
+    screenDot: "{n}번째 화면: {label}",
+  },
 } as const;
 
 export type HomeContent = typeof homeContent;

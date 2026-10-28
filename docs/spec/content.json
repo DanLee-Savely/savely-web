@@ -165,5 +165,17 @@
     "privacyLink": { "label": "개인정보처리방침", "href": "/privacy" },
     "copyright": "© SAVELY. All rights reserved."
   },
-  "floatingCta": "출시 알림 받기"
+  "floatingCta": "출시 알림 받기",
+  "a11y": {
+    "_note": "화면에 보이지 않는 스크린리더용 문구 (20-interactions I1 · I9). 시안에 없는 값이라 초안이다",
+    "logo": "세이블리",
+    "mainNav": "주요 메뉴",
+    "menu": "메뉴",
+    "menuOpen": "메뉴 열기",
+    "menuClose": "메뉴 닫기",
+    "heroCarousel": "세이블리 앱 화면",
+    "prevScreen": "이전 화면",
+    "nextScreen": "다음 화면",
+    "screenDot": "{n}번째 화면: {label}"
+  }
 }
