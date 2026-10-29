@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { homeContent } from "@/content/home.content";
 import type { WaitlistErrorCode } from "@/domain/waitlist/WaitlistResult";
 import type { WaitlistSource } from "@/domain/waitlist/WaitlistSource";
+import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useWaitlistForm } from "@/hooks/useWaitlistForm";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ type Props = { source: WaitlistSource | null; onClose: () => void };
 // I8 출시 알림 신청 창 — PC 가운데 모달(480) · 모바일 바텀시트. 열리면 이메일 칸에 포커스, 닫히면 연 버튼으로 포커스 복귀
 export function WaitlistDialog({ source, onClose }: Props) {
   const pc = useMediaQuery("(min-width: 1024px)");
+  const keyboard = useKeyboardInset();
   const email = useRef<HTMLInputElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   // Trigger 없이 여는 창이라 연 버튼을 직접 기억했다가 닫힐 때 포커스를 돌려준다
@@ -59,7 +61,9 @@ export function WaitlistDialog({ source, onClose }: Props) {
         {...shared}
         side="bottom"
         showCloseButton={false}
-        className="gap-5 rounded-t-3xl border border-b-0 border-sv-border bg-sv-surface px-5 pt-3 pb-8 shadow-none"
+        // 키보드가 열리면 그 위로 올리고, 보이는 영역보다 길면 시트 안에서 스크롤
+        style={keyboard.height ? { bottom: keyboard.inset, maxHeight: keyboard.height - 8 } : undefined}
+        className="gap-5 overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 border-sv-border bg-sv-surface px-5 pt-3 pb-8 shadow-none"
       >
         <span aria-hidden className="mx-auto h-1 w-10 rounded-sm bg-sv-border-2" />
         {form}
