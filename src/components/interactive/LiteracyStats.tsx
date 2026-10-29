@@ -3,6 +3,7 @@
 import { InfoIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { BreakText } from "@/components/common/BreakText";
+import { StatValue, statBox } from "@/components/common/StatBox";
 import { homeContent } from "@/content/home.content";
 import { cn } from "@/lib/utils";
 
@@ -27,13 +28,13 @@ export function LiteracyStats() {
   }, [open]);
 
   return (
-    <ul ref={ref} className="flex flex-col gap-5 lg:flex-row lg:gap-8">
+    <ul ref={ref} className="flex flex-col gap-3 lg:flex-row lg:gap-4">
       {stats.map((s, i) => {
         const on = open === i;
         return (
           <li
             key={s.label}
-            className="relative flex flex-col gap-3 border-t border-sv-border-2 pt-6 lg:flex-1"
+            className={cn(statBox, "relative lg:flex-1")}
             onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(i)}
             onPointerLeave={(e) => e.pointerType === "mouse" && setOpen(null)}
           >
@@ -53,12 +54,10 @@ export function LiteracyStats() {
                 className={cn("size-3.5 text-sv-text-3 transition-colors duration-200", on && "text-sv-accent")}
               />
             </button>
-            <p className="flex items-baseline gap-1.5">
-              <span className={cn("sv-text-amount-44 text-sv-text transition-colors duration-200", on && "text-sv-accent")}>
-                {s.value}
-              </span>
-              <span className="sv-text-title-section-20 text-sv-text-2">{s.unit}</span>
-            </p>
+            <StatValue
+              parts={[{ num: s.value, unit: s.unit }]}
+              numClassName={cn("transition-colors duration-200", on && "text-sv-accent")}
+            />
             <p className="sv-text-support-14_5 text-sv-text-2">
               <BreakText text={s.desc} />
             </p>

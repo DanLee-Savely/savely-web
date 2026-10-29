@@ -154,13 +154,55 @@ export const homeContent = {
     ],
     tooltipSource:
       "출처: 한국은행 · 금융감독원 「2024 전국민 금융이해력 조사」 (2025.4.29 발표)",
+    // 문제 카드 — 값은 [숫자 + 단위] 묶음 배열, valueText는 스크린리더용. 수치는 출시 전 최신 값으로 재확인(00-decisions G5)
+    issues: {
+      title: {
+        pc: "아는 것은 상위권, 챙기는 습관은 아직이에요",
+        mobile: "아는 것은 상위권,\n챙기는 습관은 아직이에요",
+      },
+      desc: {
+        pc: "한국은 경제 규모 세계 13위, 금융 지식은 국제 조사 39개국 중 8위예요.\n하지만 점검하고 대비하는 습관이 약한 사이, 이런 일들이 늘고 있어요.",
+        mobile:
+          "한국은 경제 규모 세계 13위,\n금융 지식은 국제 조사 39개국 중 8위예요.\n하지만 점검하고 대비하는 습관이 약한 사이,\n이런 일들이 늘고 있어요.",
+      },
+      relatedLabel: "관련 지표",
+      cards: [
+        {
+          label: "카드값을 다음 달로 미루는 리볼빙",
+          value: [
+            { num: "7", unit: "조" },
+            { num: "521", unit: "억 원" },
+          ],
+          valueText: "7조 521억 원",
+          desc: "이번 달 카드값을 다 내지 못하고\n다음 달로 넘긴 잔액이에요. (2026년 9월 말)",
+          related: "평소 재무 상황 점검 43.4점",
+        },
+        {
+          label: "준비 없이 맞는 노후",
+          value: [{ num: "39.7", unit: "%" }],
+          valueText: "39.7%",
+          desc: "노인 소득 빈곤율 OECD 1위,\n평균(14.8%)의 약 2.7배예요.",
+          related: "장기 재무 목표 설정 42.5점",
+        },
+        {
+          label: "보이스피싱 피해",
+          value: [
+            { num: "1", unit: "조" },
+            { num: "2,578", unit: "억 원" },
+          ],
+          valueText: "1조 2,578억 원",
+          desc: "2025년 피해액으로, 처음 1조 원을 넘었어요.\n(전년보다 47.2% 증가)",
+          related: "디지털 금융이해력 43점 (OECD 평균 55점)",
+        },
+      ],
+    },
     quote: {
       title: "금융문해력이란?",
       text: "“올바른 금융 결정을 내리고 결국 나의 금융 웰빙을 이루기 위해 필요한 인식, 지식, 기술, 태도, 행동을 모두 합한 것”",
       cite: "OECD/INFE (2020) · 번역 가안",
     },
     source:
-      "출처: 한국은행 · 금융감독원 「2024 전국민 금융이해력 조사」(2025.4.29 발표) · OECD/INFE (2020)",
+      "출처: 한국은행 · 금융감독원 「2024 전국민 금융이해력 조사」(2025.4.29 발표) · OECD/INFE (2020)\nIMF 세계경제전망(2026.10) · OECD/INFE 금융이해력 조사(2023) · 여신금융협회(2026.9월 말 기준) · OECD 「한눈에 보는 연금 2025」 · 경찰청(2026.1 발표)",
   },
   solution: {
     id: "solution",
@@ -434,3 +476,4 @@ export const homeContent = {
 } as const;
 
 export type HomeContent = typeof homeContent;
+export type LiteracyIssue = HomeContent["literacy"]["issues"]["cards"][number];
