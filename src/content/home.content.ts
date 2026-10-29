@@ -1,7 +1,6 @@
 // 화면 문구 원본: docs/spec/content.json (Figma 라이트 시안). 문구를 바꿀 때는 사용자 확인 후 두 파일을 함께 고친다.
 // \n은 Figma의 수동 줄바꿈이다. pc/mobile 값이 나뉜 문구는 BreakText로 그린다.
 // 초안(사용자 확인 필요): meta, hero.device.screens[].alt, waitlistDialog.submitting · errors, a11y
-// 확정 필요(배포 전): footer.company
 export const homeContent = {
   meta: {
     title: "세이블리 — 직접 적으며 소비를 돌아보는 가계부",
@@ -332,7 +331,7 @@ export const homeContent = {
     note: "iOS · Android로 출시될 예정이에요",
   },
   footer: {
-    company: "주식회사 세이브댓머니",
+    company: "세이블리",
     contact: "문의 contact@savelyglobal.com",
     site: "www.savelyglobal.com",
     privacyLink: {
@@ -342,6 +341,84 @@ export const homeContent = {
     copyright: "© SAVELY. All rights reserved.",
   },
   floatingCta: "출시 알림 받기",
+  privacy: {
+    meta: {
+      title: "개인정보처리방침 | 세이블리",
+    },
+    title: "개인정보처리방침",
+    draft: "초안",
+    draftNote: "정식 운영 전 전문가 검토를 거쳐 내용이 바뀔 수 있어요.",
+    intro:
+      "세이블리는 출시 알림 신청을 받기 위해 아래와 같이 개인정보를 처리해요.",
+    sections: [
+      {
+        title: "1. 처리 목적",
+        items: ["세이블리 앱 출시 소식을 이메일로 알려 드리는 데만 써요."],
+      },
+      {
+        title: "2. 처리 항목",
+        items: [
+          "이메일 주소 (필수)",
+          "동의 시각 · 신청 시각 · 신청한 위치(사이트 안의 버튼 위치)",
+          "IP 주소 · 기기 정보 · 쿠키는 저장하지 않아요. 과도한 신청을 막기 위해 접속 IP를 잠깐 확인하지만 저장하지 않아요.",
+        ],
+      },
+      {
+        title: "3. 보유 기간과 파기",
+        items: [
+          "출시 알림 발송 후 지체 없이 파기해요. 출시가 늦어져도 신청일로부터 최대 1년까지만 보관해요.",
+          "삭제를 요청하시면 바로 파기해요.",
+          "파기는 데이터베이스에서 복구할 수 없게 지우는 방식으로 해요.",
+        ],
+      },
+      {
+        title: "4. 제3자 제공",
+        items: ["개인정보를 다른 곳에 제공하지 않아요."],
+      },
+      {
+        title: "5. 처리 위탁과 국외 이전",
+        items: [
+          "받는 곳: Cloudflare, Inc. (미국)",
+          "이전 항목: 2번의 저장 항목",
+          "목적과 방법: 사이트 운영과 신청 정보 저장(Cloudflare D1). 신청할 때 네트워크로 전송해요.",
+          "보유 기간: 3번과 같아요.",
+          "국외 이전을 원하지 않으시면 신청하지 않으셔도 돼요. 이 경우 출시 알림을 받을 수 없어요.",
+        ],
+      },
+      {
+        title: "6. 정보주체의 권리",
+        items: [
+          "언제든지 내 개인정보의 열람 · 정정 · 삭제 · 처리 정지를 요청할 수 있어요.",
+          "contact@savelyglobal.com으로 요청하시면 지체 없이 처리해요.",
+        ],
+      },
+      {
+        title: "7. 안전성 확보 조치",
+        items: [
+          "관리 권한이 있는 사람만 신청 정보에 접근해요.",
+          "모든 전송은 HTTPS로 암호화해요.",
+          "이메일 주소를 기록(로그)에 남기지 않아요.",
+        ],
+      },
+      {
+        title: "8. 개인정보 보호책임자",
+        items: ["세이블리 운영 담당 · contact@savelyglobal.com"],
+      },
+      {
+        title: "9. 권익 침해 구제",
+        items: [
+          "개인정보 침해 신고나 상담이 필요하면 아래 기관에 문의할 수 있어요.",
+          "개인정보침해신고센터 (privacy.kisa.or.kr)",
+          "개인정보분쟁조정위원회 (www.kopico.go.kr)",
+        ],
+      },
+      {
+        title: "10. 방침 변경",
+        items: ["내용이 바뀌면 이 페이지에서 알려 드려요."],
+      },
+    ],
+    effective: "시행일: 2026년 10월 29일 (초안)",
+  },
   a11y: {
     logo: "세이블리",
     mainNav: "주요 메뉴",

@@ -33,6 +33,15 @@
 			"simple": { "limit": 5, "period": 60 }
 		}
 	],
+	// 출시 알림 저장소 (30-waitlist §4). 표는 migrations/ — wrangler d1 migrations apply savely-waitlist --remote
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "savely-waitlist",
+			"database_id": "312fb3a0-662c-487f-915a-5a7130512bd5",
+			"migrations_dir": "migrations"
+		}
+	],
 	"vars": {
 		// 다른 출처(Vercel 배포본)에서 오는 신청 허용 목록. 쉼표로 구분. Vercel 주소가 정해지면 넣는다
 		"WAITLIST_ALLOWED_ORIGINS": ""

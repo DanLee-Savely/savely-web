@@ -10,7 +10,7 @@ export const waitlistApiClient = new WaitlistApiClient(
   `${process.env.NEXT_PUBLIC_WAITLIST_API_URL ?? ""}/home/api/waitlist`,
 );
 
-// 서버: DB(D1) 바인딩이 있으면 D1, 없으면(로컬 개발) 메모리 저장소
+// 서버: DB(D1) 바인딩이 있으면 D1, 없으면 메모리 저장소 (로컬 개발은 wrangler 로컬 D1을 쓴다)
 const memory = new InMemoryWaitlistRepository();
 
 export type WaitlistServer = {
@@ -22,7 +22,7 @@ export type WaitlistServer = {
 
 export async function createWaitlistServer(): Promise<WaitlistServer> {
   const { getCloudflareContext } = await import("@opennextjs/cloudflare");
-  const env: CloudflareEnv & { DB?: D1Database } = (await getCloudflareContext({ async: true })).env;
+  const { env } = await getCloudflareContext({ async: true });
   return {
     service: new RegisterWaitlistService(env.DB ? new D1WaitlistRepository(env.DB) : memory),
     allow: async (key) => (env.WAITLIST_RATE_LIMITER ? (await env.WAITLIST_RATE_LIMITER.limit({ key })).success : true),
