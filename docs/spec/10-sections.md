@@ -73,11 +73,21 @@
 - 인터랙션: §I3(문제 흐름 강조) — PC만
 
 ## 04 · 금융 문해력 중요성
-- **PC:** 세로, gap 48. head → stats(가로 3열, gap 32) → quote 카드 → 출처
-  - stat: 위 테두리만 `border-2` 1px, pad-top 24, 세로 gap 12. 라벨(Label/15) → 값(Amount/44 + 「점」 Title/Section 20, 기준선 정렬, gap 4) → 설명(Support/14.5, text-2)
+- **PC:** 세로, gap 48. head → stats(가로 3열, gap 16) → issues → quote 카드 → 출처
+  - **박스 스타일 통일 (2026-10-29):** stats와 issues는 같은 이야기(아는 것 vs 챙기는 것)를 하므로 같은 박스로 맞춘다. 박스 = `surface`, r16, pad 24, 테두리 없음, 세로 gap 12. 한 행의 박스는 높이를 같게(가장 높은 박스 기준, PC stats 190 · issues 223)
+  - stat 박스: 라벨(Label/15, PC는 「ⓘ」 포함) → 값(Amount/44 + 「점」 Title/Section 20, 기준선 정렬, gap 4) → 설명(Support/14.5, text-2)
+  - **issues (2026-10-29 추가, 문구는 content.json `literacy.issues`):** 세로, gap 24. issues-head → items
+    - ⚠ `docs/design`의 S04 이미지는 이 변경 전 상태다. 구현 전에 `docs/README.md` 알림대로 MCP로 최신 이미지를 받는다
+    - 구조 덤프(`docs/figma/*.txt`)에는 반영돼 있다
+    - issues-head: 세로 gap 8. 소제목(Title/Section 20, text) → 설명(Body/15, text-2, 2줄)
+    - items: 가로 3열, gap 16(stats와 같은 열 위치). 각 항목은 stat 박스와 같음
+      - 라벨(Label/15, text) → 값 → 설명(Support/14.5, text-2, 2줄) → 관련 지표 한 줄(Support/13: 「관련 지표 · 」 text-3 + 지표 text-2)
+      - 값: [숫자(Amount/44, text) + 단위(Title/Section 20, text-2)] 묶음, 숫자-단위 gap 4, 묶음 사이 gap 10, 기준선 정렬. 예) 「7 조」 「521 억 원」 / 「39.7 %」 / 「1 조」 「2,578 억 원」
+    - 인터랙션 없음(정적). 툴팁 없음
   - quote: `surface`, r16, pad 32, 가로 gap 32. 「금융문해력이란?」(Title/Section 20, 폭 180) + 인용문(Body/15) + 출처 표기(Support/13, text-3)
   - 맨 아래 출처 Support/13, text-3
-- **모바일:** stats 세로(gap 20). quote는 세로(pad 24, gap 12)
+- **모바일:** stats와 issues의 items 모두 세로(gap 12)로 쌓는다. 박스 pad 20(나머지는 PC와 같음). 소제목 2줄 · 설명 4줄(content.json mobile 줄바꿈). quote는 세로(pad 24, gap 12)
+- 출처는 2줄(PC). 모바일은 폭에 맞춰 자연 줄바꿈
 - 인터랙션: §I4(수치 설명 툴팁) — PC 호버, 모바일은 탭(아래 20 문서 참고)
 
 ## 05 · 해결 — 세이블리 (기능 소개)

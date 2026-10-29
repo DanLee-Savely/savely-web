@@ -19,3 +19,13 @@
 | `assets/app/` | 앱 화면 캡처 5장 (더미 데이터) |
 | `assets/brand/` | 로고 · 앱 아이콘 |
 | `compare/` | 비교 스크립트가 만드는 스크린샷 (git 제외) |
+
+## 알림 — S04 디자인 수정, 코드 미반영 (2026-10-29)
+- Figma S04(금융 문해력)에 「아는 것은 상위권, 챙기는 습관은 아직이에요」 블록(문제 카드 3장)을 추가하고, **위 수치 3개도 같은 박스 스타일로 바꿨다.** 결정: `spec/00-decisions.md` A8~A10
+- 반영된 문서: `spec/content.json`(`literacy.issues` · `literacy.source`), `spec/10-sections.md`, `spec/20-interactions.md`(I4 툴팁 위치), `spec/50-acceptance.md`, `figma/*.txt`
+- **코드(`LiteracySection` · `LiteracyStats` · `src/content/home.content.ts`)에는 아직 반영되지 않았다.**
+- **아래 이미지는 수정 전 상태**다.
+  - `design/proto-pc/04-literacy.png`, `design/proto-mobile/04-literacy@2x.png`
+  - `design/pc/04-literacy.png`, `design/mobile/04-literacy@2x.png`, `design/pc/_full-page@0.5x.jpg`, `design/mobile/_full-page.jpg`
+  - `design/interactions/literacy-stats-pc/*` (수치 툴팁 6장)
+- 코드에 반영할 때: Figma MCP `get_screenshot`으로 프로토타입 S04 최신 이미지(PC `70:2976` · 모바일 `70:3110`)를 받아 위 `proto-*` 파일 2개를 덮어쓰고 `figma-mcp-log.md`에 기록한 뒤 비교한다(2회). 그 전까지 S04의 기준은 `spec/10-sections.md`와 `spec/content.json`이다.
