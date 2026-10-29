@@ -1,7 +1,7 @@
 // 화면 문구 원본: docs/spec/content.json (Figma 라이트 시안). 문구를 바꿀 때는 사용자 확인 후 두 파일을 함께 고친다.
 // \n은 Figma의 수동 줄바꿈이다. pc/mobile 값이 나뉜 문구는 BreakText로 그린다.
 // 초안(사용자 확인 필요): meta, hero.device.screens[].alt, waitlistDialog.submitting · errors, a11y
-// 확정 필요(배포 전): waitlistDialog.consentSummary 보관 기간, footer.company
+// 확정 필요(배포 전): footer.company
 export const homeContent = {
   meta: {
     title: "세이블리 — 직접 적으며 소비를 돌아보는 가계부",
@@ -301,7 +301,15 @@ export const homeContent = {
     consent: "개인정보 수집 · 이용에 동의해요 (필수)",
     consentView: "보기",
     consentSummary:
-      "수집 항목: 이메일 · 이용 목적: 출시 알림 발송 · 보관 기간: [확정 필요]",
+      "수집 항목: 이메일 · 이용 목적: 출시 알림 발송 · 보관 기간: 출시 알림 발송 후 지체 없이 파기 (최대 신청일로부터 1년)",
+    consentDetails: [
+      "수집 항목: 이메일",
+      "이용 목적: 출시 알림 발송",
+      "보관 기간: 출시 알림 발송 후 지체 없이 파기 (최대 신청일로부터 1년)",
+      "동의를 거부할 수 있어요. 거부하면 출시 알림을 받을 수 없어요.",
+    ],
+    consentHide: "접기",
+    consentPrivacyLink: "개인정보처리방침",
     submit: "알림 신청하기",
     submitting: "신청 중…",
     doneTitle: "신청이 완료됐어요",
@@ -344,6 +352,7 @@ export const homeContent = {
     prevScreen: "이전 화면",
     nextScreen: "다음 화면",
     screenDot: "{n}번째 화면: {label}",
+    dialogClose: "닫기",
   },
 } as const;
 

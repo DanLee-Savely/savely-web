@@ -112,7 +112,7 @@
   - 포커스: 열리면 이메일 칸에 포커스. 창 안에서만 Tab 이동. 닫히면 연 버튼으로 포커스를 돌려준다(shadcn Dialog/Sheet 기본 동작 사용)
   - 「보기」: 동의 내용 상세(수집 항목 · 목적 · 보관 기간)를 창 안에서 펼친다. `/home/privacy` 링크도 함께 둔다
   - 완료 후 다시 열면 기본 상태로 초기화
-  - 문구는 content.json `waitlistDialog`. 보관 기간 `[확정 필요]`는 확정 전 배포 금지
+  - 문구는 content.json `waitlistDialog`. 보관 기간은 00-decisions B4
 
 ## I9 · 모바일 메뉴
 - **Figma 동작:** ≡ 버튼 → 위에서 내려오는 메뉴 시트(MOVE_IN 0.3초) + 배경 막(`#08140F` 45%)

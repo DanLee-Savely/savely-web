@@ -138,8 +138,17 @@
     "emailPlaceholder": "이메일 주소를 입력해 주세요",
     "consent": "개인정보 수집 · 이용에 동의해요 (필수)",
     "consentView": "보기",
-    "consentSummary": "수집 항목: 이메일 · 이용 목적: 출시 알림 발송 · 보관 기간: [확정 필요]",
-    "_consentSummaryNote": "보관 기간은 00-decisions.md G2 확정 후 채운다. 확정 전에는 배포하지 않는다",
+    "consentSummary": "수집 항목: 이메일 · 이용 목적: 출시 알림 발송 · 보관 기간: 출시 알림 발송 후 지체 없이 파기 (최대 신청일로부터 1년)",
+    "_consentSummaryNote": "보관 기간은 00-decisions.md B4 (2026-10-29 확정)",
+    "consentDetails": [
+      "수집 항목: 이메일",
+      "이용 목적: 출시 알림 발송",
+      "보관 기간: 출시 알림 발송 후 지체 없이 파기 (최대 신청일로부터 1년)",
+      "동의를 거부할 수 있어요. 거부하면 출시 알림을 받을 수 없어요."
+    ],
+    "_consentDetailsNote": "「보기」로 펼치는 상세. 동의 거부 권리 안내(개인정보 보호법 제15조 제2항)",
+    "consentHide": "접기",
+    "consentPrivacyLink": "개인정보처리방침",
     "submit": "알림 신청하기",
     "submitting": "_시안에 없음 — 「신청 중…」 초안, 사용자 확인 필요",
     "doneTitle": "신청이 완료됐어요",
@@ -176,6 +185,7 @@
     "heroCarousel": "세이블리 앱 화면",
     "prevScreen": "이전 화면",
     "nextScreen": "다음 화면",
-    "screenDot": "{n}번째 화면: {label}"
+    "screenDot": "{n}번째 화면: {label}",
+    "dialogClose": "닫기"
   }
 }

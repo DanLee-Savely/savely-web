@@ -24,5 +24,17 @@
 		// Enable image optimization
 		// see https://opennext.js.org/cloudflare/howtos/image
 		"binding": "IMAGES"
+	},
+	// 출시 알림 API: 같은 IP 1분 5회 (30-waitlist §2). 지역별 근사치 — 엄격한 전역 한도가 필요하면 Durable Objects
+	"ratelimits": [
+		{
+			"name": "WAITLIST_RATE_LIMITER",
+			"namespace_id": "1001",
+			"simple": { "limit": 5, "period": 60 }
+		}
+	],
+	"vars": {
+		// 다른 출처(Vercel 배포본)에서 오는 신청 허용 목록. 쉼표로 구분. Vercel 주소가 정해지면 넣는다
+		"WAITLIST_ALLOWED_ORIGINS": ""
 	}
 }
