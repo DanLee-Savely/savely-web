@@ -8,6 +8,7 @@ import { ProblemSection } from "@/components/sections/ProblemSection";
 import { RewardSection } from "@/components/sections/RewardSection";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 import { SolutionSection } from "@/components/sections/SolutionSection";
+import { WaitlistSection } from "@/components/sections/WaitlistSection";
 import { homeContent } from "@/content/home.content";
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
         <SolutionSection />
         <RewardSection />
         <HabitSection />
+        <WaitlistSection />
       </main>
       <WaitlistButton
         source="floating"
