@@ -1,6 +1,7 @@
 import { WaitlistButton } from "@/components/interactive/WaitlistButton";
 import { WaitlistDialogProvider } from "@/components/interactive/WaitlistDialogProvider";
 import { EmpathySection } from "@/components/sections/EmpathySection";
+import { HabitSection } from "@/components/sections/HabitSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { LiteracySection } from "@/components/sections/LiteracySection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
@@ -20,6 +21,7 @@ export default function Home() {
         <LiteracySection />
         <SolutionSection />
         <RewardSection />
+        <HabitSection />
       </main>
       <WaitlistButton
         source="floating"
