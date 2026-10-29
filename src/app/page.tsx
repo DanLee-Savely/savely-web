@@ -2,6 +2,7 @@ import { WaitlistButton } from "@/components/interactive/WaitlistButton";
 import { WaitlistDialogProvider } from "@/components/interactive/WaitlistDialogProvider";
 import { EmpathySection } from "@/components/sections/EmpathySection";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { LiteracySection } from "@/components/sections/LiteracySection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 import { homeContent } from "@/content/home.content";
@@ -14,6 +15,7 @@ export default function Home() {
         <HeroSection />
         <EmpathySection />
         <ProblemSection />
+        <LiteracySection />
       </main>
       <WaitlistButton
         source="floating"
