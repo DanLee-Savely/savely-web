@@ -1,14 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StepSequencer } from "@/interaction/StepSequencer";
-
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
-const subscribeReducedMotion = (onChange: () => void) => {
-  const query = matchMedia(REDUCED_MOTION);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-};
+import { useMediaQuery } from "./useMediaQuery";
 
 // StepSequencer를 화면에 연결하는 얇은 어댑터 (20-interactions 공통 규칙)
 // - 요소가 30% 이상 보일 때 진행하고, 화면에서 벗어나면 멈춘다
@@ -20,11 +14,7 @@ export function useStepSequence<T extends Element>(
   const ref = useRef<T>(null);
   const [sequencer, setSequencer] = useState(() => new StepSequencer(delays, loop));
   const [inView, setInView] = useState(false);
-  const reducedMotion = useSyncExternalStore(
-    subscribeReducedMotion,
-    () => matchMedia(REDUCED_MOTION).matches,
-    () => false,
-  );
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   useEffect(() => {
     const el = ref.current;
