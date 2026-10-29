@@ -1,3 +1,4 @@
+import { homeContent } from "@/content/home.content";
 import home from "./app/savely_light_01_home.png";
 import recordInput from "./app/savely_light_02_record_input.png";
 import calendar from "./app/savely_light_03_calendar.png";
@@ -15,3 +16,6 @@ export const appScreens = {
   "savely_light_04_day_detail.png": dayDetail,
   "savely_light_05_report.png": report,
 } as const;
+
+// 앱 화면 대체 텍스트 — 히어로 화면 목록의 alt를 함께 쓴다
+export const screenAlt = (image: string) => homeContent.hero.device.screens.find((s) => s.image === image)?.alt ?? "";

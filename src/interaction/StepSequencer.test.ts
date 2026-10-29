@@ -23,6 +23,12 @@ describe("StepSequencer", () => {
     expect(new StepSequencer([800, 1000, 1000]).finish().step).toBe(3);
   });
 
+  it("select는 그 단계로 가서 자동 진행을 멈춘다", () => {
+    const s = new StepSequencer([3500, 3500, 3500], true).select(2);
+    expect(s).toMatchObject({ step: 2, done: true, nextDelay: null });
+    expect(s.advance()).toBe(s);
+  });
+
   it("이동해도 원래 객체는 바뀌지 않는다", () => {
     const s = new StepSequencer([800]);
     s.advance();

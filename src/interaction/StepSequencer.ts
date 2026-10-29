@@ -8,6 +8,7 @@ export class StepSequencer {
     readonly delays: readonly number[],
     readonly loop = false,
     readonly step = 0,
+    readonly stopped = false,
   ) {
     if (delays.length === 0) throw new RangeError("delays가 비어 있어요");
     if (!Number.isInteger(step) || step < 0 || step >= this.stepCount) throw new RangeError("step이 범위를 벗어났어요");
@@ -22,8 +23,9 @@ export class StepSequencer {
     return this.done ? null : this.delays[this.step];
   }
 
+  /** 마지막 단계에 닿았거나(한 번 재생) 사용자가 단계를 골라 멈췄으면 true */
   get done(): boolean {
-    return !this.loop && this.step === this.stepCount - 1;
+    return this.stopped || (!this.loop && this.step === this.stepCount - 1);
   }
 
   advance(): StepSequencer {
@@ -34,6 +36,11 @@ export class StepSequencer {
   /** 마지막 단계로 바로 이동 (reduced-motion) */
   finish(): StepSequencer {
     return this.at(this.stepCount - 1);
+  }
+
+  /** 사용자가 고른 단계로 이동하고 자동 진행을 멈춘다 (I5) */
+  select(step: number): StepSequencer {
+    return new StepSequencer(this.delays, this.loop, step, true);
   }
 
   private at(step: number): StepSequencer {

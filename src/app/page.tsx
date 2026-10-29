@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { LiteracySection } from "@/components/sections/LiteracySection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
 import { SiteHeader } from "@/components/sections/SiteHeader";
+import { SolutionSection } from "@/components/sections/SolutionSection";
 import { homeContent } from "@/content/home.content";
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
         <EmpathySection />
         <ProblemSection />
         <LiteracySection />
+        <SolutionSection />
       </main>
       <WaitlistButton
         source="floating"
