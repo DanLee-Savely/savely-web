@@ -4,6 +4,7 @@ import { EmpathySection } from "@/components/sections/EmpathySection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { LiteracySection } from "@/components/sections/LiteracySection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
+import { RewardSection } from "@/components/sections/RewardSection";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 import { SolutionSection } from "@/components/sections/SolutionSection";
 import { homeContent } from "@/content/home.content";
@@ -18,6 +19,7 @@ export default function Home() {
         <ProblemSection />
         <LiteracySection />
         <SolutionSection />
+        <RewardSection />
       </main>
       <WaitlistButton
         source="floating"
