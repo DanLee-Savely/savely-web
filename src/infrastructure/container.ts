@@ -26,6 +26,6 @@ export async function createWaitlistServer(): Promise<WaitlistServer> {
   return {
     service: new RegisterWaitlistService(env.DB ? new D1WaitlistRepository(env.DB) : memory),
     allow: async (key) => (env.WAITLIST_RATE_LIMITER ? (await env.WAITLIST_RATE_LIMITER.limit({ key })).success : true),
-    allowedOrigins: (env.WAITLIST_ALLOWED_ORIGINS as string).split(",").map((o) => o.trim()).filter(Boolean),
+    allowedOrigins: (env.WAITLIST_ALLOWED_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean),
   };
 }
