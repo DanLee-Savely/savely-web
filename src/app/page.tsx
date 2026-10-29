@@ -6,6 +6,7 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { LiteracySection } from "@/components/sections/LiteracySection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
 import { RewardSection } from "@/components/sections/RewardSection";
+import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 import { SolutionSection } from "@/components/sections/SolutionSection";
 import { WaitlistSection } from "@/components/sections/WaitlistSection";
@@ -25,6 +26,7 @@ export default function Home() {
         <HabitSection />
         <WaitlistSection />
       </main>
+      <SiteFooter />
       <WaitlistButton
         source="floating"
         size="l"
