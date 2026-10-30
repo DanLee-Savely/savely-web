@@ -1,11 +1,74 @@
 # 세이블리 소개 사이트 (savely-web)
 
+코드잇 스프린트 미션 5 — 출시 전 가계부 앱 「세이블리」의 소개 페이지(HOME)
+
+## 배포 URL
+- 실서비스(Cloudflare Workers): https://www.savelyglobal.com/home
+- 제출용(Vercel): 배포 후 추가
+
+## 서비스 소개
+세이블리(Savely)는 직접 적으며 소비를 돌아보는 가계부 앱이다(iOS · Android, 출시 전).
+- **문제:** 돌아볼 틈 없이 같은 한 달이 반복된다. 결제는 터치 한 번이면 끝나고, 월말 명세서에서야 합계를 본다
+- **해결:** 적고 · 마감하고 · 돌아보는 습관을 만드는 가계부 + 꾸준한 마감을 돕는 세이블리 포인트
+- **기대효과:** 점검이 습관이 되면 한 달이 달라진다
+- **핵심 행동:** 「출시 알림 신청」 — 이메일을 남기면 출시 소식을 먼저 받는다
+
+### 타깃 (초안)
+- 가계부를 써 봤지만 오래 못 간 사람
+- 월말 카드값에 놀라는 일이 반복되는 사람
+- 가족 소비를 함께 돌아보고 싶은 사람
+
+## 기술 스택
+| 영역 | 사용 |
+|---|---|
+| 프레임워크 | Next.js 16 (App Router) · React 19 · TypeScript(strict) |
+| 스타일 | Tailwind CSS 4 · shadcn/ui(Radix) · lucide-react · 디자인 변수(`src/styles/tokens.css`) |
+| 글꼴 | Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자) |
+| 배포 | Cloudflare Workers(OpenNext, `basePath: /home`) · Vercel(제출용) |
+| 저장 | Cloudflare D1(출시 알림 이메일) · Rate Limiting 바인딩 |
+| 검사 | Vitest(도메인 · 상태 클래스) · Playwright(시안 비교 스크린샷) · ESLint |
+
+- 구조: 검증 · 저장 · 상태 전이는 클래스(`domain` · `application` · `infrastructure` · `interaction`), 화면은 함수 컴포넌트, 훅은 둘을 잇는 얇은 어댑터
+- 문구는 모두 `src/content/home.content.ts`(원본 `docs/spec/content.json`)에서 가져온다
+
+## 구현한 인터랙션
+상세: `docs/spec/20-interactions.md`. 자동 재생은 화면에 30% 이상 보일 때만 돌고, `prefers-reduced-motion`이면 멈춰서 최종 상태를 보여준다.
+
+| # | 인터랙션 | 동작 |
+|---|---|---|
+| I1 | 히어로 앱 화면 캐러셀 | 화살표 · 화면 탭 · 점 · 스와이프 · 키보드 ←/→로 5장 이동. 끝↔처음은 페이드 |
+| I2 | 공감 말풍선 | 화면에 들어오면 「입력 중」 → 말풍선 순서로 한 번 등장 |
+| I3 | 문제 흐름 강조 (PC) | 쓰고 → 잊고 → 놀라고 → 반복하고 → 「매달 반복」 띠 순서로 강조 |
+| I4 | 금융 수치 툴팁 | PC 호버 · 키보드 포커스, 모바일 탭으로 설명과 출처 표시 |
+| I5 | 해결 단계 전환 (PC) | 3.5초마다 자동 전환, 클릭하면 그 단계로 가고 자동 전환 멈춤 |
+| I6 | 보상 고리 순환 | 적고 → 마감하고 → 포인트 받고 → 내일 또 적고 강조 순환 |
+| I7 | 습관 전후 토글 | Before/After 전환, 선택 배경이 미끄러지고 카드 문구가 바뀜 |
+| I8 | 출시 알림 신청 창 | PC 모달 · 모바일 바텀시트. 기본 → 입력됨 → 전송 중 → 완료. 이메일 형식 · 동의 검증, D1 저장, 키보드에 가리지 않게 시트 위치 보정 |
+| I9 | 모바일 메뉴 | 위에서 내려오는 메뉴. 「소개」 이동 · 신청 창 열기 |
+| I10 | 고정 메뉴 · 섹션 이동 · 떠 있는 CTA | 스크롤해도 상단 고정(흐림 배경), 「소개」 부드러운 이동, 오른쪽 아래 「출시 알림 받기」 |
+
+## 실행 방법
+```bash
+npm install
+npx wrangler d1 migrations apply savely-waitlist --local   # 처음 한 번: 로컬 D1 테이블 생성
+npm run dev            # http://localhost:3000/home
+npm test               # 단위 테스트
+npm run lint
+node scripts/compare-design.mjs [섹션]   # 시안 비교 스크린샷 (개발 서버 실행 중, docs/compare/에 저장)
+npm run deploy         # Cloudflare 배포 (권한 필요)
+```
+
+## Figma MCP 활용
+- 무료 요금제 한도(월 20회) 때문에 Figma Plugin API로 구조 · 디자인 변수 · 인터랙션 설정을 먼저 추출해 두고(`docs/figma/`), MCP는 필요할 때만 불렀다. 호출 기록: `docs/figma-mcp-log.md`
+- 추출본에서 수치(크기 · 간격 · 시간)와 문구를 `docs/spec/`의 명세로 옮기고, 그 명세대로 구현한 뒤 `compare-design.mjs` 스크린샷을 시안 이미지와 비교했다
+- S04 수정본 이미지를 `get_screenshot`으로 받으려 했으나 1×1 빈 이미지가 와서(3회), 구조 덤프 수치로 비교했다
+
 ## 검수 기록
 
 | 섹션 | 시안과 달랐던 점 | 고친 방법 |
 |---|---|---|
 | 00 GNB | 모바일 메뉴 시트 아래에 시안에 없는 1px 테두리가 보임 (shadcn Sheet 기본값) | `data-[side=top]:border-b-0`으로 덮어씀 |
-| 00 GNB | 메뉴 · 신청 창 배경 막이 shadcn 기본(검정 10% + 흐림)이라 시안(`#08140F` 45%, 흐림 없음)과 다름 | `sheet.tsx` 배경 막을 `bg-sv-backdrop` 토큰으로 교체 |
+| 00 GNB | 메뉴 · 신청 창 배경 막이 shadcn 기본(검정 10% + 흐림)이라 시안(`#08140F` 45%, 흐림 없음)과 다름 | `sheet.tsx` 배경 막을 `bg-sv-backdrop` 변수로 교체 |
 | 01 히어로 | 화면을 30px만 끌었다 놓아도 「탭」으로 처리돼 다음 장으로 넘어감 | 손을 뗄 때 판단을 `CarouselCursor.release()`로 모음: 10px 미만 이동만 탭, 가로 40px 이상만 스와이프 |
 | 01 히어로 | 1024px에서 문구 칸이 496px로 줄어 56px 제목이 4줄로 꺾임 | 가로 배치를 xl(1280)부터 시작. 1024~1279는 제목 2줄 + 휴대폰 세로 배치 |
 | 02 공감 | 마지막 문장이 시안보다 12px 위에 붙음 (Figma의 12px 빈 칸을 빠뜨림) | 말풍선과 마지막 문장 사이를 36px(12 + 12 + 12)로 맞춤 |
