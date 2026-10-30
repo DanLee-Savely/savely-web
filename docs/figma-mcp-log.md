@@ -9,6 +9,14 @@
 | 2026-10-29 | get_screenshot | `70:2976` (PC S04) | S04 수정 후 시안 이미지 | 실패: 1×1 빈 이미지(원본 1440×1169) |
 | 2026-10-29 | get_screenshot | `70:3110` (모바일 S04) | S04 수정 후 시안 이미지 | 실패: 1×1 빈 이미지(원본 390×2073) |
 | 2026-10-29 | get_screenshot | `70:2976` (PC S04, contentsOnly) | 재시도 | 실패: 같은 결과. 더 부르지 않음 |
+| 2026-10-30 | create_session | 파일 `Yzb7zX5G3QrRlxhTzkZzS0` | S03 C안 · S04 시각화 시안 받기용 세션 | — |
+| 2026-10-30 | get_screenshot | `70:1845` (UI PC S03) | S03 C안 시안 | `design/pc`, `proto-pc/03-problem.png` (1440×838) |
+| 2026-10-30 | get_screenshot | `70:2091` (UI 모바일 S03) | S03 C안 시안 | `design/mobile`, `proto-mobile/03-problem@2x.png` (390×1177 → 2배 확대) |
+| 2026-10-30 | get_screenshot | `70:1885` (UI PC S04) | S04 막대 · 그래프 시안 | `design/pc`, `proto-pc/04-literacy.png` (1440×1328) |
+| 2026-10-30 | get_screenshot | `70:2128` (UI 모바일 S04) | S04 막대 · 그래프 시안 | `design/mobile`, `proto-mobile/04-literacy@2x.png` (390×2550 → 2배 확대) |
+
+- 2026-10-29 실패 원인: 프로토타입 노드(`70:2976` 등)는 프레임이 900px로 잘려 빈 이미지가 나옴. UI 노드로 받으면 정상
+- 이번 달 사용: 8회 / 20회
 
 ## 참고: MCP 없이 미리 추출해 둔 자료 (2026-10-28)
 - Figma Plugin API로 추출했다. MCP 호출 횟수에 포함되지 않는다.

@@ -20,13 +20,8 @@
 | `assets/brand/` | 로고 · 앱 아이콘 |
 | `compare/` | 비교 스크립트가 만드는 스크린샷 (git 제외) |
 
-## 알림 — S04 디자인 수정, 코드 반영 완료 · 이미지 미갱신 (2026-10-29)
-- Figma S04(금융 문해력)에 「아는 것은 상위권, 챙기는 습관은 아직이에요」 블록(문제 카드 3장)을 추가하고, **위 수치 3개도 같은 박스 스타일로 바꿨다.** 결정: `spec/00-decisions.md` A8~A10
-- 반영된 문서: `spec/content.json`(`literacy.issues` · `literacy.source`), `spec/10-sections.md`, `spec/20-interactions.md`(I4 툴팁 위치), `spec/50-acceptance.md`, `figma/*.txt`
-- 코드 반영 완료(`LiteracySection` · `LiteracyStats` · `common/StatBox` · `home.content.ts`). 구조 덤프 수치로 검수했다.
-- Figma MCP `get_screenshot`이 1×1 빈 이미지를 돌려줘서(`figma-mcp-log.md`) 이미지는 아직 갱신하지 못했다. Figma에서 직접 내보내 덮어쓰면 된다(PC 1x · 모바일 2x).
-- **아래 이미지는 수정 전 상태**다.
-  - `design/proto-pc/04-literacy.png`, `design/proto-mobile/04-literacy@2x.png`
-  - `design/pc/04-literacy.png`, `design/mobile/04-literacy@2x.png`, `design/pc/_full-page@0.5x.jpg`, `design/mobile/_full-page.jpg`
-  - `design/interactions/literacy-stats-pc/*` (수치 툴팁 6장)
-- 코드에 반영할 때: Figma MCP `get_screenshot`으로 프로토타입 S04 최신 이미지(PC `70:2976` · 모바일 `70:3110`)를 받아 위 `proto-*` 파일 2개를 덮어쓰고 `figma-mcp-log.md`에 기록한 뒤 비교한다(2회). 그 전까지 S04의 기준은 `spec/10-sections.md`와 `spec/content.json`이다.
+## 알림 — S03 C안 · S04 시각화 (2026-10-30)
+- Figma MCP `get_screenshot`으로 UI 노드(S03 `70:1845` · `70:2091`, S04 `70:1885` · `70:2128`)를 받아 `design/pc|mobile`, `design/proto-pc|proto-mobile`의 03 · 04 이미지를 갱신했다. 프로토타입 노드는 프레임이 900px로 잘려 빈 이미지가 나온다
+  - 모바일은 1x로 받아 2배로 확대해 `@2x` 파일에 저장했다(글자가 약간 흐림)
+- 결정: `spec/00-decisions.md` D8~D12. 명세: `spec/10-sections.md` S03 · S04, `spec/20-interactions.md` I3 · I4
+- **아직 갱신하지 않은 이미지(수정 전 상태):** `design/pc/_full-page@0.5x.jpg`, `design/mobile/_full-page.jpg`, `design/interactions/literacy-stats-pc/*`(툴팁), `design/interactions/problem-flow-pc/*`(이전 S03 카드안 — 더 이상 기준 아님)

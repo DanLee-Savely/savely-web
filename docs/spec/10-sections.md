@@ -59,36 +59,42 @@
 - **모바일:** 세로, gap 32. 말풍선 들여쓰기 0 / 24 / 48
 - 인터랙션: §I2(말풍선 순차 등장)
 
-## 03 · 문제
-- **PC:** 세로, gap 48. head → loop(세로 gap 16) → example 카드
-  - loop: 카드 4개(각 247×126, `surface`, r16, pad 24, 세로 gap 8: 제목 Title/Section 20 + 설명 Support/14.5) 사이에 「→」(Title/Section 20, text-3), 간격 12
-  - 아래 띠 「↺ 점검이 빠지면…」: 1120×52, `accent-tint` 6%, r12, pad 14/20, gap 10
-  - example 카드: `surface`, r16, pad 28/32, 세로 gap 16
-    - 라벨(Eyebrow, accent) → 계산 줄(가로 gap 20: 「하루 5,000원」 → 「한 달 150,000원」 → 「1년 1,825,000원」)
-    - 1년 값은 Amount/40, accent. 그 외 값은 Title/Section 20
-    - 맨 아래 주석 Support/13
-- **모바일:** 세로, gap 28
-  - loop 카드는 한 줄형(350폭, 가로 gap 14, pad 16/18, r14). 제목은 폭 84 고정, 설명은 한 줄(마지막 카드만 2줄)
-  - example의 화살표는 「↓」, 세로 배치(gap 6)
+## 03 · 문제 (2026-10-30 C안으로 교체 — 00-decisions D12)
+- 섹션 전체 가운데 정렬(머리말 포함). 세로 gap PC 64 · 모바일 40. head → flow → amount
+- **PC flow:** 4열(각 280, 합 1120). 각 열은 세로 gap 6, 가운데 정렬
+  - 번호 Mono/13(01~03 text-3, 04 text) → 제목 Hero/34(text) → 설명 Support/14.5(text-2, 2줄)
+  - 열 경계에 「→」(Title/Section 20, text-3)를 제목 높이에 맞춰 둔다
+  - 돌아오는 선: 4열 가운데 아래에서 52px 내려가 1열 가운데까지 간 뒤 위로 올라감. 1.5px text-3, 아래 모서리 r20, 1열 쪽 끝에 위로 향한 화살촉
+  - 선 가운데 알약: 배경 `bg`(선을 가림), r999, pad 8/18, gap 8. 「↻」(Title/Section 20, accent) + 「점검이 빠지면 이 흐름이 매달 반복돼요」(Label/15, text)
+- **amount (가운데, 세로 gap 10):** 「그 사이 작은 지출이 쌓이면 (예시)」 Label/15 text-2 → 「하루 5,000원 → 한 달 150,000원 → 1년」 Title/Section 20 text-3 → 「1,825,000원」 Amount/Display 96(risk) → 「30일 · 365일 기준으로 단순 계산했어요.」 Support/13 text-3
+- **모바일:** 4단계를 세로로 가운데 쌓고 사이에 「↓」(text-3). 오른쪽에 4단계 제목 옆에서 1단계 제목 옆으로 올라가는 선(1.5px text-3, 오른쪽 모서리 r16, 1단계 쪽 끝에 왼쪽 화살촉)
+  - 알약은 flow 아래, 배경 `surface`. 금액 큰 숫자는 48px, 계산 줄은 Body/15 한 줄
+- 시안: `docs/design/proto-pc/03-problem.png`, `proto-mobile/03-problem@2x.png` (UI 노드 `70:1845` · `70:2091`, 2026-10-30)
 - 인터랙션: §I3(문제 흐름 강조) — PC만
 
 ## 04 · 금융 문해력 중요성
 - **PC:** 세로, gap 48. head → stats(가로 3열, gap 16) → issues → quote 카드 → 출처
   - **박스 스타일 통일 (2026-10-29):** stats와 issues는 같은 이야기(아는 것 vs 챙기는 것)를 하므로 같은 박스로 맞춘다. 박스 = `surface`, r16, pad 24, 테두리 없음, 세로 gap 12. 한 행의 박스는 높이를 같게(가장 높은 박스 기준, PC stats 190 · issues 223)
-  - stat 박스: 라벨(Label/15, PC는 「ⓘ」 포함) → 값(Amount/44 + 「점」 Title/Section 20, 기준선 정렬, gap 4) → 설명(Support/14.5, text-2)
+  - stat 박스: 라벨(Label/15, PC는 「ⓘ」 포함) → 값(Amount/44 + 「점」 Title/Section 20, 기준선 정렬, gap 4) → **막대** → 설명(Support/14.5, text-2)
+    - **막대 (2026-10-30, D8):** 트랙 높이 8 · r4 · `surface-3`, 0~100 기준. 채움 = 값% 길이 · r4, 값이 OECD 평균 이상이면 `accent`, 미만이면 `risk`(73.6 accent · 53.7 · 43.4 risk)
+    - 기준선: 2×16 세로선(`text`), 위치 = OECD 평균%(66.9 · 58.0 · 70.2). 아래에 라벨 「OECD 평균 …」(Support/13, text-3) 가운데 정렬. 문구 content.json `stats[].avg`
   - **issues (2026-10-29 추가, 문구는 content.json `literacy.issues`):** 세로, gap 24. issues-head → items
-    - ⚠ `docs/design`의 S04 이미지는 이 변경 전 상태다. 구현 전에 `docs/README.md` 알림대로 MCP로 최신 이미지를 받는다
-    - 구조 덤프(`docs/figma/*.txt`)에는 반영돼 있다
     - issues-head: 세로 gap 8. 소제목(Title/Section 20, text) → 설명(Body/15, text-2, 2줄)
     - items: 가로 3열, gap 16(stats와 같은 열 위치). 각 항목은 stat 박스와 같음
-      - 라벨(Label/15, text) → 값 → 설명(Support/14.5, text-2, 2줄) → 관련 지표 한 줄(Support/13: 「관련 지표 · 」 text-3 + 지표 text-2)
+      - 라벨(Label/15, text) → 값 → **그래프** → 설명(Support/14.5, text-2, 2줄) → 관련 지표 한 줄(Support/13: 「관련 지표 · 」 text-3 + 지표 text-2)
+      - **그래프 (2026-10-30, D8, 높이 96):** 기준선 y=70 1px `border`. 막대는 0에서 시작 · 최대 46px(가장 큰 값) · 위 모서리 r4, 칸을 같은 폭으로 나눠 가운데 둔다. 마지막 막대만 `risk`, 나머지 `border`
+        - x 라벨 Support/13(마지막 text-2, 나머지 text-3), 막대 위 값 라벨 Label/13(마지막 text, 나머지 text-3)
+        - 리볼빙: 막대 7개(폭 24, 3~9월). 값 라벨은 처음 「6조 6,725억」(그래프 왼쪽 정렬) · 끝 「7조 521억」(오른쪽 정렬)만
+        - 노후: 막대 2개(폭 56) 「OECD 평균」 14.8% / 「한국」 39.7%. 보이스피싱: 「2024년」 8,546억 / 「2025년」 1조 2,578억
+        - 데이터 content.json `issues.cards[].chart`
       - 값: [숫자(Amount/44, text) + 단위(Title/Section 20, text-2)] 묶음, 숫자-단위 gap 4, 묶음 사이 gap 10, 기준선 정렬. 예) 「7 조」 「521 억 원」 / 「39.7 %」 / 「1 조」 「2,578 억 원」
-    - 인터랙션 없음(정적). 툴팁 없음
+    - 툴팁 없음. 그래프 성장 애니메이션만 있음(§I4)
   - quote: `surface`, r16, pad 32, 가로 gap 32. 「금융문해력이란?」(Title/Section 20, 폭 180) + 인용문(Body/15) + 출처 표기(Support/13, text-3)
   - 맨 아래 출처 Support/13, text-3
 - **모바일:** stats와 issues의 items 모두 세로(gap 12)로 쌓는다. 박스 pad 20(나머지는 PC와 같음). 소제목 2줄 · 설명 4줄(content.json mobile 줄바꿈). quote는 세로(pad 24, gap 12)
 - 출처는 2줄(PC). 모바일은 폭에 맞춰 자연 줄바꿈
-- 인터랙션: §I4(수치 설명 툴팁) — PC 호버, 모바일은 탭(아래 20 문서 참고)
+- 시안: `docs/design/proto-pc/04-literacy.png`, `proto-mobile/04-literacy@2x.png` (UI 노드 `70:1885` · `70:2128`, 2026-10-30). UI 노드에는 「ⓘ」가 없지만 툴팁을 위해 유지한다(00-decisions H)
+- 인터랙션: §I4(수치 설명 툴팁 · 막대 성장) — PC 호버, 모바일은 탭(아래 20 문서 참고)
 
 ## 05 · 해결 — 세이블리 (기능 소개)
 - **PC (기준 = 프로토타입):** 세로, gap 48. head → 본문(가로, gap 56, 세로 가운데)
