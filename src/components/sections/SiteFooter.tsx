@@ -10,6 +10,7 @@ const { footer, a11y } = homeContent;
 export function SiteFooter() {
   return (
     <footer
+      id="footer"
       data-section="99-footer"
       className="border-t border-sv-border bg-sv-page-bg px-5 pt-10 pb-12 lg:border-t-0 lg:py-16"
     >

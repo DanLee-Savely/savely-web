@@ -55,8 +55,9 @@ export function LiteracySection() {
             <figcaption className="sv-text-support-13 text-sv-text-3">{quote.cite}</figcaption>
           </div>
         </figure>
-        {/* PC는 \n에서 2줄, 모바일은 폭에 맞춰 자연 줄바꿈 */}
-        <p className="sv-text-support-13 text-sv-text-3 lg:whitespace-pre-line">{literacy.source}</p>
+        <p className="sv-text-support-13 text-sv-text-3">
+          <BreakText text={literacy.source} />
+        </p>
       </div>
     </Section>
   );

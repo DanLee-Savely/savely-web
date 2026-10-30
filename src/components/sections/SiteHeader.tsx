@@ -9,6 +9,7 @@ const { gnb } = homeContent;
 export function SiteHeader() {
   return (
     <header
+      id="gnb"
       data-section="00-gnb"
       className="sticky top-0 z-40 border-b border-sv-border bg-sv-gnb-bg px-5 backdrop-blur-(--sv-gnb-blur) lg:border-sv-border-2"
     >
