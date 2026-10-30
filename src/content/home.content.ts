@@ -136,6 +136,7 @@ export const homeContent = {
         unit: "점",
         desc: "OECD 평균(66.9점)보다 높아요.",
         tooltip: "금융 지식 영역 점수예요. (OECD 평균 66.9점)",
+        avg: { value: 66.9, label: "OECD 평균 66.9" },
       },
       {
         label: "미래를 대비하는 태도",
@@ -143,6 +144,7 @@ export const homeContent = {
         unit: "점",
         desc: "OECD 평균(58.0점)보다 낮아요.",
         tooltip: "미래 대비와 관련된 금융 태도 점수예요. (OECD 평균 58.0점)",
+        avg: { value: 58.0, label: "OECD 평균 58.0" },
       },
       {
         label: "평소 내 돈 상황을 점검하는 습관",
@@ -150,6 +152,8 @@ export const homeContent = {
         unit: "점",
         desc: "절반에도 못 미쳐요.\n알고 있어도 꾸준히 챙기기는 쉽지 않아요.",
         tooltip: "금융 행위 영역의 세부 항목 ‘평소 재무 상황 점검’ 점수예요.",
+        // OECD/INFE 2023 Annex D Table 2.13 (00-decisions D11)
+        avg: { value: 70.2, label: "OECD 평균 70.2" },
       },
     ],
     tooltipSource:
@@ -176,6 +180,18 @@ export const homeContent = {
           valueText: "7조 521억 원",
           desc: "이번 달 카드값을 다 내지 못하고\n다음 달로 넘긴 잔액이에요. (2026년 9월 말)",
           related: "평소 재무 상황 점검 43.4점",
+          // 억 원, 여신금융협회 집계 3~9월 말
+          chart: {
+            bars: [
+              { label: "3월", value: 66725, valueLabel: "6조 6,725억" },
+              { label: "4월", value: 67065 },
+              { label: "5월", value: 67999 },
+              { label: "6월", value: 68321 },
+              { label: "7월", value: 68759 },
+              { label: "8월", value: 69994 },
+              { label: "9월", value: 70521, valueLabel: "7조 521억" },
+            ],
+          },
         },
         {
           label: "준비 없이 맞는 노후",
@@ -183,6 +199,12 @@ export const homeContent = {
           valueText: "39.7%",
           desc: "노인 소득 빈곤율 OECD 1위,\n평균(14.8%)의 약 2.7배예요.",
           related: "장기 재무 목표 설정 42.5점",
+          chart: {
+            bars: [
+              { label: "OECD 평균", value: 14.8, valueLabel: "14.8%" },
+              { label: "한국", value: 39.7, valueLabel: "39.7%" },
+            ],
+          },
         },
         {
           label: "보이스피싱 피해",
@@ -193,6 +215,12 @@ export const homeContent = {
           valueText: "1조 2,578억 원",
           desc: "2025년 피해액으로, 처음 1조 원을 넘었어요.\n(전년보다 47.2% 증가)",
           related: "디지털 금융이해력 43점 (OECD 평균 55점)",
+          chart: {
+            bars: [
+              { label: "2024년", value: 8546, valueLabel: "8,546억" },
+              { label: "2025년", value: 12578, valueLabel: "1조 2,578억" },
+            ],
+          },
         },
       ],
     },

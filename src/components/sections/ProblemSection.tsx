@@ -1,44 +1,40 @@
-import { ArrowDownIcon, ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
+import { Fragment } from "react";
 import { Section } from "@/components/common/Section";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { ProblemFlow } from "@/components/interactive/ProblemFlow";
 import { homeContent } from "@/content/home.content";
-import { cn } from "@/lib/utils";
 
 const { problem } = homeContent;
 const { example } = problem;
+const total = example.items[example.items.length - 1];
 
-// 03 문제 — 머리말 → 흐름(I3) → 예시 계산 카드. 간격 PC 48 · 모바일 28
+// 「하루 5,000원 → 한 달 150,000원 → 1년」 — example.items를 이어 만들고, 마지막 값은 아래 큰 숫자로 뺀다
+const calc = (
+  <>
+    {example.items.map((item, i) => (
+      <Fragment key={item.label}>
+        {i > 0 && <ArrowRightIcon aria-hidden strokeWidth={1.75} className="size-[1em] shrink-0" />}
+        {item === total ? item.label : `${item.label} ${item.value}`}
+      </Fragment>
+    ))}
+  </>
+);
+
+// 03 문제(C안, D12) — 가운데 정렬. 머리말 → 흐름(I3) → 금액. 간격 PC 64 · 모바일 40
 export function ProblemSection() {
   return (
     <Section name="03-problem" id={problem.id}>
-      <div className="flex flex-col gap-7 lg:gap-12">
+      <div className="flex flex-col items-center gap-10 text-center lg:gap-16">
         <SectionHeader eyebrow={problem.eyebrow} title={problem.title} desc={problem.desc} />
         <ProblemFlow />
-        <div className="flex flex-col gap-4 rounded-sv-lg bg-sv-surface px-5 py-6 lg:px-8 lg:py-7">
-          <p className="sv-text-eyebrow-12_5 text-sv-accent">{example.label}</p>
-          <ol className="flex flex-col items-start gap-1.5 lg:flex-row lg:items-center lg:gap-5">
-            {example.items.map((item, i) => (
-              <li key={item.label} className="contents">
-                {i > 0 && (
-                  <span aria-hidden className="flex h-6 items-center text-sv-text-3">
-                    <ArrowDownIcon strokeWidth={1.75} className="size-5 lg:hidden" />
-                    <ArrowRightIcon strokeWidth={1.75} className="hidden size-5 lg:block" />
-                  </span>
-                )}
-                <div className="flex flex-col gap-1">
-                  <span className="sv-text-support-13 text-sv-text-3">{item.label}</span>
-                  <span
-                    className={cn(
-                      "emphasis" in item ? "sv-text-amount-40 text-sv-accent" : "sv-text-title-section-20 text-sv-text",
-                    )}
-                  >
-                    {item.value}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ol>
+        <div className="flex flex-col items-center gap-2.5">
+          <p className="sv-text-label-15 text-sv-text-2">{example.label}</p>
+          <p className="text-sv-text-3">
+            <span className="flex items-center gap-1.5 sv-text-body-15 lg:hidden">{calc}</span>
+            <span className="hidden items-center gap-2 sv-text-title-section-20 lg:flex">{calc}</span>
+          </p>
+          <p className="sv-text-amount-display text-sv-risk">{total.value}</p>
           <p className="sv-text-support-13 text-sv-text-3">{example.note}</p>
         </div>
       </div>

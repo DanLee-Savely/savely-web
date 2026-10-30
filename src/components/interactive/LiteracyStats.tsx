@@ -3,13 +3,13 @@
 import { InfoIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { BreakText } from "@/components/common/BreakText";
-import { StatValue, statBox } from "@/components/common/StatBox";
+import { StatBar, StatValue, statBox } from "@/components/common/StatBox";
 import { homeContent } from "@/content/home.content";
 import { cn } from "@/lib/utils";
 
 const { stats, tooltipSource } = homeContent.literacy;
 
-// I4 수치 툴팁 — PC는 마우스 hover · 키보드 focus, 모바일은 라벨(ⓘ) 탭으로 열고 바깥 탭 · Esc로 닫는다
+// I4 수치 툴팁 · 막대 — PC는 마우스 hover · 키보드 focus, 모바일은 라벨(ⓘ) 탭으로 열고 바깥 탭 · Esc로 닫는다
 export function LiteracyStats() {
   const [open, setOpen] = useState<number | null>(null);
   const ref = useRef<HTMLUListElement>(null);
@@ -58,6 +58,7 @@ export function LiteracyStats() {
               parts={[{ num: s.value, unit: s.unit }]}
               numClassName={cn("transition-colors duration-200", on && "text-sv-accent")}
             />
+            <StatBar value={Number(s.value)} avg={s.avg} />
             <p className="sv-text-support-14_5 text-sv-text-2">
               <BreakText text={s.desc} />
             </p>

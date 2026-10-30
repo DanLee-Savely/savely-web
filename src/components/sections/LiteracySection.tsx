@@ -1,7 +1,7 @@
 import { BreakText } from "@/components/common/BreakText";
 import { Section } from "@/components/common/Section";
 import { SectionHeader } from "@/components/common/SectionHeader";
-import { StatValue, statBox } from "@/components/common/StatBox";
+import { BarChart, StatValue, statBox } from "@/components/common/StatBox";
 import { LiteracyStats } from "@/components/interactive/LiteracyStats";
 import { homeContent, type LiteracyIssue } from "@/content/home.content";
 import { cn } from "@/lib/utils";
@@ -9,12 +9,13 @@ import { cn } from "@/lib/utils";
 const { literacy } = homeContent;
 const { issues, quote } = literacy;
 
-// 문제 카드 — 수치 박스와 같은 스타일, 정적(툴팁 없음). 관련 지표는 나란히만 보여준다(00-decisions A10)
+// 문제 카드 — 수치 박스와 같은 스타일 + 그래프(툴팁 없음). 관련 지표는 나란히만 보여준다(00-decisions A10)
 function IssueCard({ issue }: { issue: LiteracyIssue }) {
   return (
     <li className={cn(statBox, "lg:flex-1")}>
       <p className="sv-text-label-15 text-sv-text">{issue.label}</p>
       <StatValue parts={issue.value} srText={issue.valueText} />
+      <BarChart bars={issue.chart.bars} />
       <p className="sv-text-support-14_5 text-sv-text-2">
         <BreakText text={issue.desc} />
       </p>
