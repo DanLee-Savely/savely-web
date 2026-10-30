@@ -14,7 +14,7 @@ export default function PrivacyPage() {
     <>
       <header className="border-b border-sv-border bg-sv-bg px-5 py-3 lg:border-sv-border-2 lg:py-4">
         <div className="mx-auto max-w-(--sv-content-max)">
-          <Link href="/" className="inline-block">
+          <Link href="/home" className="inline-block">
             <Logo className="h-7 lg:h-9" />
           </Link>
         </div>

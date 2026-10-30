@@ -36,12 +36,12 @@ docs/compare/
 npx shadcn@latest init
 npx shadcn@latest add button card dialog sheet input checkbox carousel tooltip
 ```
-- `next.config`에 `basePath: '/home'` 추가
+- ~~`next.config`에 `basePath: '/home'` 추가~~ → 2026-10-30 basePath 제거, 메인은 `src/app/home/`(00-decisions F8)
 - `docs/spec/tokens.css` → `src/styles/tokens.css`로 옮기고 `globals.css`에서 불러온다
 - `docs/assets/app/*` → `public/images/app/`, `docs/assets/brand/*` → `public/images/brand/`
-  - basePath 주의: `next/image`에 문자열 경로를 쓸 때는 `/home/images/...`처럼 basePath를 붙인다(Next.js 공식 문서). 가능하면 정적 import
+  - `next/image`는 정적 import를 쓴다. 문자열 경로를 쓰면 실제 경로(`/home/...`)를 그대로 쓴다
 
-## 2. basePath 검증 (본 구현 전에 먼저)
+## 2. basePath 검증 (본 구현 전에 먼저) — 2026-10-30 basePath 제거로 더 이상 해당 없음
 - 빈 페이지 하나로 Cloudflare에 배포해서 `https://www.savelyglobal.com/home`과 정적 파일(이미지 · CSS · JS)이 정상인지 확인한다.
 - 이유: OpenNext 공식 문서에 basePath 지원이 명시돼 있지 않다.
 - 실패하면 대안을 사용자와 정한다.
@@ -51,7 +51,7 @@ npx shadcn@latest add button card dialog sheet input checkbox carousel tooltip
 ## 3. Cloudflare (실서비스)
 1. **D1 생성:** `npx wrangler d1 create savely-waitlist` → 출력된 `database_id`를 `wrangler.jsonc`의 `d1_databases`에 `binding: "DB"`로 기록한다(`database_id`는 비밀값이 아님)
 2. **마이그레이션 적용:** `npx wrangler d1 migrations apply savely-waitlist --remote`
-3. **Route 설정:** `wrangler.jsonc`에 `routes: [{ "pattern": "www.savelyglobal.com/home*", "zone_name": "savelyglobal.com" }]`
+3. **Route 설정:** `wrangler.jsonc`의 `routes`에 `www.savelyglobal.com/home*`와 `www.savelyglobal.com/_next/*`(정적 파일 · 이미지 최적화). 새 경로(예 `/app*`)는 화면이 생길 때 추가한다. 도메인 전체(`/*`)는 다른 용도의 경로가 있을 수 있어 잡지 않는다
    - www 레코드는 Cloudflare 프록시(주황 구름)가 켜져 있어야 한다(Cloudflare 공식 문서)
 4. **GitHub 자동 배포:** Cloudflare 대시보드 → Workers & Pages → 해당 Worker → Settings → Builds에서 GitHub 저장소 연결 (**사용자가 직접**)
    - 빌드 명령 예: `npx opennextjs-cloudflare build` / 배포 명령 예: `npx opennextjs-cloudflare deploy`
@@ -66,7 +66,7 @@ npx shadcn@latest add button card dialog sheet input checkbox carousel tooltip
 ## 4. Vercel (제출용)
 1. Vercel 대시보드에서 GitHub 저장소 `DanLee-Savely/savely-web`을 가져온다 (**사용자가 직접**, GitHub 권한 승인 필요)
 2. 환경 변수 `NEXT_PUBLIC_WAITLIST_API_URL=https://www.savelyglobal.com`
-3. basePath 때문에 Vercel 주소는 `https://<프로젝트>.vercel.app/home`이 된다. 루트(`/`) 접속 시 `/home`으로 보내는 리다이렉트를 `next.config`의 `redirects`에 추가한다(`basePath: false` 옵션 사용)
+3. Vercel 주소도 메인은 `https://<프로젝트>.vercel.app/home`이다. 루트(`/`)는 `next.config`의 `redirects`로 `/home`에 보낸다
 4. 확인: 시크릿 창과 모바일에서 페이지 · 이미지 · 인터랙션 · 출시 알림 신청까지 직접 확인한다(미션 5 요건)
 
 ## 5. 비밀값 원칙

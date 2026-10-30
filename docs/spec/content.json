@@ -188,7 +188,7 @@
     "_companyNote": "00-decisions.md C5 (2026-10-29 확정)",
     "contact": "문의 contact@savelyglobal.com",
     "site": "www.savelyglobal.com",
-    "privacyLink": { "label": "개인정보처리방침", "href": "/privacy" },
+    "privacyLink": { "label": "개인정보처리방침", "href": "/home/privacy" },
     "copyright": "© SAVELY. All rights reserved."
   },
   "floatingCta": "출시 알림 받기",

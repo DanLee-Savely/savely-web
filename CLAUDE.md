@@ -45,10 +45,9 @@
 ## 4. 기술 스택과 배포 (상세: 40-deploy.md)
 - Next.js App Router + TypeScript(strict) + Tailwind CSS + shadcn/ui, lucide-react
 - 글꼴: Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자). Figma는 Noto Sans KR로 그려서 1~2px 차이는 허용한다.
-- `basePath: '/home'`. `next/link`는 자동 적용된다. `next/image` 문자열 경로에는 `/home`을 붙인다.
-- **실서비스:** Cloudflare Workers(OpenNext) — `www.savelyglobal.com/home*`. 출시 알림 저장은 D1(바인딩 `DB`)
+- **basePath 없음 (2026-10-30, 00-decisions F8).** 메인은 `src/app/home/` → `/home`, 이후 앱은 같은 프로젝트의 `/app` 등에 붙인다. 링크 · 이미지 문자열 경로는 `/home/...`처럼 실제 경로를 그대로 쓴다.
+- **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/_next/*`(새 경로가 생기면 그 경로만 추가, 예 `/app*`). 출시 알림 저장은 D1(바인딩 `DB`)
 - **제출용:** Vercel(같은 저장소 자동 배포). 폼은 실서비스 API로 보낸다(CORS 허용 목록).
-- **첫 작업은 basePath 동작 검증**이다(OpenNext 문서에 basePath 지원이 명시돼 있지 않음).
 - **색 모드:** 라이트 고정. 다크 토큰은 정의만 두고 전환은 켜지 않는다.
 
 ## 5. 코드 구조 — 객체 지향
@@ -60,7 +59,7 @@
   - 훅은 클래스를 화면에 연결하는 얇은 어댑터다.
 ```
 src/
-  app/            layout · page · privacy/page · api/waitlist/route.ts (얇게)
+  app/            layout(루트) · home/{page · privacy/page · api/waitlist/route.ts · icon.png} (얇게). 앱은 이후 app/app/ 등
   domain/         EmailAddress · WaitlistEntry · WaitlistRepository(인터페이스) · 오류 클래스
   application/    RegisterWaitlistService
   infrastructure/ D1WaitlistRepository · InMemoryWaitlistRepository · WaitlistApiClient · container.ts

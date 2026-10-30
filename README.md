@@ -24,12 +24,13 @@
 | 프레임워크 | Next.js 16 (App Router) · React 19 · TypeScript(strict) |
 | 스타일 | Tailwind CSS 4 · shadcn/ui(Radix) · lucide-react · 디자인 변수(`src/styles/tokens.css`) |
 | 글꼴 | Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자) |
-| 배포 | Cloudflare Workers(OpenNext, `basePath: /home`) · Vercel(제출용) |
+| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*`) · Vercel(제출용) |
 | 저장 | Cloudflare D1(출시 알림 이메일) · Rate Limiting 바인딩 |
 | 검사 | Vitest(도메인 · 상태 클래스) · Playwright(시안 비교 스크린샷) · ESLint |
 
 - 구조: 검증 · 저장 · 상태 전이는 클래스(`domain` · `application` · `infrastructure` · `interaction`), 화면은 함수 컴포넌트, 훅은 둘을 잇는 얇은 어댑터
 - 문구는 모두 `src/content/home.content.ts`(원본 `docs/spec/content.json`)에서 가져온다
+- 경로: 메인은 `src/app/home/` → `/home`. basePath 없이 두어 이후 로그인 후 PC 앱(`/app` 등)을 같은 프로젝트에 이어 붙일 수 있다
 
 ## 구현한 인터랙션
 상세: `docs/spec/20-interactions.md`. 자동 재생은 화면에 30% 이상 보일 때만 돌고, `prefers-reduced-motion`이면 멈춰서 최종 상태를 보여준다.

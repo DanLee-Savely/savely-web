@@ -19,7 +19,7 @@ paths:
   - 반복 UI(버튼 · 카드 · 칩 · 섹션 머리말)는 `src/components/common/`에 한 번만 만들고 재사용한다.
   - shadcn 생성 파일(`src/components/ui/`)은 직접 고치기보다 감싸서(`AppButton` 등) 세이블리 스타일을 입힌다.
 - **버튼 · 링크 구분:** 이동은 `<a>`/`Link`, 동작(창 열기 · 전환)은 `<button>`
-- **이미지:** `next/image`. 정적 import를 우선한다. 문자열 경로를 쓰면 basePath(`/home`)를 붙인다. 모든 이미지에 `alt`
+- **이미지:** `next/image`. 정적 import를 우선한다. 문자열 경로는 실제 경로(`/home/...`)를 그대로 쓴다(basePath 없음). 모든 이미지에 `alt`
 - **섹션 루트:** `data-section="<번호-이름>"`과 `id`를 단다(비교 스크립트 · 앵커 이동에 사용).
 - **움직임:** `prefers-reduced-motion`을 존중한다. 전환 시간과 곡선은 20-interactions.md의 값을 쓴다.
 - **구현 후:** `node scripts/compare-design.mjs <섹션>`으로 찍어 시안과 비교하고, 50-acceptance.md 항목을 체크한다.

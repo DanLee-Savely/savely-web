@@ -408,7 +408,7 @@ export const homeContent = {
     site: "www.savelyglobal.com",
     privacyLink: {
       label: "개인정보처리방침",
-      href: "/privacy",
+      href: "/home/privacy",
     },
     copyright: "© SAVELY. All rights reserved.",
   },
