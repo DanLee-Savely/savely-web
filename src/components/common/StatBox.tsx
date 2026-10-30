@@ -21,9 +21,9 @@ export function StatValue({ parts, srText, numClassName }: { parts: readonly Par
   );
 }
 
-// I4 막대 성장: 0 → 값으로 0.8초 ease-out, 라벨은 함께 나타난다 (GrowOnView 안에서)
-const grow = "transition-transform duration-800 ease-out group-data-grown:scale-100 motion-reduce:transition-none";
-const appear = "opacity-0 transition-opacity duration-800 group-data-grown:opacity-100 motion-reduce:transition-none";
+// I4 막대 성장: 화면 진입 0.4초 뒤 0 → 값으로 0.8초 ease-out, 라벨은 함께 나타난다 (GrowOnView 안에서)
+const grow = "transition-transform delay-400 duration-800 ease-out group-data-grown:scale-100 motion-reduce:transition-none";
+const appear = "opacity-0 transition-opacity delay-400 duration-800 group-data-grown:opacity-100 motion-reduce:transition-none";
 
 // 수치 막대(D8) — 0~100 트랙, 값이 OECD 평균 이상이면 accent · 미만이면 risk. 평균 위치에 기준선 + 라벨
 export function StatBar({ value, avg }: { value: number; avg: { readonly value: number; readonly label: string } }) {

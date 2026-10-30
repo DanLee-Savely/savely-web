@@ -28,7 +28,7 @@ export function ProblemSection() {
       <div className="flex flex-col items-center gap-10 text-center lg:gap-16">
         <SectionHeader eyebrow={problem.eyebrow} title={problem.title} desc={problem.desc} />
         <ProblemFlow />
-        <div className="flex flex-col items-center gap-2.5">
+        <div className="flex flex-col items-center gap-2 lg:gap-2.5">
           <p className="sv-text-label-15 text-sv-text-2">{example.label}</p>
           <p className="text-sv-text-3">
             <span className="flex items-center gap-1.5 sv-text-body-15 lg:hidden">{calc}</span>
