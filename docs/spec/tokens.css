@@ -34,6 +34,10 @@
   /* 흰 배경 대비 3.55:1 — 막대 · 그래프 · 24px 이상 굵은 숫자에만. 일반 글자에는 쓰지 않는다 (00-decisions D9) */
   --sv-risk: #ff3b30;
   --sv-info: #1e40af;
+  /* A안 정산 도장 · 기록 카드 (2026-10-31, 00-decisions D13) */
+  --sv-day-muted: #9aa39e;
+  --sv-day-empty: #b3b9b5;
+  --sv-glow-gold: rgb(234 217 168);
 
   /* ---------- 간격 · 레이아웃 ---------- */
   --sv-space-4: 4px;
@@ -61,6 +65,9 @@
   --sv-backdrop: rgb(8 20 15 / 45%);
   --sv-gnb-bg: rgb(250 250 250 / 86%);
   --sv-gnb-blur: 20px;
+  --sv-surface-float: rgb(255 255 255 / 94%);
+  --sv-shadow-float: 0 12px 30px rgb(15 26 20 / 10%);
+  --sv-shadow-float-lg: 0 16px 40px rgb(15 26 20 / 12%);
 
   /* ---------- 글꼴 ---------- */
   --sv-font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -116,6 +123,9 @@
   --sv-risk: #ff453a;
   --sv-info: #60a5fa;
   --sv-gnb-bg: rgb(10 10 10 / 86%);
+  --sv-day-muted: #6b6b6b;
+  --sv-day-empty: #4a4a4a;
+  --sv-surface-float: rgb(20 20 20 / 94%);
 }
 
 /* ---------- 텍스트 스타일 (Figma 이름 그대로) ---------- */
@@ -149,3 +159,11 @@
 /* Amount/Display — S03 큰 금액 전용 (00-decisions D10). PC 96 · 모바일 48 */
 .sv-text-amount-display { font-family: var(--sv-font-mono); font-size: 48px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
 @media (min-width: 64rem) { .sv-text-amount-display { font-size: 96px; } }
+
+/* A안 정산 도장 · 기록 카드 전용 (2026-10-31, 00-decisions D13) — 아직 Figma 스타일 없음 */
+/* Mono/Day 11 — 달력 날짜 숫자. 도장 · 오늘은 굵기 700 */
+.sv-text-mono-day-11 { font-family: var(--sv-font-mono); font-size: 11px; font-weight: 500; line-height: 1; letter-spacing: 0.0em; }
+/* Caption/11 — 달력 요일 */
+.sv-text-caption-11 { font-family: var(--sv-font-sans); font-size: 11px; font-weight: 400; line-height: 16px; letter-spacing: 0.0em; }
+/* Mono/Amount 13 — 기록 카드 금액 · 연속 정산 n · +P */
+.sv-text-mono-amount-13 { font-family: var(--sv-font-mono); font-size: 13px; font-weight: 700; line-height: 1.4; letter-spacing: -0.02em; }

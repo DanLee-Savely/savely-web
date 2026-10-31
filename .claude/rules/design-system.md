@@ -10,7 +10,7 @@ paths:
 - **기준 시안:** Figma 라이트 프로토타입. 수치는 `docs/spec/10-sections.md`, 문구는 `docs/spec/content.json`, 인터랙션은 `docs/spec/20-interactions.md`
 - **색 · 간격 · 모서리:** `src/styles/tokens.css`의 `--sv-*` 변수만 쓴다. 16진수 색이나 임의 px 색을 컴포넌트에 직접 쓰지 않는다.
   - Tailwind에서는 `bg-[var(--sv-surface)]`처럼 쓰거나, 테마 확장으로 이름을 붙여 쓴다.
-- **글자:** Figma 텍스트 스타일 13종(`.sv-text-*` 클래스, tokens.css)만 쓴다. 임의 크기 · 굵기를 만들지 않는다.
+- **글자:** Figma 텍스트 스타일 13종 + Amount/Display(00-decisions D10) + A안 3종(Mono/Day 11 · Caption/11 · Mono/Amount 13, D13)의 `.sv-text-*` 클래스(tokens.css)만 쓴다. 임의 크기 · 굵기를 만들지 않는다.
   - Pretendard는 화면 글자, JetBrains Mono는 금액 · 숫자(Amount · Mono 스타일)에 쓴다.
 - **레이아웃:** 콘텐츠 최대 폭 1120, 좌우 여백 PC 160 · 모바일 20. 섹션 세로 패딩 PC 96 · 모바일 56
 - **반응형 기준:** 390 / 1440 시안. 그 사이 폭(768 · 1024 · 1280)에서도 잘림 · 겹침 · 가로 스크롤이 없어야 한다. 기준점은 `md`(768) · `lg`(1024)

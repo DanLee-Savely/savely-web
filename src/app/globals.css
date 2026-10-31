@@ -55,12 +55,18 @@
   --color-sv-risk: var(--sv-risk);
   --color-sv-backdrop: var(--sv-backdrop);
   --color-sv-gnb-bg: var(--sv-gnb-bg);
+  --color-sv-day-muted: var(--sv-day-muted);
+  --color-sv-day-empty: var(--sv-day-empty);
+  --color-sv-glow-gold: var(--sv-glow-gold);
+  --color-sv-surface-float: var(--sv-surface-float);
   --radius-sv-sm: var(--sv-radius-sm);
   --radius-sv-md: var(--sv-radius-md);
   --radius-sv-lg: var(--sv-radius-lg);
   --radius-sv-pill: var(--sv-radius-pill);
   --shadow-sv-phone: var(--sv-shadow-phone);
   --shadow-sv-floating-cta: var(--sv-shadow-floating-cta);
+  --shadow-sv-float: var(--sv-shadow-float);
+  --shadow-sv-float-lg: var(--sv-shadow-float-lg);
   --font-sans: var(--sv-font-sans);
   --font-mono: var(--sv-font-mono);
   --font-heading: var(--sv-font-sans);

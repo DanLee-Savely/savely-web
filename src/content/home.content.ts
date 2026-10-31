@@ -266,6 +266,7 @@ export const homeContent = {
         image: "savely_light_05_report.png",
       },
     ],
+    report: { before: "10월 가장 많이 쓴 곳은 ", em: "식비", after: "예요" },
   },
   reward: {
     id: "reward",
@@ -346,6 +347,7 @@ export const homeContent = {
         },
       ],
     },
+    calendar: { month: "10월", count: "정산 {n}/31일" },
     repeat: {
       pc: "이 흐름이 반복될수록 습관이 되고, 습관이 되면 한 달이 달라져요.",
       mobile:
@@ -490,6 +492,17 @@ export const homeContent = {
       },
     ],
     effective: "시행일: 2026년 10월 29일 (초안)",
+  },
+  stamps: {
+    records: [
+      { icon: "coffee", label: "카페", amount: "4,800원" },
+      { icon: "meal", label: "점심", amount: "9,000원" },
+      { icon: "bus", label: "교통", amount: "1,450원" },
+      { icon: "cart", label: "장보기", amount: "32,000원" },
+    ],
+    streak: "{n}일 연속 정산 중",
+    weekdays: ["월", "화", "수", "목", "금", "토", "일"],
+    month: { days: 31, firstWeekday: 3 },
   },
   a11y: {
     logo: "세이블리",

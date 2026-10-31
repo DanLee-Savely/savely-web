@@ -102,7 +102,9 @@
       { "no": "01", "title": "쓴 돈을 직접 적어요", "desc": "자동으로 불러오지 않고 직접 적기 때문에, 쓰는 순간을 한 번 더 생각하게 돼요.", "image": "savely_light_02_record_input.png" },
       { "no": "02", "title": "하루를 돌아보고 마감해요", "desc": "정해 둔 정산 시간이 되면 오늘 기록을 확인하고 마감해요. 얼마를 썼고 어디에 많이 썼는지 바로 보여요.", "image": "savely_light_03_calendar.png" },
       { "no": "03", "title": "쌓인 기록에서 내 습관을 발견해요", "desc": "이번 달 어디에 많이 썼는지, 지난달과 무엇이 달라졌는지, 어떤 기분일 때 지갑이 열렸는지 리포트로 알려드려요.", "image": "savely_light_05_report.png" }
-    ]
+    ],
+    "report": { "before": "10월 가장 많이 쓴 곳은 ", "em": "식비", "after": "예요" },
+    "_reportNote": "2026-10-31 A안(I13) PC 03단계 카드 — 앱 홈 화면 문구. em만 강조한다"
   },
   "reward": {
     "id": "reward",
@@ -140,6 +142,8 @@
         { "title": "바꾸고", "desc": "작은 것 하나부터\n바꿔 봐요" }
       ]
     },
+    "calendar": { "month": "10월", "count": "정산 {n}/31일" },
+    "_calendarNote": "2026-10-31 A안(I15) 달력 머리 — 앱 달력 화면 표현. {n}은 도장 수(JetBrains Mono 굵게)",
     "repeat": { "pc": "이 흐름이 반복될수록 습관이 되고, 습관이 되면 한 달이 달라져요.", "mobile": "이 흐름이 반복될수록 습관이 되고,\n습관이 되면 한 달이 달라져요." }
   },
   "waitlistSection": {
@@ -277,6 +281,20 @@
       }
     ],
     "effective": "시행일: 2026년 10월 29일 (초안)"
+  },
+  "stamps": {
+    "_note": "2026-10-31 A안(I11~I15) 기록 카드 · 정산 도장 공용 문구 (docs/design/interactions/a-plan/README.md 2장, 사용자 승인). 날짜는 앱 캡처와 같은 2026년 10월(1일 = 목요일). 포인트 적립량 숫자는 넣지 않는다",
+    "records": [
+      { "icon": "coffee", "label": "카페", "amount": "4,800원" },
+      { "icon": "meal", "label": "점심", "amount": "9,000원" },
+      { "icon": "bus", "label": "교통", "amount": "1,450원" },
+      { "icon": "cart", "label": "장보기", "amount": "32,000원" }
+    ],
+    "_recordsNote": "히어로는 4개를 순환, 03은 앞 3개, 05는 첫 번째(금액이 한 자리씩 입력된다)",
+    "streak": "{n}일 연속 정산 중",
+    "weekdays": ["월", "화", "수", "목", "금", "토", "일"],
+    "month": { "days": 31, "firstWeekday": 3 },
+    "_monthNote": "firstWeekday는 1일의 요일 번호(월 = 0). 05 한 주 카드(20~26일)의 「화 수 … 월」 순서는 이 값으로 계산한다"
   },
   "a11y": {
     "_note": "화면에 보이지 않는 스크린리더용 문구 (20-interactions I1 · I9). 시안에 없는 값이라 초안이다",
