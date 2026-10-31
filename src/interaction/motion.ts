@@ -9,12 +9,14 @@ export const bump = (k: number, amount: number) => (k > 0 && k < 1 ? 1 + amount 
 /** 날짜 원. since = 도장이 찍힌 뒤 지난 초(찍히는 중인 날만) */
 export type DayMark = { n: number; look: "on" | "today" | "off" | "empty"; since?: number };
 
-/** 도장 찍힘: 0.42초 easeOutBack 확대(0.55 → 1) + 0.7초 퍼지는 테두리(투명도 0.6 → 0, 1 → 2.1배) */
+/** 튀어나옴: k(0~1) 동안 easeOutBack으로 0.55 → 1(살짝 넘침). 범위 밖이면 1 */
+export const popScale = (k: number) => (k >= 0 && k < 1 ? 0.55 + 0.45 * easeOutBack(k) : 1);
+
+/** 도장 찍힘: 0.42초 튀어나옴 + 0.7초 퍼지는 테두리(투명도 0.6 → 0, 1 → 2.1배) */
 export function stampFx(since = Infinity) {
-  const k = since / 0.42;
   const r = since / 0.7;
   return {
-    scale: k >= 0 && k < 1 ? 0.55 + 0.45 * easeOutBack(k) : 1,
+    scale: popScale(since / 0.42),
     ring: r >= 0 && r < 1 ? 0.6 * (1 - r) : 0,
     ringScale: 1 + r * 1.1,
   };

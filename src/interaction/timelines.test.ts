@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { HabitCalendarTimeline } from "./HabitCalendarTimeline";
 import { HeroStampTimeline } from "./HeroStampTimeline";
 import { ProblemTimeline } from "./ProblemTimeline";
+import { SolutionCardTimeline } from "./SolutionCardTimeline";
 
 const stamped = (days: { look: string }[]) => days.filter((d) => d.look === "on").length;
 
@@ -80,5 +81,30 @@ describe("ProblemTimeline (I3 · I12)", () => {
     expect(tl.amount(1.8, 1825000).value % 1000).toBe(0);
     expect(tl.amount(2.6, 1825000).value).toBe(1825000);
     expect(tl.stillAmount(1825000)).toEqual({ lit: [false, false, false], value: 1825000, opacity: 1, scale: 1 });
+  });
+});
+
+describe("SolutionCardTimeline (I13)", () => {
+  const tl = new SolutionCardTimeline("4,800원");
+
+  it("금액이 0 → 4 → 48 → 480 → 4,800으로 입력되고 1.5초에 체크가 튀어나온다", () => {
+    expect([0.5, 0.6, 0.8, 1.0, 1.1, 1.4].map((t) => tl.at(t, true).typed)).toEqual(["0", "0", "4", "48", "480", "4,800"]);
+    expect(tl.at(1.0, true).caret).toBe(true);
+    expect(tl.at(1.49, true).check).toBe(0);
+    expect(tl.at(2, true).check).toBe(1);
+  });
+
+  it("1.0초에 26일 도장 · 25 → 26일, 0.9초에 「식비」 강조", () => {
+    expect(tl.at(0.99, true)).toMatchObject({ streak: 25, mark: true });
+    expect(tl.at(0.99, true).week[6].look).toBe("today");
+    expect(tl.at(1.0, true).week[6].look).toBe("on");
+    expect(tl.at(1.0, true).streak).toBe(26);
+  });
+
+  it("자동 전환 중에는 다음 단계 0.3초 전부터 사라지고, 고른 단계에서는 남는다", () => {
+    expect(tl.at(3.0, true).opacity).toBe(1);
+    expect(tl.at(3.45, true).opacity).toBe(0);
+    expect(tl.at(3.45, false).opacity).toBe(1);
+    expect(tl.still()).toMatchObject({ typed: "4,800", check: 1, streak: 26, opacity: 1 });
   });
 });

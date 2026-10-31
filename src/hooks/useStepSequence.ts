@@ -12,14 +12,19 @@ export function useStepSequence<T extends Element>(
   { loop = false, still }: { loop?: boolean; still?: number } = {},
 ) {
   const ref = useRef<T>(null);
-  const [sequencer, setSequencer] = useState(() => new StepSequencer(delays, loop));
+  const [sequencer, setSequencer] = useState(
+    () => new StepSequencer(delays, loop),
+  );
   const [inView, setInView] = useState(false);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.3 });
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.3 },
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
@@ -31,6 +36,15 @@ export function useStepSequence<T extends Element>(
     return () => clearTimeout(timer);
   }, [sequencer, inView, reducedMotion]);
 
-  const step = reducedMotion && !sequencer.stopped ? (still ?? sequencer.finish().step) : sequencer.step;
-  return { ref, step, select: (i: number) => setSequencer((s) => s.select(i)) };
+  const step =
+    reducedMotion && !sequencer.stopped
+      ? (still ?? sequencer.finish().step)
+      : sequencer.step;
+  return {
+    ref,
+    step,
+    stopped: sequencer.stopped,
+    active: inView && !reducedMotion,
+    select: (i: number) => setSequencer((s) => s.select(i)),
+  };
 }
