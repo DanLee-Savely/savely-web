@@ -10,7 +10,7 @@ const { hero } = homeContent;
 // 가로 배치는 1120을 다 쓰는 xl(1280)부터 — 1024~1279에서는 56px 제목이 꺾이지 않게 세로 배치
 export function HeroSection() {
   return (
-    <Section name="01-hero" id="hero" className="pt-10 pb-14 lg:pt-24 lg:pb-28">
+    <Section name="01-hero" id="hero" className="relative isolate overflow-hidden pt-10 pb-14 lg:pt-24 lg:pb-28">
       <div className="flex flex-col items-center gap-10 xl:flex-row xl:gap-[60px]">
         <div className="flex w-full flex-col items-start gap-6 xl:flex-1">
           <p className="sv-text-eyebrow-12_5 text-sv-accent">{hero.eyebrow}</p>

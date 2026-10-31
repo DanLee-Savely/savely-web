@@ -6,6 +6,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { appScreens } from "@/assets";
 import { homeContent } from "@/content/home.content";
 import { CarouselCursor } from "@/interaction/CarouselCursor";
+import { HeroStage } from "./HeroStage";
 import { cn } from "@/lib/utils";
 
 const { screens } = homeContent.hero.device;
@@ -47,50 +48,69 @@ export function HeroDeviceCarousel() {
       className="flex shrink-0 flex-col items-center gap-3 lg:gap-4"
     >
       <div className="flex items-center gap-3 lg:gap-5">
-        <button type="button" aria-label={a11y.prevScreen} onClick={() => move((c) => c.prev())} className={arrowClass}>
+        <button
+          type="button"
+          aria-label={a11y.prevScreen}
+          onClick={() => move((c) => c.prev())}
+          className={arrowClass}
+        >
           <ChevronLeftIcon className="size-6" />
         </button>
-        <div className="h-[465px] w-[217px] rounded-[33.85px] bg-sv-surface-3 p-[7.05px] shadow-sv-phone lg:h-[660px] lg:w-[308px] lg:rounded-[48px] lg:p-2.5">
-          <div
-            className="size-full cursor-pointer touch-pan-y overflow-hidden rounded-[26.8px] select-none lg:rounded-[38px]"
-            onPointerDown={(e) => {
-              pointerStart.current = { x: e.clientX, y: e.clientY };
-            }}
-            onPointerUp={(e) => {
-              const start = pointerStart.current;
-              pointerStart.current = null;
-              if (start) move((c) => c.release(e.clientX - start.x, e.clientY - start.y));
-            }}
-          >
+        <HeroStage>
+          <div className="h-[465px] w-[217px] rounded-[33.85px] bg-sv-surface-3 p-[7.05px] shadow-sv-phone lg:h-[660px] lg:w-[308px] lg:rounded-[48px] lg:p-2.5">
             <div
-              key={fadeKey}
-              className={cn("size-full", cursor.transition === "fade" && "animate-in duration-300 fade-in motion-reduce:animate-none")}
+              className="size-full cursor-pointer touch-pan-y overflow-hidden rounded-[26.8px] select-none lg:rounded-[38px]"
+              onPointerDown={(e) => {
+                pointerStart.current = { x: e.clientX, y: e.clientY };
+              }}
+              onPointerUp={(e) => {
+                const start = pointerStart.current;
+                pointerStart.current = null;
+                if (start)
+                  move((c) =>
+                    c.release(e.clientX - start.x, e.clientY - start.y),
+                  );
+              }}
             >
               <div
+                key={fadeKey}
                 className={cn(
-                  "flex h-full",
-                  cursor.transition === "slide" &&
-                    "transition-transform duration-450 ease-[cubic-bezier(.4,0,.2,1)] motion-reduce:transition-none",
+                  "size-full",
+                  cursor.transition === "fade" &&
+                    "animate-in duration-300 fade-in motion-reduce:animate-none",
                 )}
-                style={{ transform: `translateX(-${cursor.index * 100}%)` }}
               >
-                {screens.map((screen, i) => (
-                  <Image
-                    key={screen.image}
-                    src={appScreens[screen.image]}
-                    alt={screen.alt}
-                    aria-hidden={i !== cursor.index}
-                    priority={i === 0}
-                    sizes="(min-width: 1024px) 288px, 203px"
-                    draggable={false}
-                    className="size-full shrink-0 object-cover"
-                  />
-                ))}
+                <div
+                  className={cn(
+                    "flex h-full",
+                    cursor.transition === "slide" &&
+                      "transition-transform duration-450 ease-[cubic-bezier(.4,0,.2,1)] motion-reduce:transition-none",
+                  )}
+                  style={{ transform: `translateX(-${cursor.index * 100}%)` }}
+                >
+                  {screens.map((screen, i) => (
+                    <Image
+                      key={screen.image}
+                      src={appScreens[screen.image]}
+                      alt={screen.alt}
+                      aria-hidden={i !== cursor.index}
+                      priority={i === 0}
+                      sizes="(min-width: 1024px) 288px, 203px"
+                      draggable={false}
+                      className="size-full shrink-0 object-cover"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <button type="button" aria-label={a11y.nextScreen} onClick={() => move((c) => c.next())} className={arrowClass}>
+        </HeroStage>
+        <button
+          type="button"
+          aria-label={a11y.nextScreen}
+          onClick={() => move((c) => c.next())}
+          className={arrowClass}
+        >
           <ChevronRightIcon className="size-6" />
         </button>
       </div>
@@ -103,12 +123,16 @@ export function HeroDeviceCarousel() {
             <button
               key={screen.image}
               type="button"
-              aria-label={a11y.screenDot.replace("{n}", String(i + 1)).replace("{label}", screen.label)}
+              aria-label={a11y.screenDot
+                .replace("{n}", String(i + 1))
+                .replace("{label}", screen.label)}
               aria-current={i === cursor.index}
               onClick={() => move((c) => c.goTo(i))}
               className={cn(
                 "relative h-1.5 rounded-[3px] transition-all after:absolute after:-inset-2 motion-reduce:transition-none",
-                i === cursor.index ? "w-4 bg-sv-accent lg:w-5" : "w-1.5 bg-sv-border",
+                i === cursor.index
+                  ? "w-4 bg-sv-accent lg:w-5"
+                  : "w-1.5 bg-sv-border",
               )}
             />
           ))}

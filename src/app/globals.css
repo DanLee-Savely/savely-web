@@ -90,3 +90,13 @@
     word-break: keep-all;
   }
 }
+
+/* A안 떠 있음 · 빛 이동 (20-interactions I11 · I13). 진폭은 --sv-float(기본 4px) */
+@keyframes sv-float {
+  from { translate: 0 calc(var(--sv-float, 4px) * -1); }
+  to { translate: 0 var(--sv-float, 4px); }
+}
+@keyframes sv-drift {
+  from { translate: -40px -30px; }
+  to { translate: 40px 30px; }
+}
