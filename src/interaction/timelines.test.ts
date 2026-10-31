@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { HabitCalendarTimeline } from "./HabitCalendarTimeline";
 import { HeroStampTimeline } from "./HeroStampTimeline";
 
 const stamped = (days: { look: string }[]) => days.filter((d) => d.look === "on").length;
@@ -35,5 +36,27 @@ describe("HeroStampTimeline (I11)", () => {
     const f = tl.still();
     expect(stamped(f.days)).toBe(14);
     expect(f.cards).toEqual([{ slot: 0, record: 0, opacity: 1, dy: 0 }]);
+  });
+});
+
+describe("HabitCalendarTimeline (I15)", () => {
+  const tl = new HabitCalendarTimeline(31);
+
+  it("함께한 한 달: 0.3초부터 35ms마다 1일 → 31일 도장", () => {
+    expect(tl.at(0.29, 1, 0).count).toBe(0);
+    expect(tl.at(0.6, 1, 0).count).toBe(9);
+    expect(tl.at(tl.duration(1), 1, 0).count).toBe(31);
+  });
+
+  it("빠진 한 달로 돌아가면 31일부터 12ms마다 지워지고, 도장이 없으면 더 연한 숫자", () => {
+    expect(tl.at(0.1, 0, 1).days[30].look).toBe("off");
+    expect(tl.at(0.1, 0, 1).days[0].look).toBe("on");
+    expect(tl.at(tl.duration(0), 0, 1).days.every((d) => d.look === "empty")).toBe(true);
+    expect(tl.at(1, 0, 0).count).toBe(0);
+  });
+
+  it("동작 줄이기는 누르면 바로 바뀐다", () => {
+    expect(tl.still(1).count).toBe(31);
+    expect(tl.still(0).count).toBe(0);
   });
 });
