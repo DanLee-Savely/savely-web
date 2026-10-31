@@ -17,11 +17,11 @@ import { cn } from "@/lib/utils";
 const { steps, repeat } = homeContent.problem;
 const forgotten = homeContent.stamps.records.slice(0, 3);
 const timeline = new ProblemTimeline();
-// 0~3 = n번째 열 강조(0.9초 간격, 선 · 알약은 흐리게) → 4 = 반복(선 · 알약 강조, 2.5초) → 5 = 최종(전부 보임)에서 멈춘다
+// 0~3 = n번째 열 강조(1.35초 간격, 선 · 알약은 흐리게) → 4 = 반복(선 · 알약 강조, 3.75초) → 5 = 최종(전부 보임)에서 멈춘다. 전환 0.5초
 const REPEAT = 4;
 const FINAL = 5;
-const fade = "transition-opacity duration-350 motion-reduce:transition-none";
-const tint = "transition-all duration-350 motion-reduce:transition-none";
+const fade = "transition-opacity duration-500 motion-reduce:transition-none";
+const tint = "transition-all duration-500 motion-reduce:transition-none";
 
 // I3 문제 흐름(C안, D12) — PC 4열 + 돌아오는 선 + 알약, 모바일은 세로 + 오른쪽 선(정적)
 // I12 「잊고」 아래에서 사라지는 기록 카드(PC만, 흐름과 같은 시계)

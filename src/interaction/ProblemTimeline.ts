@@ -2,6 +2,8 @@ import { bump, clamp, easeOutCubic } from "./motion";
 
 // I3 흐름 단계: 0.9 · 0.9 · 0.9 · 0.9 · 2.5초 → 0~3 열 강조, 4 반복, 5 최종
 const STEPS = [0.9, 1.8, 2.7, 3.6, 6.1];
+// 흐름 · 「잊고」 카드는 위 값의 1.5배로 천천히 (2026-10-31 사용자 요청, 00-decisions D15). 금액 카운트는 그대로
+const PACE = 1.5;
 // I12 금액 줄 강조 구간(하루 · 한 달 · 1년)
 const LIT = [
   [0.2, 0.7],
@@ -22,15 +24,16 @@ export type AmountFrame = {
 // I3 · I12 문제 — 흐름 시계(t)와 금액 시계(t, 금액 영역이 보이는 순간부터)를 각각 받는다
 export class ProblemTimeline {
   /** 흐름 시계가 멈춰도 되는 시각 */
-  readonly flowEnd = STEPS[STEPS.length - 1];
+  readonly flowEnd = STEPS[STEPS.length - 1] * PACE;
   readonly countEnd = COUNT_TO + 0.35;
 
   flowStep(t: number): number {
-    return STEPS.filter((s) => t >= s).length;
+    return STEPS.filter((s) => t >= s * PACE).length;
   }
 
-  /** 「잊고」 아래 기록 카드 k: 0.95 + 0.25k초에 0.25초 동안 나타나고, 0.8초 뒤 0.55초 동안 흐려지며 위로 사라진다 */
-  forget(t: number, count: number): ForgetChip[] {
+  /** 「잊고」 아래 기록 카드 k: 0.95 + 0.25k초에 0.25초 동안 나타나고, 0.8초 뒤 0.55초 동안 흐려지며 위로 사라진다(× PACE) */
+  forget(time: number, count: number): ForgetChip[] {
+    const t = time / PACE;
     return Array.from({ length: count }, (_, k) => {
       const at = 0.95 + 0.25 * k;
       const fadeIn = clamp((t - at) / 0.25);

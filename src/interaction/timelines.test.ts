@@ -67,14 +67,15 @@ describe("HabitCalendarTimeline (I15)", () => {
 describe("ProblemTimeline (I3 · I12)", () => {
   const tl = new ProblemTimeline();
 
-  it("흐름 단계는 0.9 · 0.9 · 0.9 · 0.9 · 2.5초 간격 그대로", () => {
-    expect([0, 0.9, 1.79, 3.6, 6.09, 6.1].map((t) => tl.flowStep(t))).toEqual([0, 1, 1, 4, 4, 5]);
+  it("흐름 단계는 1.35 · 1.35 · 1.35 · 1.35 · 3.75초 간격(1.5배)", () => {
+    expect([0, 1.35, 2.69, 5.4, 9.14, 9.15].map((t) => tl.flowStep(t))).toEqual([0, 1, 1, 4, 4, 5]);
+    expect(tl.flowEnd).toBeCloseTo(9.15);
   });
 
-  it("「잊고」 카드는 0.95 + 0.25k초에 나타나 0.8초 뒤 흐려지며 사라진다", () => {
-    expect(tl.forget(0.9, 3).map((c) => c.opacity)).toEqual([0, 0, 0]);
-    expect(tl.forget(1.5, 3).map((c) => c.opacity)).toEqual([1, 1, expect.closeTo(0.2, 5)]);
-    expect(tl.forget(3, 3).every((c) => c.opacity === 0 && c.blur === 6)).toBe(true);
+  it("「잊고」 카드는 1.425 + 0.375k초에 나타나 1.2초 뒤 흐려지며 사라진다", () => {
+    expect(tl.forget(1.35, 3).map((c) => c.opacity)).toEqual([0, 0, 0]);
+    expect(tl.forget(2.25, 3).map((c) => c.opacity)).toEqual([1, 1, expect.closeTo(0.2, 5)]);
+    expect(tl.forget(4.5, 3).every((c) => c.opacity === 0 && c.blur === 6)).toBe(true);
   });
 
   it("금액은 1.0~2.6초 동안 천 원 단위로 올라 최종값에서 멈춘다", () => {
