@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { HabitCalendarTimeline } from "./HabitCalendarTimeline";
 import { HeroStampTimeline } from "./HeroStampTimeline";
 import { ProblemTimeline } from "./ProblemTimeline";
+import { RewardTimeline } from "./RewardTimeline";
 import { SolutionCardTimeline } from "./SolutionCardTimeline";
 
 const stamped = (days: { look: string }[]) => days.filter((d) => d.look === "on").length;
@@ -106,5 +107,36 @@ describe("SolutionCardTimeline (I13)", () => {
     expect(tl.at(3.45, true).opacity).toBe(0);
     expect(tl.at(3.45, false).opacity).toBe(1);
     expect(tl.still()).toMatchObject({ typed: "4,800", check: 1, streak: 26, opacity: 1 });
+  });
+});
+
+describe("RewardTimeline (I6 · I14)", () => {
+  const tl = new RewardTimeline(31);
+
+  it("고리는 0.9 · 0.9 · 1.4 · 0.9초(4.1초 한 바퀴)로 그대로 순환한다", () => {
+    expect([0, 0.9, 1.8, 3.2, 4.1].map((t) => tl.at(t).step)).toEqual([0, 1, 2, 3, 0]);
+  });
+
+  it("카드 1: 「마감하고」에서 오늘 도장, 한 바퀴마다 하루씩 넘어가고 31일 다음은 1일", () => {
+    expect(tl.at(0.5).strip[2]).toMatchObject({ n: 25, look: "today" });
+    expect(tl.at(1).strip[2]).toMatchObject({ n: 25, look: "on" });
+    expect(tl.at(4.1 + 0.5).strip[2].n).toBe(26);
+    expect(tl.at(4.1 * 7 + 0.5).strip[2].n).toBe(1);
+    expect(tl.at(2.2).badge.opacity).toBeGreaterThan(0);
+  });
+
+  it("카드 2: 0.42초마다 도장 → 3.25초 ★ → 5.6초 주기로 다시", () => {
+    expect(tl.at(0.3 + 0.42 * 3).week.filter((d) => d.look === "on")).toHaveLength(4);
+    expect(tl.at(3.2).star).toBe(0);
+    expect(tl.at(4).star).toBe(1);
+    expect(tl.at(5.4).week.every((d) => d.look === "off")).toBe(true);
+    expect(tl.at(5.6 + 1).week).toEqual(tl.at(1).week);
+  });
+
+  it("동작 줄이기: 「포인트 받고」 고정, 오늘 도장, 7칸 + ★", () => {
+    const f = tl.still();
+    expect(f).toMatchObject({ step: 2, star: 1, weekOpacity: 1 });
+    expect(f.strip[2].look).toBe("on");
+    expect(f.week.every((d) => d.look === "on")).toBe(true);
   });
 });
