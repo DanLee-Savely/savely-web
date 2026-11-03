@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 const { empathy } = homeContent;
 // Figma: Step 0 →(0.8초) 1 →(1초) 2 →(1초) 3. 사이트에서는 3에서 멈춘다
 const DELAYS = [800, 1000, 1000];
-const INDENTS = ["", "pl-6 lg:pl-14", "pl-12 lg:pl-28"]; // 모바일 0/24/48 · PC 0/56/112
+// 모바일은 들여쓰기 0/24/48. PC는 대화 칸 전체에 계단으로 펼친다: 왼쪽 · 가운데 · 오른쪽 끝 (00-decisions D16)
+const INDENTS = ["lg:self-start", "pl-6 lg:self-center lg:pl-0", "pl-12 lg:self-end lg:pl-0"];
 const bubbleClass = "rounded-[20px_20px_20px_6px] bg-sv-surface px-[22px] py-4";
 
 // I2 공감 말풍선 — 「입력 중」 뒤에 말풍선이 하나씩 나타나고, 마지막 문장은 끝에 나타난다
