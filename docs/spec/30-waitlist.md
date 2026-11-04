@@ -32,9 +32,13 @@
 | 동의 없음 | 400 | `{ "ok": false, "code": "CONSENT_REQUIRED" }` |
 | 요청 과다 | 429 | `{ "ok": false, "code": "RATE_LIMITED" }` |
 | 서버 오류 | 500 | `{ "ok": false, "code": "SERVER_ERROR" }` (내부 메시지 · 이메일을 응답에 넣지 않음) |
+| 다른 출처(`Origin`이 자기 출처 · 허용 목록이 아님) | 403 | `{ "ok": false, "code": "SERVER_ERROR" }` — 본문을 읽기 전에 거부 |
+| `Content-Type`이 `application/json`이 아님 | 415 | 위와 같음 (사전 요청 없는 교차 사이트 폼 전송 차단) |
+| 본문 1KB 초과(`Content-Length`) | 413 | 위와 같음 |
 
 - **CORS:** `OPTIONS` 사전 요청을 처리한다. `Access-Control-Allow-Origin`은 허용 목록(환경 변수 `WAITLIST_ALLOWED_ORIGINS`)에 있는 출처만 그대로 돌려준다. 허용 목록 예: Vercel 배포 도메인
 - **남용 방지:** 같은 IP에서 1분에 5회를 넘으면 429. IP는 판단에만 쓰고 저장하지 않는다
+  - IPv6는 앞 64비트(/64)로 묶어 센다. 한 회선이 /64 블록을 통째로 받아 주소를 바꿔 가며 한도를 피할 수 있기 때문(`RateLimitKey`)
   - 구현 방법(Cloudflare Rate Limiting 바인딩 또는 메모리 카운터)은 구현 단계에서 공식 문서를 확인해 고른다
   - 스팸이 늘면 Cloudflare Turnstile 추가를 검토한다(현재 범위 밖)
 
@@ -42,6 +46,7 @@
 - 앞뒤 공백 제거, 소문자로 정규화
 - 길이 3~254자
 - 형식: `로컬@도메인.최상위` (간단한 정규식 + 도메인에 점 1개 이상). 지나치게 엄격한 정규식은 쓰지 않는다
+- 제어 문자(`\p{Cc}`) · 보이지 않는 서식 문자(`\p{Cf}`: 폭 0 · 방향 바꿈)는 거부한다. 운영자가 터미널로 목록을 볼 때 화면을 조작할 수 있기 때문
 - 잘못된 값은 생성 시 `InvalidEmailError`를 던진다
 
 ## 4. 저장소 (Cloudflare D1)
