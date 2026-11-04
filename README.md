@@ -4,7 +4,7 @@
 
 ## 배포 URL
 - 실서비스(Cloudflare Workers): https://www.savelyglobal.com/home
-- 제출용(Vercel): 배포 후 추가
+- Vercel 사본은 만들지 않고 실서비스 주소로 제출했다
 
 ## 서비스 소개
 세이블리(Savely)는 직접 적으며 소비를 돌아보는 가계부 앱이다(iOS · Android, 출시 전).
@@ -24,7 +24,7 @@
 | 프레임워크 | Next.js 16 (App Router) · React 19 · TypeScript(strict) |
 | 스타일 | Tailwind CSS 4 · shadcn/ui(Radix) · lucide-react · 디자인 변수(`src/styles/tokens.css`) |
 | 글꼴 | Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자) |
-| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`) · Vercel(제출용) |
+| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`) |
 | 저장 | Cloudflare D1(출시 알림 이메일) · Rate Limiting 바인딩 |
 | 검사 | Vitest(도메인 · 상태 클래스) · Playwright(시안 비교 스크린샷) · ESLint |
 
@@ -53,6 +53,11 @@
 | I14 | 보상 +P · 카드 속 도장 (A안) | 「포인트 받고」에서 +P가 떠오르고, 카드 1은 하루씩 넘어가며 오늘 도장, 카드 2는 한 주 7칸이 차면 ★ + 보너스 +P(적립량 숫자 없음) |
 | I15 | 습관 한 달 달력 (A안) | 「세이블리와 함께한 한 달」을 누르면 1일 → 31일 도장이 차례로 찍히고 「정산 31/31일」, 다시 누르면 거꾸로 지워짐 |
 
+## 검색 노출
+- `src/app/robots.ts` · `sitemap.ts`로 `/robots.txt` · `/sitemap.xml`을 만들고, Worker 라우트에 두 주소만 추가했다
+- 대표 주소(canonical), 링크 공유 미리보기(Open Graph · Twitter 카드, 히어로 캡처 1200×630)를 넣었다
+- Google Search Console(도메인 속성) · 네이버 서치어드바이저에 등록하고 사이트맵을 제출했다
+
 ## 실행 방법
 ```bash
 npm install
@@ -69,7 +74,7 @@ npm run deploy         # Cloudflare 배포 (권한 필요)
 - 추출본에서 수치(크기 · 간격 · 시간)와 문구를 `docs/spec/`의 명세로 옮기고, 그 명세대로 구현한 뒤 `compare-design.mjs` 스크린샷을 시안 이미지와 비교했다
 - S04 수정본 이미지를 프로토타입 노드에서 `get_screenshot`으로 받으려 했으나 1×1 빈 이미지가 와서(3회), 구조 덤프 수치로 비교했다. 이후 UI 노드(S03 · S04 PC · 모바일)로 받아 `docs/design`의 시안 이미지를 갱신했다
 - Figma가 최신으로 바뀐 뒤에는 `use_figma`(읽기 전용 Plugin API 스크립트)로 인터랙션 세트 · 프로토타입을 덤프해 기존 추출본과 줄 단위로 비교하고, 달라진 인터랙션(공감 마지막 문장 · 문제 흐름 · 막대 지연)만 골라 반영했다. 결과 크기 제한(48KB) 때문에 기존 줄은 해시로 보내고 바뀐 줄만 받았다
-- 이번 달 사용 15회 / 20회(실패 포함)
+- 2026-10 사용 15회 / 20회(실패 포함)
 
 ## 검수 기록
 
@@ -106,3 +111,7 @@ npm run deploy         # Cloudflare 배포 (권한 필요)
 | 05 해결 (A안) | 단계 카드가 휴대폰 뒤에 깔림(휴대폰의 기울기 transform이 위에 그려짐) | 카드에 `z-10`. 카드 위치는 측정 없이 CSS로(목록 아래 칸 가운데, 휴대폰 왼쪽 + 32) |
 | 03 · 07 (A안) | 비교 자동 점검에서 카드 · 달력이 문단 상자와 겹침으로 잡힘 | 실제 글자 영역(Range)으로 다시 재서 1440 · 1280 · 1024 · 390 · 360 모두 글자 · 버튼 · 화살표 겹침 0, 가로 넘침 0, 콘솔 에러 0 |
 | 공통 (A안 Lighthouse, 로컬 next start · 3회 중앙값) | 전 → 후: 모바일 성능 73 → 73(LCP 5.3 → 5.4초, TBT 22 → 21ms, CLS 0 → 0), 데스크톱 98 → 98(LCP 1.0초, CLS 0). 접근성 89 → 89 · 권장사항 100 · SEO 100 | 저대비 글자 항목이 5 → 37개: 늘어난 32개는 장식 달력(aria-hidden)의 「아직 도장 없는 날짜」 회색(`day-muted` · `day-empty`, README 지정값). 순수 장식이라 WCAG 예외로 두고 사용자 확인 대기 |
+| 02 공감 (2026-11-03) | PC에서 말풍선이 왼쪽에 몰려 오른쪽 여백이 277px 남아 다른 섹션과 비율이 맞지 않음 | 말풍선 3개를 대화 칸 왼쪽 · 가운데 · 오른쪽 끝에 계단으로 배치(00-decisions D16). 1440에서 셋째 말풍선이 콘텐츠 끝(1280)에 맞음, 모바일은 그대로 |
+| 검색 노출 (2026-11-04) | 실서비스 `/robots.txt` · `/sitemap.xml`이 522(Worker 라우트 밖), 공유 미리보기 · 대표 주소 없음 | 위 「검색 노출」대로 추가. 실서비스에서 robots · sitemap 200, og 태그 · 이미지 200 확인 |
+| 개인정보처리방침 (2026-11-04) | 글 폭 클래스를 `max-w-720`으로 바꾸자 Tailwind 4에서 720 × 0.25rem = 2880px가 되어 1440 화면에서 글 폭이 1400px로 넓어짐 | `max-w-180`(= 720px)으로 수정 |
+| 공통 (실기기) | iOS Safari에서 인터랙션 · 출시 알림 신청 확인 | — |
