@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         </div>
       </header>
       <main className="flex-1 bg-sv-bg px-5 py-14 lg:py-24">
-        <article className="mx-auto flex max-w-[720px] flex-col gap-10">
+        <article className="mx-auto flex max-w-180 flex-col gap-10">
           <div className="flex flex-col items-start gap-3">
             <span className="rounded-sv-pill bg-sv-accent-tint px-3 py-1 sv-text-label-13 text-sv-accent">
               {privacy.draft}
