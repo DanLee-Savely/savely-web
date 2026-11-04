@@ -1,6 +1,7 @@
 import { RegisterWaitlistService } from "@/application/waitlist/RegisterWaitlistService";
 import { D1WaitlistRepository } from "./waitlist/D1WaitlistRepository";
 import { InMemoryWaitlistRepository } from "./waitlist/InMemoryWaitlistRepository";
+import { RateLimitKey } from "./waitlist/RateLimitKey";
 import { WaitlistApiClient } from "./waitlist/WaitlistApiClient";
 
 // 구현체 조립은 이 파일에서만 한다 (CLAUDE.md §5)
@@ -25,7 +26,7 @@ export async function createWaitlistServer(): Promise<WaitlistServer> {
   const { env } = await getCloudflareContext({ async: true });
   return {
     service: new RegisterWaitlistService(env.DB ? new D1WaitlistRepository(env.DB) : memory),
-    allow: async (key) => (env.WAITLIST_RATE_LIMITER ? (await env.WAITLIST_RATE_LIMITER.limit({ key })).success : true),
+    allow: async (key) => (env.WAITLIST_RATE_LIMITER ? (await env.WAITLIST_RATE_LIMITER.limit({ key: RateLimitKey.of(key) })).success : true),
     allowedOrigins: (env.WAITLIST_ALLOWED_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean),
   };
 }
