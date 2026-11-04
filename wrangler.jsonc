@@ -9,6 +9,9 @@
 		{ "pattern": "www.savelyglobal.com/robots.txt", "zone_name": "savelyglobal.com" },
 		{ "pattern": "www.savelyglobal.com/sitemap.xml", "zone_name": "savelyglobal.com" }
 	],
+	// *.workers.dev · 미리보기 주소를 열지 않는다(도메인 규칙을 우회하는 입구, 보안 점검 2026-10-31)
+	"workers_dev": false,
+	"preview_urls": false,
 	"compatibility_date": "2026-10-28",
 	"compatibility_flags": [
 		"nodejs_compat",
@@ -49,7 +52,7 @@
 		}
 	],
 	"vars": {
-		// 다른 출처(Vercel 배포본)에서 오는 신청 허용 목록. 쉼표로 구분. Vercel 주소가 정해지면 넣는다
+		// 다른 출처에서 오는 신청 허용 목록. 쉼표로 구분. 지금은 없음(Vercel 사본을 만들지 않음, 00-decisions B6)
 		"WAITLIST_ALLOWED_ORIGINS": ""
 	}
 }
