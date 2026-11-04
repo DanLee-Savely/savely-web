@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { WaitlistButton } from "@/components/interactive/WaitlistButton";
 import { WaitlistDialogProvider } from "@/components/interactive/WaitlistDialogProvider";
 import { EmpathySection } from "@/components/sections/EmpathySection";
@@ -11,6 +12,8 @@ import { SiteHeader } from "@/components/sections/SiteHeader";
 import { SolutionSection } from "@/components/sections/SolutionSection";
 import { WaitlistSection } from "@/components/sections/WaitlistSection";
 import { homeContent } from "@/content/home.content";
+
+export const metadata: Metadata = { alternates: { canonical: "/home" } };
 
 export default function Home() {
   return (

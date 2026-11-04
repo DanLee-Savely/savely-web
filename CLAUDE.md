@@ -46,7 +46,7 @@
 - Next.js App Router + TypeScript(strict) + Tailwind CSS + shadcn/ui, lucide-react
 - 글꼴: Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자). Figma는 Noto Sans KR로 그려서 1~2px 차이는 허용한다.
 - **basePath 없음 (2026-10-30, 00-decisions F8).** 메인은 `src/app/home/` → `/home`, 이후 앱은 같은 프로젝트의 `/app` 등에 붙인다. 링크 · 이미지 문자열 경로는 `/home/...`처럼 실제 경로를 그대로 쓴다.
-- **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/_next/*`(새 경로가 생기면 그 경로만 추가, 예 `/app*`). 출시 알림 저장은 D1(바인딩 `DB`)
+- **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`(새 경로가 생기면 그 경로만 추가, 예 `/app*`). 출시 알림 저장은 D1(바인딩 `DB`)
 - **제출용:** Vercel(같은 저장소 자동 배포). 폼은 실서비스 API로 보낸다(CORS 허용 목록).
 - **색 모드:** 라이트 고정. 다크 토큰은 정의만 두고 전환은 켜지 않는다.
 

@@ -6,7 +6,10 @@ import { homeContent } from "@/content/home.content";
 
 const { privacy } = homeContent;
 
-export const metadata: Metadata = { title: privacy.meta.title };
+export const metadata: Metadata = {
+  title: privacy.meta.title,
+  alternates: { canonical: "/home/privacy" },
+};
 
 // /home/privacy — 출시 알림 신청의 실제 처리 방식과 일치해야 한다 (30-waitlist §6, 00-decisions C6 초안)
 export default function PrivacyPage() {

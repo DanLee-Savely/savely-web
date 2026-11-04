@@ -24,7 +24,7 @@
 | 프레임워크 | Next.js 16 (App Router) · React 19 · TypeScript(strict) |
 | 스타일 | Tailwind CSS 4 · shadcn/ui(Radix) · lucide-react · 디자인 변수(`src/styles/tokens.css`) |
 | 글꼴 | Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자) |
-| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*`) · Vercel(제출용) |
+| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`) · Vercel(제출용) |
 | 저장 | Cloudflare D1(출시 알림 이메일) · Rate Limiting 바인딩 |
 | 검사 | Vitest(도메인 · 상태 클래스) · Playwright(시안 비교 스크린샷) · ESLint |
 

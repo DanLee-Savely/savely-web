@@ -10,9 +10,20 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const { meta, footer } = homeContent;
+
 export const metadata: Metadata = {
-  title: homeContent.meta.title,
-  description: homeContent.meta.description,
+  metadataBase: new URL(`https://${footer.site}`),
+  title: meta.title,
+  description: meta.description,
+  openGraph: {
+    title: meta.title,
+    description: meta.description,
+    siteName: footer.company,
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
