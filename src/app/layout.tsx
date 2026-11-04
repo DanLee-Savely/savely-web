@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: { card: "summary_large_image" },
+  verification: {
+    other: {
+      "naver-site-verification": "e2921943b650e711e49588f555f05ef63e5b6f96",
+    },
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
