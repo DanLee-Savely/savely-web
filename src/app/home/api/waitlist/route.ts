@@ -36,6 +36,18 @@ export async function POST(req: Request) {
   if (!(await server.allow(req.headers.get("cf-connecting-ip") ?? "local")))
     return reply({ ok: false, code: "RATE_LIMITED" }, 429, headers);
 
+  // 다른 사이트 · 폼에서 보낸 요청과 큰 본문은 읽기 전에 거부한다. 정상 신청 창은 이 길에 오지 않는다
+  const origin = req.headers.get("origin");
+  const status =
+    origin && origin !== new URL(req.url).origin && !server.allowedOrigins.includes(origin)
+      ? 403
+      : !req.headers.get("content-type")?.startsWith("application/json")
+        ? 415
+        : Number(req.headers.get("content-length")) > 1024
+          ? 413
+          : 0;
+  if (status) return reply({ ok: false, code: "SERVER_ERROR" }, status, headers);
+
   const raw: unknown = await req.json().catch(() => null);
   const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   try {
