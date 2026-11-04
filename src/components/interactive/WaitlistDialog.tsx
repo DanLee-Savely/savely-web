@@ -100,7 +100,7 @@ function WaitlistForm({ source, onClose, emailRef, pc }: FormProps) {
         </span>
         <Title className="sv-text-title-section-20 text-sv-text">{copy.doneTitle}</Title>
         <Description className="sv-text-body-15 text-sv-text-2">
-          <BreakText text={copy.doneDesc.replace("{email}", flow.email.trim())} />
+          <BreakText text={copy.doneDesc.replace("{email}", () => flow.email.trim())} />
         </Description>
         <AppButton variant="secondary" size="l" className="w-full" onClick={onClose} autoFocus>
           {copy.doneConfirm}

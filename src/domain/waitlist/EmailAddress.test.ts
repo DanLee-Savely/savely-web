@@ -19,6 +19,11 @@ describe("EmailAddress", () => {
     },
   );
 
+  // 터미널 제어 문자 · 폭 0 · 방향 바꿈 문자 (보안 점검 2026-10-31)
+  it.each(["a\u001b[8mx@b.co", "a\u200b@b.co", "a@b.co\u202e"])("보이지 않는 문자 %j 는 거부한다", (raw) => {
+    expect(EmailAddress.isValid(raw)).toBe(false);
+  });
+
   it("254자까지 받고 255자는 거부한다", () => {
     const at = (n: number) => `${"a".repeat(n - "@example.com".length)}@example.com`;
     expect(EmailAddress.isValid(at(254))).toBe(true);

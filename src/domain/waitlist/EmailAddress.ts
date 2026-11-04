@@ -1,7 +1,7 @@
 import { InvalidEmailError } from "./errors";
 
-// 로컬@도메인.최상위 — 지나치게 엄격하게 막지 않는다 (30-waitlist §3)
-const PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// 로컬@도메인.최상위 — 지나치게 엄격하게 막지 않는다. 제어 · 보이지 않는 문자만 막는다 (30-waitlist §3)
+const PATTERN = /^[^\s@\p{Cc}\p{Cf}]+@[^\s@\p{Cc}\p{Cf}]+\.[^\s@\p{Cc}\p{Cf}]+$/u;
 
 // 값 객체: 앞뒤 공백 제거 · 소문자로 정규화, 3~254자
 export class EmailAddress {
