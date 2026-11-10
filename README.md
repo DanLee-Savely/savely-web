@@ -1,10 +1,12 @@
 # 세이블리 소개 사이트 (savely-web)
 
 코드잇 스프린트 미션 5 — 출시 전 가계부 앱 「세이블리」의 소개 페이지(HOME)
+미션 6 — 웹에서 지출 기록을 적고 · 보고 · 고치고 · 지우는 체험판(`/app`, 아래 「미션 6 MVP」)
 
 ## 배포 URL
 - 실서비스(Cloudflare Workers): https://www.savelyglobal.com/home
 - Vercel 사본은 만들지 않고 실서비스 주소로 제출했다
+- 미션 6 기록 체험판: https://www.savelyglobal.com/app (배포 전 — 같은 Worker에 `/app*` 라우트를 더해 배포한다)
 
 ## 서비스 소개
 세이블리(Savely)는 직접 적으며 소비를 돌아보는 가계부 앱이다(iOS · Android, 출시 전).
@@ -24,8 +26,8 @@
 | 프레임워크 | Next.js 16 (App Router) · React 19 · TypeScript(strict) |
 | 스타일 | Tailwind CSS 4 · shadcn/ui(Radix) · lucide-react · 디자인 변수(`src/styles/tokens.css`) |
 | 글꼴 | Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자) |
-| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`) |
-| 저장 | Cloudflare D1(출시 알림 이메일) · Rate Limiting 바인딩 |
+| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`, 미션 6 배포 시 `/app*`) |
+| 저장 | Cloudflare D1(출시 알림 이메일 · 기록 체험판, 서로 다른 데이터베이스) · R2(기록 사진) · Rate Limiting 바인딩 |
 | 검사 | Vitest(도메인 · 상태 클래스) · Playwright(시안 비교 스크린샷) · ESLint |
 
 - 구조: 검증 · 저장 · 상태 전이는 클래스(`domain` · `application` · `infrastructure` · `interaction`), 화면은 함수 컴포넌트, 훅은 둘을 잇는 얇은 어댑터
@@ -53,6 +55,66 @@
 | I14 | 보상 +P · 카드 속 도장 (A안) | 「포인트 받고」에서 +P가 떠오르고, 카드 1은 하루씩 넘어가며 오늘 도장, 카드 2는 한 주 7칸이 차면 ★ + 보너스 +P(적립량 숫자 없음) |
 | I15 | 습관 한 달 달력 (A안) | 「세이블리와 함께한 한 달」을 누르면 1일 → 31일 도장이 차례로 찍히고 「정산 31/31일」, 다시 누르면 거꾸로 지워짐 |
 
+## 미션 6 MVP — 기록 체험판 `/app`
+명세 원본: `docs/spec/70-mvp-records.md` · QA 결과: `docs/spec/71-mvp-qa.md` · 시안: `docs/design/app/`
+
+세이블리의 출발점인 「직접 적는다」를 웹에서 검증한다. 로그인 없이 누구나 같은 데이터를 보고 고치는 **공개 체험판**이라, 모든 화면 위에 「실제 소비 내역 · 개인정보를 적지 말라」는 안내 띠를 두고 검색에서 뺐다(noindex).
+
+### 핵심 기능
+| 화면 | 주소 | 내용 |
+|---|---|---|
+| 목록 | `/app/records?page=N` | 날짜 최신순 10건씩, 이전 · 번호(최대 5개) · 다음. 빈 상태 · 로딩(회색 막대 10줄) · 불러오기 오류 + 「다시 시도」 |
+| 등록 | `/app/records/new` | 구분(지출 · 수입) · 금액 · 날짜 · 카테고리(필수), 내용 60자 · 메모 200자 · 결제수단 · 왜 썼나요 · 그때 기분 · 사진 1장(선택). 수입이면 지출 전용 칸 숨김 |
+| 상세 | `/app/records/[id]` | 모든 항목(빈 항목은 「—」) · 사진(원본 새 탭) · 처음 적은 시각 · 고친 시각, 「수정」 · 「삭제」(확인 창) |
+| 수정 | `/app/records/[id]/edit` | 등록과 같은 폼에 기존 값, 사진 바꾸기 · 삭제 |
+| 사진 | `/app/records/[id]/image` | R2에서 꺼내 전달(버킷 공개 주소 없음) |
+| 없는 기록 | — | 「찾는 기록이 없어요」, HTTP 404 |
+
+- 검증은 브라우저와 서버가 **같은 도메인 클래스**(`RecordEntry.check`)로 한다. 칸별 오류 문구, 첫 오류 칸으로 포커스, 저장 중에는 입력 잠금 · 두 번 저장 방지
+- 저장 · 수정 · 삭제 뒤 알림(「기록했어요」 등 3초), 쓰기 요청 제한(IP당 1분 10회, 넘으면 「요청이 너무 많아요」)
+- 사진은 브라우저에서 긴 변 1600px JPEG로 다시 저장해 찍은 위치(GPS) 등 EXIF를 지운 뒤 올린다. 서버는 파일 앞부분 바이트로 JPG · PNG · WEBP · 5MB 이하를 다시 확인한다
+- 소개 사이트 히어로에 「웹에서 체험하기」(PC만) → `/app`
+
+### 테이블 구조 (D1 `savely-records`, `migrations-records/0001_create_records.sql`)
+| 열 | 타입 | 규칙 |
+|---|---|---|
+| `id` | TEXT PK | UUID(서버 생성) |
+| `kind` | TEXT | `expense` · `income` |
+| `amount` | INTEGER | 1 ~ 999,999,999,999 |
+| `record_date` | TEXT | `'YYYY-MM-DD'`(한국 날짜), 미래 불가는 서버 코드에서 |
+| `category_id` | TEXT | 지출 23 · 수입 6개 값(구분과 일치는 서버 코드에서) |
+| `title` · `memo` | TEXT | 60자 · 200자 |
+| `payment_method` · `reason` · `feeling` | TEXT | 값 목록, 지출만(수입이면 NULL — CHECK 제약) |
+| `image_key` | TEXT | R2 키 `{기록 id}/{uuid}.{확장자}`(원래 파일 이름 저장 안 함) |
+| `created_at` · `updated_at` | TEXT | ISO 8601 UTC, 서버 코드가 넣음 |
+
+인덱스 `records_date_idx (record_date DESC, created_at DESC)` — 목록 정렬 · 페이지 나누기용
+
+### 데이터 처리 규칙
+- D1 · R2는 서버 코드에서 Cloudflare **바인딩**으로만 접근한다(`src/infrastructure/container.ts`). 브라우저에는 데이터베이스 · 버킷 주소나 키가 없다
+- SQL은 바인딩 파라미터(`?1`…)만 쓴다. DB CHECK 제약은 마지막 방어선
+- 「오늘」은 Asia/Seoul 기준, 날짜는 문자열 그대로 다룬다
+- 로그에는 기록 id와 오류 종류만 남긴다(금액 · 내용 · 메모 금지)
+- 출시 알림 D1(실제 이메일)과 **다른 데이터베이스**다
+
+### 바인딩 · 환경 변수 이름 (값은 `wrangler.jsonc` · 대시보드, 비밀 값 없음)
+| 이름 | 종류 | 용도 |
+|---|---|---|
+| `RECORDS_DB` | D1 | 기록 테이블 |
+| `RECORD_IMAGES` | R2 | 기록 사진 |
+| `RECORDS_RATE_LIMITER` | Rate Limiting | 쓰기 요청 제한 |
+| `DB` · `WAITLIST_RATE_LIMITER` · `WAITLIST_ALLOWED_ORIGINS` | D1 · Rate Limiting · 변수 | 출시 알림(미션 5) |
+
+### 코드 구조
+- domain: `RecordEntry` · `Amount` · `RecordDate` · `RecordTitle` · `RecordMemo` · `ImageFile` · `CategoryCatalog` · `RecordRepository` · `ImageStorage` · 도메인 오류
+- application: 유스케이스 하나 = 클래스 하나(`Create` · `List` · `Get` · `Update` · `DeleteRecordService`)
+- infrastructure: `D1RecordRepository` · `R2ImageStorage` · `WriteRateLimiter`(테스트 전용 InMemory 저장소 2개)
+- interaction: `RecordFormFlow`(폼 상태 · 칸별 오류) · `PageWindow`(페이지 번호)
+- 화면: Server Actions(`src/app/app/records/actions.ts`) · 재사용 컴포넌트(`src/components/app/`), 문구는 `src/content/app.content.ts`
+
+### QA 결과 (2026-11-10, 로컬 preview)
+Q1~Q22 **22개 통과** — 빈 값 · 잘못된 형식 · 서버 검증(요청 본문 조작) · 두 번 저장 · 새로고침 · 수정 · 구분 전환 · 삭제 · 없는 주소(404) · 사진 형식 · 크기 · 오프라인 · 페이지 나누기 · 빈 목록 · 로딩 · 오류 · 저장소 직접 접근 · 사진 위치 정보 · 날짜 경계 · 요청 제한 · 데이터베이스 분리. 상세는 `docs/spec/71-mvp-qa.md`
+
 ## 검색 노출
 - `src/app/robots.ts` · `sitemap.ts`로 `/robots.txt` · `/sitemap.xml`을 만들고, Worker 라우트에 두 주소만 추가했다
 - 대표 주소(canonical), 링크 공유 미리보기(Open Graph · Twitter 카드, 히어로 캡처 1200×630)를 넣었다
@@ -61,8 +123,10 @@
 ## 실행 방법
 ```bash
 npm install
-npx wrangler d1 migrations apply savely-waitlist --local   # 처음 한 번: 로컬 D1 테이블 생성
-npm run dev            # http://localhost:3000/home
+npx wrangler d1 migrations apply savely-waitlist --local   # 처음 한 번: 로컬 D1 테이블 생성(출시 알림)
+npx wrangler d1 migrations apply savely-records --local    # 처음 한 번: 로컬 D1 테이블 생성(기록 체험판)
+npm run dev            # http://localhost:3000/home · /app (로컬 D1 · R2 · 요청 제한)
+npm run preview        # 배포와 같은 Worker 환경(http://localhost:8787)
 npm test               # 단위 테스트
 npm run lint
 node scripts/compare-design.mjs [섹션]   # 시안 비교 스크린샷 (개발 서버 실행 중, docs/compare/에 저장)
@@ -116,3 +180,4 @@ npm run deploy         # Cloudflare 배포 (권한 필요)
 | 개인정보처리방침 (2026-11-04) | 글 폭 클래스를 `max-w-720`으로 바꾸자 Tailwind 4에서 720 × 0.25rem = 2880px가 되어 1440 화면에서 글 폭이 1400px로 넓어짐 | `max-w-180`(= 720px)으로 수정 |
 | 공통 (실기기) | iOS Safari에서 인터랙션 · 출시 알림 신청 확인 | — |
 | 출시 알림 API (2026-11-04 보안 점검 반영) | 확정 취약점은 없었으나 IPv6 주소를 바꿔 가며 요청 제한을 피할 여지, 다른 사이트에서 `text/plain`으로 보내는 신청, 이메일 속 터미널 제어 문자, iframe 삽입 여지가 남음 | IPv6 /64 단위 제한, 403 · 415 · 413 사전 거부, 제어 · 보이지 않는 문자 거부, 보안 헤더 · workers.dev 끔(00-decisions B6). 로컬 Worker에서 응답 코드 · 헤더 · 실제 신청 확인 |
+| 기록 체험판 /app (2026-11-10 QA) | 저장 직후 3초 안에 연 삭제 확인 창이 저절로 닫힘(알림이 주소를 지우며 페이지를 다시 그림). 같은 순간의 두 번째 클릭이 저장을 한 번 더 보낼 수 있음. 없는 기록 상세가 HTTP 200(상세 로딩 화면 때문) | 주소는 `history.replaceState`로 지움, 저장 · 삭제에 전송 중 표시, 상세 · 수정 `loading.tsx` 제거. Q1~Q22 재점검 통과(`docs/spec/71-mvp-qa.md`) |

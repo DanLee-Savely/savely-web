@@ -370,7 +370,7 @@ CREATE INDEX records_date_idx ON records (record_date DESC, created_at DESC);
 
 ---
 
-## 10. QA 체크리스트 (초안 — 미션 8번 시나리오 포함)
+## 10. QA 체크리스트 (미션 8번 시나리오 포함 — 결과: `71-mvp-qa.md`, 2026-11-10 로컬 22/22 통과)
 
 | # | 시나리오 | 방법 | 기대 결과 |
 |---|---|---|---|
