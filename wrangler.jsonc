@@ -40,6 +40,12 @@
 			"name": "WAITLIST_RATE_LIMITER",
 			"namespace_id": "1001",
 			"simple": { "limit": 5, "period": 60 }
+		},
+		// 기록 체험판 쓰기(등록 · 수정 · 삭제): 같은 IP 1분 10회 (70-mvp-records M15)
+		{
+			"name": "RECORDS_RATE_LIMITER",
+			"namespace_id": "1002",
+			"simple": { "limit": 10, "period": 60 }
 		}
 	],
 	// 출시 알림 저장소 (30-waitlist §4). 표는 migrations/ — wrangler d1 migrations apply savely-waitlist --remote
@@ -49,7 +55,18 @@
 			"database_name": "savely-waitlist",
 			"database_id": "312fb3a0-662c-487f-915a-5a7130512bd5",
 			"migrations_dir": "migrations"
+		},
+		// 기록 체험판 (70-mvp-records §6). 개인정보가 든 출시 알림 DB와 나눈다 — wrangler d1 migrations apply savely-records
+		{
+			"binding": "RECORDS_DB",
+			"database_name": "savely-records",
+			"database_id": "fddeac75-2b53-4375-829d-d5d2bf35e816",
+			"migrations_dir": "migrations-records"
 		}
+	],
+	// 기록 사진 (70-mvp-records §6-4). 공개 주소 없음 — /app/records/[id]/image 로만 전달
+	"r2_buckets": [
+		{ "binding": "RECORD_IMAGES", "bucket_name": "savely-record-images" }
 	],
 	"vars": {
 		// 다른 출처에서 오는 신청 허용 목록. 쉼표로 구분. 지금은 없음(Vercel 사본을 만들지 않음, 00-decisions B6)
