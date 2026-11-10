@@ -46,10 +46,37 @@ export const appContent = {
     expenseInfo: "지출 정보",
     expenseInfoHint: "선택 · 수입이면 숨겨져요",
     hint: "금액 · 날짜 · 카테고리만 채우면 저장할 수 있어요",
+    editHint: "고친 내용은 저장하면 바로 반영돼요",
     cancel: "취소",
     save: "저장하기",
     update: "수정하기",
     saving: "저장 중…",
+  },
+
+  photo: {
+    title: "사진",
+    titleHint: "선택 · 1장",
+    drop: "사진을 끌어 놓거나 눌러서 고르세요",
+    rule: "JPG · PNG · WEBP · 5MB 이하",
+    pick: "사진 고르기",
+    change: "바꾸기",
+    remove: "삭제",
+    privacy: "올리기 전에 사진 속 위치 정보를 지워요. 영수증보다 구매한 물건 사진을 권해요.",
+    previewAlt: "고른 사진 미리보기",
+    alt: "기록 사진",
+    original: "원본 보기",
+    none: { title: "첨부한 사진이 없어요", desc: "수정에서 사진을 추가할 수 있어요" }, // X4
+    failed: "사진을 불러오지 못했어요", // X5
+  },
+
+  notFound: { title: "찾는 기록이 없어요", desc: "삭제됐거나 주소가 잘못됐어요", cta: "목록으로" }, // X3
+
+  confirmDelete: {
+    title: "이 기록을 삭제할까요?", // D1
+    desc: "삭제하면 되돌릴 수 없어요. 첨부한 사진도 함께 지워져요.",
+    cancel: "취소",
+    confirm: "삭제",
+    deleting: "삭제 중…",
   },
 
   detail: {

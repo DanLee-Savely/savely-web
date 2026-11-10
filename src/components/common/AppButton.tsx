@@ -8,6 +8,7 @@ const variants = {
   secondary: "bg-sv-surface-2 text-sv-text hover:bg-sv-surface-3",
   outline: "border border-sv-border bg-sv-surface text-sv-text hover:bg-sv-surface-2",
   "outline-danger": "border border-sv-border bg-sv-surface text-sv-danger hover:bg-sv-surface-2",
+  danger: "bg-sv-danger text-sv-on-accent hover:opacity-90",
 };
 const sizes = {
   m: "h-[45px] px-5 sv-text-label-13",

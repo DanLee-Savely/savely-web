@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { ImageUploadError, InvalidRecordError } from "@/domain/record/errors";
+import { ImageUploadError, InvalidRecordError, RecordNotFoundError } from "@/domain/record/errors";
 import type { RecordDraft, RecordFieldErrors } from "@/domain/record/RecordEntry";
 import { createRecordsServer } from "@/infrastructure/container";
 
@@ -41,4 +41,34 @@ export async function createRecord(formData: FormData): Promise<RecordActionResu
     return toResult(e);
   }
   redirect(`/app/records/${id}?done=created`);
+}
+
+/** 수정: 그사이 지워졌으면 상세 주소로 보내 없는 기록 안내를 보여 준다 (§4-4) */
+export async function updateRecord(id: string, formData: FormData): Promise<RecordActionResult> {
+  const server = await createRecordsServer();
+  if (!(await allowed(server.limiter))) return { formError: "RATE_LIMITED" };
+  try {
+    await server.update.execute({ id, draft: readDraft(formData), image: await readImage(formData), removeImage: formData.get("removeImage") === "1" });
+  } catch (e) {
+    if (!(e instanceof RecordNotFoundError)) return toResult(e);
+    redirect(`/app/records/${id}`);
+  }
+  redirect(`/app/records/${id}?done=updated`);
+}
+
+/** 삭제: 성공 · 이미 지워짐 모두 목록으로, 실패는 확인 창에 E11 (§4-5) */
+export async function deleteRecord(id: string): Promise<RecordActionResult> {
+  const server = await createRecordsServer();
+  if (!(await allowed(server.limiter))) return { formError: "RATE_LIMITED" };
+  let done = "deleted";
+  try {
+    await server.remove.execute(id);
+  } catch (e) {
+    if (!(e instanceof RecordNotFoundError)) {
+      console.error("[records] DELETE_FAILED", e instanceof Error ? e.name : typeof e);
+      return { formError: "DELETE_FAILED" };
+    }
+    done = "gone";
+  }
+  redirect(`/app/records?done=${done}`);
 }
