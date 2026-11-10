@@ -9,7 +9,8 @@
   - 기획 → 디자인 반영 → 구현 → 검수 → 배포를 완주하는 과제다
   - 미션 6에서 MVP로 확장한다 → **/app 지출 기록 CRUD 체험판** (`docs/spec/70-mvp-records.md`)
     - 등록 · 목록 · 상세 · 수정 · 삭제 + 사진 1장. 로그인 없음: 모든 방문자가 같은 데이터를 보고 고친다(상단 안내 띠 N1)
-    - 정산 · 보상 · 달력 · 리포트 · 멤버십은 미션 7 이후
+    - 홈(`/app`) · 달력 · 리포트: 기록만 읽어 계산하는 화면(쓰기 없음, A안 2026-11-10). 왼쪽 메뉴는 홈 · 기록 · 달력 · 리포트
+    - 정산 · 연속 정산 · 완벽한 주 · 보상(SVX) · AI 리포트 · 예산 · 멤버십은 로그인 이후(미션 7~)
 - **흐름:** 문제(돌아볼 틈 없이 같은 한 달이 반복) → 해결(적고 · 마감하고 · 돌아보는 습관을 만드는 가계부 + 습관을 돕는 포인트) → 기대효과(한 달이 달라짐)
 - **핵심 행동(CTA):** 「출시 알림 신청」 — 이메일을 남기면 출시 소식을 먼저 받는다. 앱 다운로드 · 스토어 링크는 없다.
 - **타깃 (초안 · 확정 필요):** 가계부를 써 봤지만 오래 못 간 사람 / 월말 카드값에 놀라는 일이 반복되는 사람 / 가족 소비를 함께 돌아보고 싶은 사람
@@ -49,8 +50,8 @@
 - Next.js App Router + TypeScript(strict) + Tailwind CSS + shadcn/ui, lucide-react
 - 글꼴: Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자). Figma는 Noto Sans KR로 그려서 1~2px 차이는 허용한다.
 - **basePath 없음 (2026-10-30, 00-decisions F8).** 메인은 `src/app/home/` → `/home`, 이후 앱은 같은 프로젝트의 `/app` 등에 붙인다. 링크 · 이미지 문자열 경로는 `/home/...`처럼 실제 경로를 그대로 쓴다.
-- **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/app` · `/app/*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`(새 경로가 생기면 그 경로만 추가). 출시 알림 저장은 D1(바인딩 `DB`)
-- **기록 체험판 /app (미션 6, 70-mvp-records §6 · §8):** 같은 Worker의 `/app` · `/app/*` 라우트(`/app*`은 `/apple` 등까지 잡아 쓰지 않음)
+- **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/app*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`(새 경로가 생기면 그 경로만 추가). 출시 알림 저장은 D1(바인딩 `DB`)
+- **기록 체험판 /app (미션 6, 70-mvp-records §6 · §8):** 같은 Worker의 `/app*` 라우트(정확 일치 `/app`은 쿼리가 붙으면 받지 못함, 00-decisions M12)
   - 바인딩: D1 `RECORDS_DB`(`savely-records`, 마이그레이션 `migrations-records/`) · R2 `RECORD_IMAGES`(`savely-record-images`, 공개 주소 없음) · 요청 제한 `RECORDS_RATE_LIMITER`(IP당 1분 쓰기 10회)
   - 출시 알림 DB와 **별도 데이터베이스**다(누구나 쓰고 지우는 데이터를 개인정보와 섞지 않음)
   - 테이블 `records`: id(UUID, 서버 생성) · kind · amount(1 ~ 999,999,999,999) · record_date(`'YYYY-MM-DD'`) · category_id · title(60자) · payment_method · reason · feeling · memo(200자) · image_key · created_at · updated_at. 수입은 지출 전용 칸(결제수단 · 왜 썼나요 · 기분)이 비어 있어야 한다
