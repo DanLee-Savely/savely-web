@@ -1,14 +1,15 @@
 import type { Clock } from "./Clock";
-import { FutureDateError, InvalidDateError } from "./errors";
+import { DateRequiredError, FutureDateError, InvalidDateError } from "./errors";
 
 const SEOUL = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" });
 
-// 값 객체: 'YYYY-MM-DD' 한국 날짜 문자열. 오늘(Asia/Seoul) 이후는 거부 (70-mvp-records §8-4)
+// 값 객체: 'YYYY-MM-DD' 한국 날짜 문자열. 빈칸 · 오늘(Asia/Seoul) 이후는 거부 (70-mvp-records §8-4)
 // Date로 바꾸지 않고 문자열끼리 비교한다 — 같은 형식이라 사전순 = 날짜순
 export class RecordDate {
   private constructor(private readonly value: string) {}
 
   static create(raw: string, clock: Clock): RecordDate {
+    if (!raw.trim()) throw new DateRequiredError();
     if (!RecordDate.isCalendarDate(raw)) throw new InvalidDateError();
     if (raw > RecordDate.today(clock)) throw new FutureDateError();
     return new RecordDate(raw);

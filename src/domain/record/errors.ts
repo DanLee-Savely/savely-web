@@ -10,6 +10,10 @@ export class InvalidAmountError extends DomainError {
   readonly code = "INVALID_AMOUNT";
 }
 
+export class DateRequiredError extends DomainError {
+  readonly code = "DATE_REQUIRED";
+}
+
 export class InvalidDateError extends DomainError {
   readonly code = "INVALID_DATE";
 }

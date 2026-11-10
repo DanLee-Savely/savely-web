@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Amount } from "./Amount";
 import { CategoryCatalog } from "./CategoryCatalog";
-import { AmountRequiredError, FutureDateError, ImageTooLargeError, InvalidAmountError, InvalidDateError, InvalidImageTypeError, InvalidRecordError, TextTooLongError } from "./errors";
+import { AmountRequiredError, DateRequiredError, FutureDateError, ImageTooLargeError, InvalidAmountError, InvalidDateError, InvalidImageTypeError, InvalidRecordError, TextTooLongError } from "./errors";
 import { ImageFile } from "./ImageFile";
 import { RecordDate } from "./RecordDate";
 import { type RecordDraft, RecordEntry } from "./RecordEntry";
@@ -45,7 +45,7 @@ describe("RecordDate", () => {
     expect(RecordDate.create("1999-01-01", clock).toString()).toBe("1999-01-01");
     expect(() => RecordDate.create("2026-02-30", clock)).toThrow(InvalidDateError);
     expect(() => RecordDate.create("2026-1-5", clock)).toThrow(InvalidDateError);
-    expect(() => RecordDate.create("", clock)).toThrow(InvalidDateError);
+    expect(() => RecordDate.create("", clock)).toThrow(DateRequiredError);
   });
 });
 
