@@ -44,6 +44,8 @@ describe("RecordDate", () => {
   it("과거는 제한 없음, 없는 날짜 · 형식은 거부", () => {
     expect(RecordDate.create("1999-01-01", clock).toString()).toBe("1999-01-01");
     expect(() => RecordDate.create("2026-02-30", clock)).toThrow(InvalidDateError);
+    expect(() => RecordDate.create("2026-10-40", clock)).toThrow(InvalidDateError);
+    expect(() => RecordDate.create("2026-13-01", clock)).toThrow(InvalidDateError);
     expect(() => RecordDate.create("2026-1-5", clock)).toThrow(InvalidDateError);
     expect(() => RecordDate.create("", clock)).toThrow(DateRequiredError);
   });

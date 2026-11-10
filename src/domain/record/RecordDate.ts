@@ -20,9 +20,20 @@ export class RecordDate {
     return SEOUL.format(clock.now());
   }
 
-  // 2026-02-30 같은 없는 날짜를 거른다. 시각과 Z를 붙여 UTC로 명시한다
+  /** 'YYYY-MM-DD'에서 n일 앞뒤 날짜 (UTC 자정으로 계산해 시간대 영향 없음) */
+  static addDays(date: string, n: number): string {
+    return new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+  }
+
+  /** 0 = 월요일 … 6 = 일요일 (앱 달력과 같은 월요일 시작) */
+  static weekday(date: string): number {
+    return (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
+  }
+
+  // 2026-02-30 · 2026-10-40 같은 없는 날짜를 거른다. 시각과 Z를 붙여 UTC로 명시한다(13월 · 40일은 Date가 NaN)
   private static isCalendarDate(raw: string): boolean {
-    return /^\d{4}-\d{2}-\d{2}$/.test(raw) && new Date(`${raw}T00:00:00Z`).toISOString().startsWith(raw);
+    const time = Date.parse(`${raw}T00:00:00Z`);
+    return /^\d{4}-\d{2}-\d{2}$/.test(raw) && !Number.isNaN(time) && new Date(time).toISOString().startsWith(raw);
   }
 
   equals(other: RecordDate): boolean {
