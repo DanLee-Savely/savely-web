@@ -6,7 +6,9 @@
 ## 배포 URL
 - 실서비스(Cloudflare Workers): https://www.savelyglobal.com/home
 - Vercel 사본은 만들지 않고 실서비스 주소로 제출했다
-- 미션 6 기록 체험판: https://www.savelyglobal.com/app (기록 CRUD 2026-11-10 배포 · 홈 · 달력 · 리포트는 배포 전 — 같은 Worker의 `/app*` 라우트)
+- 미션 6 기록 체험판(Cloudflare Workers): https://www.savelyglobal.com/app — 2026-11-10 배포, 같은 Worker의 `/app*` 라우트
+  - 홈 `/app` · 기록 `/app/records` · 달력 `/app/calendar` · 리포트 `/app/report`
+  - 소개 사이트 히어로의 「웹에서 체험하기」(PC)로 들어가고, 체험판 왼쪽 위 로고로 소개 사이트에 돌아온다
 
 ## 서비스 소개
 세이블리(Savely)는 직접 적으며 소비를 돌아보는 가계부 앱이다(iOS · Android, 출시 전).
