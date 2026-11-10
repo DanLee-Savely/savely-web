@@ -10,7 +10,7 @@ const log = (q, ok, note) => { R[q] = { ok, note }; console.log(q, ok ? "PASS" :
 const d1 = (sql, db = "savely-records") => JSON.parse(execSync(`npx wrangler d1 execute ${db} --local --json --command "${sql}" 2>/dev/null`).toString())[0].results;
 const count = () => d1("SELECT COUNT(*) AS n FROM records")[0].n;
 const blobs = () => Number(execSync(`find .wrangler/state/v3/r2 -path "*blobs*" -type f 2>/dev/null | wc -l`).toString().trim());
-let writes = 0; const t0 = Date.now();
+let writes = 0;
 const budget = async (n = 1) => { if (writes + n > 9) { const wait = Math.max(0, 61000 - (Date.now() - wStart)); console.log(`  (요청 제한 창 대기 ${Math.ceil(wait / 1000)}초)`); await new Promise((r) => setTimeout(r, wait)); writes = 0; wStart = Date.now(); } writes += n; };
 let wStart = Date.now();
 const waitlistBefore = d1("SELECT COUNT(*) AS n FROM waitlist", "savely-waitlist")[0].n;
