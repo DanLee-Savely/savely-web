@@ -1,12 +1,12 @@
 # 세이블리 소개 사이트 (savely-web)
 
 코드잇 스프린트 미션 5 — 출시 전 가계부 앱 「세이블리」의 소개 페이지(HOME)
-미션 6 — 웹에서 지출 기록을 적고 · 보고 · 고치고 · 지우는 체험판(`/app`, 아래 「미션 6 MVP」)
+미션 6 — 웹에서 지출 기록을 적고 · 보고 · 고치고 · 지우고, 홈 · 달력 · 리포트로 모아 보는 체험판(`/app`, 아래 「미션 6 MVP」)
 
 ## 배포 URL
 - 실서비스(Cloudflare Workers): https://www.savelyglobal.com/home
 - Vercel 사본은 만들지 않고 실서비스 주소로 제출했다
-- 미션 6 기록 체험판: https://www.savelyglobal.com/app (2026-11-10 배포, 홈 · 달력 · 리포트는 배포 전 — 같은 Worker의 `/app*` 라우트)
+- 미션 6 기록 체험판: https://www.savelyglobal.com/app (기록 CRUD 2026-11-10 배포 · 홈 · 달력 · 리포트는 배포 전 — 같은 Worker의 `/app*` 라우트)
 
 ## 서비스 소개
 세이블리(Savely)는 직접 적으며 소비를 돌아보는 가계부 앱이다(iOS · Android, 출시 전).
@@ -61,8 +61,13 @@
 세이블리의 출발점인 「직접 적는다」를 웹에서 검증한다. 로그인 없이 누구나 같은 데이터를 보고 고치는 **공개 체험판**이라, 모든 화면 위에 「실제 소비 내역 · 개인정보를 적지 말라」는 안내 띠를 두고 검색에서 뺐다(noindex).
 
 ### 핵심 기능
+왼쪽 메뉴: 홈 · 기록 · 달력 · 리포트. 정산 · 연속 정산 · 보상 · AI 리포트 · 예산 · 멤버십은 로그인 이후라 만들지 않았다(00-decisions M17 · M18).
+
 | 화면 | 주소 | 내용 |
 |---|---|---|
+| 홈 | `/app` | 「오늘 세 번 적었어요.」(오늘 건수에 따라) · 오늘 쓴 돈과 최근 3건 · 이번 달 쓴 돈 · 수입 · 기록 · 하루 평균 · 최근 7일 지출 막대 · 이번 달 많이 쓴 곳 상위 3 |
+| 달력 | `/app/calendar?month=&date=` | 월요일 시작 칸에 날짜별 지출, 달 이동(미래 달 없음), 선택한 날의 쓴 돈 · 기록 · 필수지출 건수 · 기분 집계 · 「이 날 기록 추가」(그 날짜로 등록) |
+| 리포트 | `/app/report?month=` | 월 지출 · 수입 · 하루 평균 · 지난달 같은 기간 비교 · 가장 많이 쓴 곳, 주별 지출(1–7 … 29–말일, 진행 중 · 예정), 카테고리별 비율, 왜 썼고 기분은 어땠나요 · 충동 인사이트 |
 | 목록 | `/app/records?page=N` | 날짜 최신순 10건씩, 이전 · 번호(최대 5개) · 다음. 빈 상태 · 로딩(회색 막대 10줄) · 불러오기 오류 + 「다시 시도」 |
 | 등록 | `/app/records/new` | 구분(지출 · 수입) · 금액 · 날짜 · 카테고리(필수), 내용 60자 · 메모 200자 · 결제수단 · 왜 썼나요 · 그때 기분 · 사진 1장(선택). 수입이면 지출 전용 칸 숨김 |
 | 상세 | `/app/records/[id]` | 모든 항목(빈 항목은 「—」) · 사진(원본 새 탭) · 처음 적은 시각 · 고친 시각, 「수정」 · 「삭제」(확인 창) |
@@ -72,6 +77,7 @@
 
 - 검증은 브라우저와 서버가 **같은 도메인 클래스**(`RecordEntry.check`)로 한다. 칸별 오류 문구, 첫 오류 칸으로 포커스, 저장 중에는 입력 잠금 · 두 번 저장 방지
 - 저장 · 수정 · 삭제 뒤 알림(「기록했어요」 등 3초), 쓰기 요청 제한(IP당 1분 10회, 넘으면 「요청이 너무 많아요」)
+- 홈 · 달력 · 리포트는 기록 테이블만 읽어 계산한다(새 테이블 없음, `record_date BETWEEN ? AND ?` 집계). 금액 · 막대 · 비율은 **지출만**, 수입은 「수입」 줄에만(M19). 「오늘」 · 「이번 달」은 Asia/Seoul
 - 사진은 브라우저에서 긴 변 1600px JPEG로 다시 저장해 찍은 위치(GPS) 등 EXIF를 지운 뒤 올린다. 서버는 파일 앞부분 바이트로 JPG · PNG · WEBP · 5MB 이하를 다시 확인한다
 - 소개 사이트 히어로에 「웹에서 체험하기」(PC만) → `/app`
 
@@ -106,14 +112,14 @@
 | `DB` · `WAITLIST_RATE_LIMITER` · `WAITLIST_ALLOWED_ORIGINS` | D1 · Rate Limiting · 변수 | 출시 알림(미션 5) |
 
 ### 코드 구조
-- domain: `RecordEntry` · `Amount` · `RecordDate` · `RecordTitle` · `RecordMemo` · `ImageFile` · `CategoryCatalog` · `RecordRepository` · `ImageStorage` · 도메인 오류
-- application: 유스케이스 하나 = 클래스 하나(`Create` · `List` · `Get` · `Update` · `DeleteRecordService`)
-- infrastructure: `D1RecordRepository` · `R2ImageStorage` · `WriteRateLimiter`(테스트 전용 InMemory 저장소 2개)
+- domain: `RecordEntry` · `Amount` · `RecordDate` · `RecordTitle` · `RecordMemo` · `ImageFile` · `CategoryCatalog` · `MonthKey`(달) · `WeekBuckets`(주 구간) · `RecordRepository` · `RecordStatsReader`(집계) · `ImageStorage` · 도메인 오류
+- application: 유스케이스 하나 = 클래스 하나(`Create` · `List` · `Get` · `Update` · `DeleteRecordService`, `GetHomeSummary` · `GetMonthCalendar` · `GetMonthlyReportService`)
+- infrastructure: `D1RecordRepository` · `D1RecordStatsReader` · `R2ImageStorage` · `WriteRateLimiter`(테스트 전용 InMemory 3개)
 - interaction: `RecordFormFlow`(폼 상태 · 칸별 오류) · `PageWindow`(페이지 번호)
 - 화면: Server Actions(`src/app/app/records/actions.ts`) · 재사용 컴포넌트(`src/components/app/`), 문구는 `src/content/app.content.ts`
 
 ### QA 결과 (2026-11-10, 로컬 preview)
-Q1~Q22 **22개 통과** — 빈 값 · 잘못된 형식 · 서버 검증(요청 본문 조작) · 두 번 저장 · 새로고침 · 수정 · 구분 전환 · 삭제 · 없는 주소(404) · 사진 형식 · 크기 · 오프라인 · 페이지 나누기 · 빈 목록 · 로딩 · 오류 · 저장소 직접 접근 · 사진 위치 정보 · 날짜 경계 · 요청 제한 · 데이터베이스 분리. 상세는 `docs/spec/71-mvp-qa.md`
+Q1~Q30 **30개 통과**(홈 · 달력 · 리포트를 더한 뒤 Q1~Q22도 다시 통과). 홈 제목 · 세 화면 합계 일치 · 수입 제외 · 달 이동 · 날짜 선택 → 등록 · 28/30/31일 주 구간 · 빈 상태 · 한국 날짜 기준 — 빈 값 · 잘못된 형식 · 서버 검증(요청 본문 조작) · 두 번 저장 · 새로고침 · 수정 · 구분 전환 · 삭제 · 없는 주소(404) · 사진 형식 · 크기 · 오프라인 · 페이지 나누기 · 빈 목록 · 로딩 · 오류 · 저장소 직접 접근 · 사진 위치 정보 · 날짜 경계 · 요청 제한 · 데이터베이스 분리. 상세는 `docs/spec/71-mvp-qa.md`
 
 ## 검색 노출
 - `src/app/robots.ts` · `sitemap.ts`로 `/robots.txt` · `/sitemap.xml`을 만들고, Worker 라우트에 두 주소만 추가했다
@@ -181,3 +187,4 @@ npm run deploy         # Cloudflare 배포 (권한 필요)
 | 공통 (실기기) | iOS Safari에서 인터랙션 · 출시 알림 신청 확인 | — |
 | 출시 알림 API (2026-11-04 보안 점검 반영) | 확정 취약점은 없었으나 IPv6 주소를 바꿔 가며 요청 제한을 피할 여지, 다른 사이트에서 `text/plain`으로 보내는 신청, 이메일 속 터미널 제어 문자, iframe 삽입 여지가 남음 | IPv6 /64 단위 제한, 403 · 415 · 413 사전 거부, 제어 · 보이지 않는 문자 거부, 보안 헤더 · workers.dev 끔(00-decisions B6). 로컬 Worker에서 응답 코드 · 헤더 · 실제 신청 확인 |
 | 기록 체험판 /app (2026-11-10 QA) | 저장 직후 3초 안에 연 삭제 확인 창이 저절로 닫힘(알림이 주소를 지우며 페이지를 다시 그림). 같은 순간의 두 번째 클릭이 저장을 한 번 더 보낼 수 있음. 없는 기록 상세가 HTTP 200(상세 로딩 화면 때문) | 주소는 `history.replaceState`로 지움, 저장 · 삭제에 전송 중 표시, 상세 · 수정 `loading.tsx` 제거. Q1~Q22 재점검 통과(`docs/spec/71-mvp-qa.md`) |
+| 홈 · 달력 · 리포트 (2026-11-10 A안 QA) | 없는 날짜(`2026-10-40`)에서 날짜 검사가 RangeError로 멈춤. 배포 후 `/app?_rsc=…`가 522(정확 일치 라우트). 「통신예요」처럼 받침 뒤 「예요」 | 없는 날짜는 E13, 라우트 `/app*`, 받침이면 「이에요」. Q23~Q30 통과 · Q1~Q22 재통과(`docs/spec/71-mvp-qa.md`) |
