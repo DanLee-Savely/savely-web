@@ -24,6 +24,8 @@ export const homeContent = {
     },
     desc: "하루 한 번 적고 마감하는 작은 습관으로\n나와 가족의 소비를 함께 돌아봐요.",
     cta: "출시 알림 신청",
+    // 보조 버튼: /app 기록 체험판 (00-decisions M10). PC만 표시
+    secondaryCta: { label: "웹에서 체험하기", href: "/app" },
     note: "iOS · Android로 출시될 예정이에요",
     device: {
       screens: [

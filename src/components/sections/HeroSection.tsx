@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { AppButton } from "@/components/common/AppButton";
 import { BreakText } from "@/components/common/BreakText";
 import { Section } from "@/components/common/Section";
 import { HeroDeviceCarousel } from "@/components/interactive/HeroDeviceCarousel";
@@ -25,9 +27,15 @@ export function HeroSection() {
           <p className="sv-text-body-15 text-sv-text-2">
             <BreakText text={hero.desc} />
           </p>
-          <WaitlistButton source="hero" size="l">
-            {hero.cta}
-          </WaitlistButton>
+          <div className="flex gap-3">
+            <WaitlistButton source="hero" size="l">
+              {hero.cta}
+            </WaitlistButton>
+            {/* 웹 체험은 PC만 (M10 · M16 — 모바일은 앱이 담당) */}
+            <AppButton asChild variant="outline" size="l" className="hidden lg:inline-flex">
+              <Link href={hero.secondaryCta.href}>{hero.secondaryCta.label}</Link>
+            </AppButton>
+          </div>
           <p className="sv-text-support-13 text-sv-text-3">{hero.note}</p>
         </div>
         <HeroDeviceCarousel />
