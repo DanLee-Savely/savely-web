@@ -1,11 +1,15 @@
 import { CreateRecordService } from "@/application/record/CreateRecordService";
 import { DeleteRecordService } from "@/application/record/DeleteRecordService";
+import { GetHomeSummaryService } from "@/application/record/GetHomeSummaryService";
+import { GetMonthCalendarService } from "@/application/record/GetMonthCalendarService";
+import { GetMonthlyReportService } from "@/application/record/GetMonthlyReportService";
 import { GetRecordService } from "@/application/record/GetRecordService";
 import { ListRecordsService } from "@/application/record/ListRecordsService";
 import { UpdateRecordService } from "@/application/record/UpdateRecordService";
 import { RegisterWaitlistService } from "@/application/waitlist/RegisterWaitlistService";
 import type { ImageStorage } from "@/domain/record/ImageStorage";
 import { D1RecordRepository } from "./record/D1RecordRepository";
+import { D1RecordStatsReader } from "./record/D1RecordStatsReader";
 import { R2ImageStorage } from "./record/R2ImageStorage";
 import { SystemClock } from "./record/SystemClock";
 import { WriteRateLimiter } from "./record/WriteRateLimiter";
@@ -50,6 +54,9 @@ export type RecordsServer = {
   create: CreateRecordService;
   update: UpdateRecordService;
   remove: DeleteRecordService;
+  home: GetHomeSummaryService;
+  calendar: GetMonthCalendarService;
+  report: GetMonthlyReportService;
   images: ImageStorage;
   limiter: WriteRateLimiter;
 };
@@ -61,12 +68,16 @@ export async function createRecordsServer(): Promise<RecordsServer> {
   if (!env.RECORDS_DB || !env.RECORD_IMAGES) throw new Error("RECORDS_DB · RECORD_IMAGES 바인딩이 없어요");
   const repository = new D1RecordRepository(env.RECORDS_DB);
   const images = new R2ImageStorage(env.RECORD_IMAGES);
+  const stats = new D1RecordStatsReader(env.RECORDS_DB);
   return {
     list: new ListRecordsService(repository),
     get: new GetRecordService(repository),
     create: new CreateRecordService(repository, images, clock),
     update: new UpdateRecordService(repository, images, clock),
     remove: new DeleteRecordService(repository, images),
+    home: new GetHomeSummaryService(stats, clock),
+    calendar: new GetMonthCalendarService(stats, clock),
+    report: new GetMonthlyReportService(stats, clock),
     images,
     limiter: new WriteRateLimiter(env.RECORDS_RATE_LIMITER),
   };

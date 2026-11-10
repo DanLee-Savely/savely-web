@@ -33,6 +33,11 @@ export class InMemoryRecordRepository implements RecordRepository {
     return row ? RecordEntry.restore(row) : null;
   }
 
+  /** 집계 테스트용: 저장된 모든 행 */
+  all(): RecordData[] {
+    return [...this.rows.values()];
+  }
+
   get size(): number {
     return this.rows.size;
   }
