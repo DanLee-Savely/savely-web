@@ -1,10 +1,14 @@
-import { Clock } from "lucide-react";
+import { Clock, Pencil } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteRecordButton } from "@/components/app/DeleteRecordButton";
 import { PageHeader } from "@/components/app/PageHeader";
+import { RecordPhoto } from "@/components/app/RecordPhoto";
+import { AppButton } from "@/components/common/AppButton";
 import { appContent } from "@/content/app.content";
 import { RecordNotFoundError } from "@/domain/record/errors";
 import { createRecordsServer } from "@/infrastructure/container";
-import { formatAmount, formatDay, formatTime } from "@/lib/recordFormat";
+import { formatAmount, formatDay, formatTime, imageUrl } from "@/lib/recordFormat";
 
 const { detail, kinds, categories, paymentMethods, reasons, feelings, form } = appContent;
 
@@ -31,27 +35,44 @@ export default async function RecordPage({ params }: PageProps<"/app/records/[id
 
   return (
     <>
-      <PageHeader back={{ href: "/app/records", label: detail.backToList }} title={r.title ?? categories[r.categoryId]} />
-      <article className="rounded-sv-lg border border-sv-border-2 bg-sv-surface p-7">
-        <span className="rounded-sv-pill bg-sv-surface-2 px-2.5 py-1 sv-text-label-13 text-sv-text-2">{kinds[r.kind]}</span>
-        <p className={`mt-3 mb-6 sv-text-amount-44 ${expense ? "text-sv-text" : "text-sv-accent"}`}>
-          {!expense && "+"}
-          {formatAmount(r.amount)}
-          <span className="ml-1.5 sv-text-label-15 text-sv-text-2">{form.won}</span>
-        </p>
-        <dl className="border-t border-sv-border-2">
-          {rows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[136px_1fr] gap-4 border-b border-sv-border-2 py-3.5">
-              <dt className="sv-text-support-13 text-sv-text-3">{label}</dt>
-              <dd className="sv-text-label-15 break-all whitespace-pre-line text-sv-text">{value || detail.empty}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-5 flex items-center gap-1.5 sv-text-support-13 text-sv-text-3">
-          <Clock aria-hidden className="size-4" />
-          {detail.times.replace("{created}", formatTime(r.createdAt)).replace("{updated}", formatTime(r.updatedAt))}
-        </p>
-      </article>
+      <PageHeader
+        back={{ href: "/app/records", label: detail.backToList }}
+        title={r.title ?? categories[r.categoryId]}
+        actions={
+          <>
+            <AppButton asChild variant="outline">
+              <Link href={`/app/records/${r.id}/edit`}>
+                <Pencil aria-hidden className="size-4" />
+                {detail.edit}
+              </Link>
+            </AppButton>
+            <DeleteRecordButton record={r} />
+          </>
+        }
+      />
+      <div className="grid items-start gap-5 xl:grid-cols-[1fr_440px]">
+        <article className="rounded-sv-lg border border-sv-border-2 bg-sv-surface p-7">
+          <span className="rounded-sv-pill bg-sv-surface-2 px-2.5 py-1 sv-text-label-13 text-sv-text-2">{kinds[r.kind]}</span>
+          <p className={`mt-3 mb-6 sv-text-amount-44 ${expense ? "text-sv-text" : "text-sv-accent"}`}>
+            {!expense && "+"}
+            {formatAmount(r.amount)}
+            <span className="ml-1.5 sv-text-label-15 text-sv-text-2">{form.won}</span>
+          </p>
+          <dl className="border-t border-sv-border-2">
+            {rows.map(([label, value]) => (
+              <div key={label} className="grid grid-cols-[136px_1fr] gap-4 border-b border-sv-border-2 py-3.5">
+                <dt className="sv-text-support-13 text-sv-text-3">{label}</dt>
+                <dd className="sv-text-label-15 break-all whitespace-pre-line text-sv-text">{value || detail.empty}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-5 flex items-center gap-1.5 sv-text-support-13 text-sv-text-3">
+            <Clock aria-hidden className="size-4" />
+            {detail.times.replace("{created}", formatTime(r.createdAt)).replace("{updated}", formatTime(r.updatedAt))}
+          </p>
+        </article>
+        <RecordPhoto src={imageUrl(r)} />
+      </div>
     </>
   );
 }

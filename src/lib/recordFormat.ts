@@ -15,3 +15,7 @@ export const formatTime = (iso: string): string => TIME.format(new Date(iso));
 
 /** 9000 → 「9,000」 */
 export const formatAmount = (n: number): string => n.toLocaleString("ko-KR");
+
+/** 사진 주소(/app/records/[id]/image), 없으면 null. 사진을 바꾸면 키가 바뀌므로 v로 붙여 이전 사진이 보이지 않게 한다 */
+export const imageUrl = (r: { id: string; imageKey: string | null }): string | null =>
+  r.imageKey && `/app/records/${r.id}/image?v=${r.imageKey.split("/")[1]}`;

@@ -14,7 +14,7 @@ export default function NewRecordPage() {
   return (
     <>
       <PageHeader back={{ href: "/app/records", label: form.backToList }} title={form.createTitle} />
-      <RecordForm initial={emptyDraft(today)} today={today} action={createRecord} submitLabel={form.save} cancelHref="/app/records" />
+      <RecordForm initial={emptyDraft(today)} today={today} action={createRecord} submitLabel={form.save} cancelHref="/app/records" hint={form.hint} />
     </>
   );
 }
