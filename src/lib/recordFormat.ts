@@ -10,6 +10,14 @@ export const formatDay = (date: string): string => {
   return DAY.format(Date.UTC(y, m - 1, d));
 };
 
+const DAY_SHORT = new Intl.DateTimeFormat("ko-KR", { day: "numeric", weekday: "short", timeZone: "UTC" });
+
+/** '2026-10-20' → 「20일 (화)」 */
+export const formatDayShort = (date: string): string => {
+  const [y, m, d] = date.split("-").map(Number);
+  return DAY_SHORT.format(Date.UTC(y, m - 1, d));
+};
+
 /** ISO 시각 → 「10월 26일 14:12」(한국 시간) */
 export const formatTime = (iso: string): string => TIME.format(new Date(iso));
 

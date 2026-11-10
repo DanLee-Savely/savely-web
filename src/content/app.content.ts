@@ -88,6 +88,78 @@ export const appContent = {
     times: "처음 적은 시각 {created} · 마지막으로 고친 시각 {updated}",
   },
 
+  // 홈 · 달력 · 리포트 (§9 H · C · R, 초안 2026-11-10). {M}월 · {n}건 등은 코드에서 채운다
+  home: {
+    titleZero: "오늘은 아직 적지 않았어요.", // H1
+    titleCount: "오늘 {n} 적었어요.", // H2 — {n}: 한 번 · 두 번 … 다섯 번, 6건부터 「6번」
+    countWords: ["한 번", "두 번", "세 번", "네 번", "다섯 번"],
+    countN: "{n}번",
+    emptyToday: "한 건만 적어도 오늘이 시작됩니다", // H3
+    emptyCta: "첫 기록 남기기",
+    today: "오늘", // H4
+    todaySpent: "오늘 쓴 돈",
+    allRecords: "기록 전체",
+    monthRange: "{M}월 1일 – {D}일",
+    monthSpent: "이번 달 쓴 돈",
+    income: "수입",
+    count: "기록",
+    countValue: "{n}건",
+    recordCount: "기록 {n}건",
+    dailyAverage: "하루 평균 지출",
+    last7: "최근 7일 지출",
+    top: "{M}월 많이 쓴 곳",
+    topEmpty: "기록이 쌓이면 많이 쓴 곳을 보여 드려요", // H5
+    report: "리포트",
+    calendar: "달력",
+  },
+
+  calendar: {
+    title: "달력",
+    monthLabel: "{Y}년 {M}월",
+    prevMonth: "이전 달", // 화면 낭독기용
+    nextMonth: "다음 달",
+    monthExpense: "{M}월 지출 {amount}원",
+    weekdays: ["월", "화", "수", "목", "금", "토", "일"],
+    selected: "선택한 날", // C1
+    spent: "이 날 쓴 돈",
+    recordCount: "기록 {n}건",
+    fixedCount: "필수지출 {n}건",
+    feeling: "그때 기분",
+    add: "이 날 기록 추가",
+    empty: "이 날은 기록이 없어요", // C2
+    today: "오늘", // C3
+    average: "하루 평균",
+  },
+
+  report: {
+    title: "리포트", // R1
+    subtitle: "{M}월 1일 – {D}일 · 기록 {n}건",
+    expense: "{M}월 지출",
+    income: "수입",
+    dailyAverage: "하루 평균 지출",
+    weekly: "주별 지출",
+    weekRange: "{from}–{to}일",
+    maxWeek: "가장 많이 쓴 주 · {range}",
+    progress: "진행 중",
+    planned: "예정",
+    where: "어디에 썼나요",
+    total: "합계",
+    why: "왜 썼고, 기분은 어땠나요",
+    reason: "왜 썼나요",
+    feeling: "그때 기분",
+    insight: "“{M}월 가장 많이 쓴 곳은 {category}”", // R2 — {category}에 「예요 / 이에요」를 붙인다
+    insightSub: "{category} {amount}원 · 전체 지출의 {n}%",
+    compare: {
+      more: "지난달 같은 기간보다 {amount}원 더 썼어요", // R3
+      less: "지난달 같은 기간보다 {amount}원 덜 썼어요",
+      same: "지난달 같은 기간과 같아요",
+      none: "지난달 기록이 없어서 아직 비교할 수 없어요",
+    },
+    impulse: "충동적으로 쓴 {n}건 중 {m}건은 ‘아쉬움·후회’였어요", // R4
+    empty: "이 달은 기록이 없어요", // R5
+    emptyCta: "기록하기",
+  },
+
   toast: {
     created: "기록했어요", // S1
     updated: "수정했어요", // S2
@@ -115,3 +187,16 @@ export const appContent = {
 /** 도메인 오류 code → 화면 문구 (브라우저 검사 · 서버 결과가 같이 쓴다) */
 export const errorMessage = (field: string, code: string): string =>
   appContent.errors[field]?.[code] ?? appContent.errors.form[code] ?? appContent.errors.form.SERVER_ERROR;
+
+/** 문구의 {이름} 자리를 채운다 */
+export const fill = (text: string, values: Record<string, string | number>): string =>
+  text.replace(/\{(\w+)\}/g, (_, k: string) => String(values[k] ?? ""));
+
+/** H2 오늘 기록 건수 말: 1~5건은 「한 번 … 다섯 번」, 6건부터 「6번」 */
+export const countWord = (n: number): string => appContent.home.countWords[n - 1] ?? fill(appContent.home.countN, { n });
+
+/** 「식비예요」 · 「교통이에요」 — 마지막 글자에 받침이 있으면 「이에요」 */
+export const withCopula = (word: string): string => {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  return word + (code >= 0 && code < 11172 && code % 28 ? "이에요" : "예요");
+};
