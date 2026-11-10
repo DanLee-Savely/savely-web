@@ -1,4 +1,4 @@
-# 71 · MVP QA 결과 — 기록 체험판 /app (미션 6)
+# 71 · MVP QA 결과 — 기록 체험판 /app
 
 > **점검일:** 2026-11-10 · **환경:** 로컬 `npm run preview`(OpenNext 빌드를 workerd로 실행, 로컬 D1 · R2 · 요청 제한 바인딩) · Chromium(Playwright) 1440×900 · ko-KR
 > **기준:** `70-mvp-records.md` §10 · **자동 점검:** `scripts/qa-records.mjs` (preview 실행 중 `node scripts/qa-records.mjs <임시 폴더>`, 테스트 이미지는 `<임시 폴더>/img`)

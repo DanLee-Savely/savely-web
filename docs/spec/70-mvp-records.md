@@ -1,7 +1,7 @@
-# 70 · MVP — 지출 기록 CRUD (스프린트 미션 6)
+# 70 · MVP — 지출 기록 CRUD (기록 체험판 /app)
 
 > **상태:** 구현 기준 · 작성 2026-11-09 · 결정은 `00-decisions.md` I(M1~M16)에 옮김(2026-11-10)
-> **근거:** 코드잇 「[IF] 스프린트 미션 6」 공지 · 앱 `savely-app/lib/data/models/record.dart`, `lib/data/db/seed.dart`, `lib/features/record/record_screens.dart` · 서버 `savely-backend/prisma/schema.prisma`(`model Record`)
+> **근거:** 앱 `savely-app/lib/data/models/record.dart`, `lib/data/db/seed.dart`, `lib/features/record/record_screens.dart` · 서버 `savely-backend/prisma/schema.prisma`(`model Record`)
 > **사용자 결정 (2026-11-09):** 저장소는 Supabase 대신 Cloudflare D1 + R2, 배포는 Vercel 대신 Cloudflare(M12 · M14).
 > **「제안」 표시**는 확정 전 값이다. §11에서 확정하면 표시를 지우고 `00-decisions.md`에 옮긴다.
 
@@ -24,7 +24,7 @@
 
 | 기능 | 빼는 이유 |
 |---|---|
-| 로그인 · 회원가입 · 사용자별 권한 | 미션 공지가 미션 7로 넘김 |
+| 로그인 · 회원가입 · 사용자별 권한 | 로그인 이후 단계로 미룸 |
 | 정산 · 연속 정산 · 완벽한 주 · 보상(SVX) | 한 사람의 기록이 전제인 기능이라 로그인 없이는 숫자의 주인이 없음. 문구 규칙상 SVX는 로그인 후 화면 전용. 대시보드 시안(2026-11-04)의 정산 · 연속 · 적립 카드도 같은 이유로 뺀다 |
 | AI 리포트 · 멤버십 | 로그인 · 유료 기능 전제. 범위 밖 (홈 · 달력 · 리포트는 2026-11-10 A안으로 범위에 넣음) |
 | 상환 · 저축 유형, 카드 이름 | 앱에는 있으나 MVP 검증에 필요 없음. 카드 이름은 개인정보에 가까움 |
@@ -213,7 +213,7 @@
 
 ## 5. 재사용 컴포넌트
 
-미션 4번 요건(반복 UI의 컴포넌트화)에 맞춰 아래를 공통 컴포넌트로 만든다. 등록 · 수정은 같은 폼 컴포넌트를 쓴다.
+반복되는 UI는 아래를 공통 컴포넌트로 만든다. 등록 · 수정은 같은 폼 컴포넌트를 쓴다.
 
 버튼 · 금액 입력 · 칩 그룹(하나 선택) · 날짜 입력 · 글자 수 표시 입력 · 사진 선택기(미리보기 · 삭제) · 기록 행 · 기록 폼 · 페이지 나누기 · 확인 창 · 빈 상태 · 오류 상태 · 알림(토스트) · 안내 띠 · 스켈레톤
 
@@ -221,7 +221,7 @@
 
 ## 6. 데이터 구조 (Cloudflare D1 · R2)
 
-> **2026-11-09 사용자 결정:** 미션 공지의 Supabase 대신, 이미 쓰고 있는 Cloudflare D1(데이터베이스)과 R2(파일 저장)를 쓴다(M14).
+> **2026-11-09 사용자 결정:** Supabase 같은 별도 서비스 대신, 이미 쓰고 있는 Cloudflare D1(데이터베이스)과 R2(파일 저장)를 쓴다(M14).
 > 출시 알림 D1(`savely-waitlist`, 실제 이메일 보관)과는 **별도 데이터베이스**로 만든다. 누구나 쓰고 지우는 체험판 데이터를 개인정보와 같은 데이터베이스에 두지 않기 위해서다.
 
 | 자원 | 이름 (제안) | 바인딩 이름 (제안) | 용도 |
@@ -353,7 +353,7 @@ CREATE INDEX records_date_idx ON records (record_date DESC, created_at DESC);
 | domain | 도메인 오류 | `InvalidAmountError` · `FutureDateError` · `InvalidCategoryError` · `TextTooLongError` · `InvalidImageTypeError` · `ImageTooLargeError` · `ImageUploadError` · `RecordNotFoundError` |
 | application | `CreateRecordService` · `ListRecordsService` · `GetRecordService` · `UpdateRecordService` · `DeleteRecordService` | 유스케이스 하나 = 클래스 하나, `execute()` 하나 |
 | infrastructure | `D1RecordRepository` · `R2ImageStorage` | Cloudflare 구현(서버 전용). 바인딩은 `container.ts`에서 `getCloudflareContext()`로 받는다 — 출시 알림 `D1WaitlistRepository`와 같은 방식 |
-| infrastructure | `InMemoryRecordRepository` · `InMemoryImageStorage` | 단위 테스트 전용. 실행 환경의 저장소로 쓰지 않는다(미션 규칙: Mock · 로컬 저장을 최종 저장소로 쓰지 않음) |
+| infrastructure | `InMemoryRecordRepository` · `InMemoryImageStorage` | 단위 테스트 전용. 실행 환경의 저장소로 쓰지 않는다(Mock · 로컬 저장을 최종 저장소로 쓰지 않음) |
 | infrastructure | `container.ts` | 구현체 조립(이곳에서만 `new`) |
 | infrastructure | `WriteRateLimiter` | 쓰기 요청 제한(`RECORDS_RATE_LIMITER` 바인딩) |
 | interaction | `RecordFormFlow` | 폼 상태 전이: idle → editing → submitting → done / error, 칸별 오류 보관 |
@@ -391,7 +391,7 @@ CREATE INDEX records_date_idx ON records (record_date DESC, created_at DESC);
 - DB CHECK 제약은 마지막 방어선이다. 정상 흐름에서는 서버 코드가 먼저 거른다.
 
 ### 8-3. 개인정보
-- 실제 개인정보나 민감한 데이터를 저장하지 않는다(미션 공지). 카드 이름 칸을 두지 않는다.
+- 실제 개인정보나 민감한 데이터를 저장하지 않는다. 카드 이름 칸을 두지 않는다.
 - 휴대폰 사진에는 찍은 위치(GPS) 같은 정보(EXIF)가 들어 있을 수 있고, 로그인이 없어 누구나 사진을 열어 볼 수 있다. 그래서 올리기 전에 브라우저에서 사진을 다시 저장해 이 정보를 지운다.
 - 원래 파일 이름은 저장하지 않는다.
 - 로그에는 금액 · 내용 · 메모를 남기지 않는다. 기록 id와 오류 종류만 남긴다.
@@ -457,7 +457,7 @@ CREATE INDEX records_date_idx ON records (record_date DESC, created_at DESC);
 
 ---
 
-## 10. QA 체크리스트 (미션 8번 시나리오 포함 — 결과: `71-mvp-qa.md`, 2026-11-10 로컬 30/30 통과)
+## 10. QA 체크리스트 (결과: `71-mvp-qa.md`, 2026-11-10 로컬 30/30 통과)
 
 | # | 시나리오 | 방법 | 기대 결과 |
 |---|---|---|---|
@@ -505,11 +505,11 @@ CREATE INDEX records_date_idx ON records (record_date DESC, created_at DESC);
 | M5 | 페이지당 건수 | 10건 — **확정(사용자 2026-11-10)** | |
 | M6 | 금액 상한 | 1원 이상 1조 원 미만(앱 서버와 같음) — **확정(사용자 2026-11-10)** | 서버 `src/shared/money/amount.schema.ts`의 `MAX_AMOUNT`(1조 미만, 주석상 근거 「비즈니스 로직 2번 v1.1 §8-3」)와 맞춘다. 2026-11-10 정정: 첫 초안의 「서버에서 상한을 찾지 못했다」는 확인 누락이었다 |
 | M7 | 삭제 방식 | 행을 실제로 삭제 — **확정(사용자 2026-11-10)** | 앱 서버는 소프트 삭제(`deleted_at`) |
-| M8 | 접근 방식 | D1 · R2는 서버에서 바인딩으로만 접근 · R2 공개 주소 없음(사진은 서버 경로로 전달) · 쓰기 요청 제한 | 사용자별 권한은 미션 7 |
+| M8 | 접근 방식 | D1 · R2는 서버에서 바인딩으로만 접근 · R2 공개 주소 없음(사진은 서버 경로로 전달) · 쓰기 요청 제한 | 사용자별 권한은 로그인 이후 |
 | M9 | 날짜 범위 | 미래만 금지(과거 제한 없음) — **확정(사용자 2026-11-10)** | 앱은 과거 30일까지(서버 기록 창). 체험 편의를 위해 MVP는 제한 없음 |
 | M10 | 소개 사이트 → /app 연결 | 히어로의 「출시 알림 신청」 옆 보조(테두리) 버튼 「웹에서 체험하기」 → `/app` — **확정(사용자 2026-11-10)**. 모바일 소개 화면에는 표시하지 않음(제안, M16과 같은 이유) | 주 버튼은 그대로 「출시 알림 신청」(00-decisions A7 유지). `content.json`에 `hero.secondaryCta` 추가 필요(문구 규칙). Figma 반영: UI 히어로 `70:1818` · 라이트 프로토타입 PC 히어로 `70:2939` |
 | M11 | Cloudflare 자원 | D1 `savely-records` · R2 `savely-record-images` · 요청 제한 바인딩 생성 | 대표님 Cloudflare 계정 권한 필요. 명령은 3단계에서 안내 |
-| M12 | 배포 대상 | Cloudflare Workers — 기존 Worker에 `/app*` 경로 추가, 주소 `www.savelyglobal.com/app` — **확정(사용자 2026-11-10)**. Vercel 사용 안 함(사용자 2026-11-09) | 공지 제출물의 「Vercel 배포 URL」을 다른 주소로 내도 되는지는 운영진 확인 필요. 실서비스 도메인에 로그인 없는 공개 쓰기가 열리므로 안내 띠(N1) · 요청 제한(M15) · 검색 제외(noindex)를 함께 적용 |
+| M12 | 배포 대상 | Cloudflare Workers — 기존 Worker에 `/app*` 경로 추가, 주소 `www.savelyglobal.com/app` — **확정(사용자 2026-11-10)**. Vercel 사용 안 함(사용자 2026-11-09) | 실서비스 도메인에 로그인 없는 공개 쓰기가 열리므로 안내 띠(N1) · 요청 제한(M15) · 검색 제외(noindex)를 함께 적용 |
 | M13 | 문구 | §9 초안 그대로 — **확정(사용자 2026-11-10)** | 문구 규칙상 확정 전 사용자 확인 |
 | M14 | 저장소 | Cloudflare D1(출시 알림과 별도 데이터베이스) + R2 — **확정(사용자 2026-11-09)** | 공지는 Supabase를 명시. 핵심 요건(CRUD 한 사이클을 DB와 안정적으로 연결)을 기준으로 판단했고, 문구 차이에 따른 감점 위험은 사용자 판단으로 수용 |
 | M15 | 요청 제한 | IP 기준 1분에 쓰기 10회 — **확정(사용자 2026-11-10)** | 로그인 없는 공개 쓰기 남용 방지 |
@@ -524,7 +524,7 @@ CREATE INDEX records_date_idx ON records (record_date DESC, created_at DESC);
 
 ## 12. 이 문서 확정 후 반영할 곳
 - `docs/spec/00-decisions.md`: M1~M13 확정 내용을 결정 기록으로 옮긴다.
-- `CLAUDE.md`: §1(이 저장소 범위에 /app MVP 추가) · §2(이 문서 링크) · §4(D1 · R2 · 요청 제한 바인딩 이름) 보강. 미션 공지 「프로젝트 컨텍스트 파일에 테이블 구조와 데이터 처리 규칙 반영」 요건을 채운다.
+- `CLAUDE.md`: §1(이 저장소 범위에 /app MVP 추가) · §2(이 문서 링크) · §4(D1 · R2 · 요청 제한 바인딩 이름) 보강. 테이블 구조와 데이터 처리 규칙을 프로젝트 컨텍스트 파일에 반영한다.
 - `README.md`: 서비스 소개 · 핵심 기능 명세 · 테이블 구조 · 실행 방법 · 환경 변수 이름 · 배포 URL · QA 결과.
-- Figma(2단계, 2026-11-09 완료): 「디자인 시스템 · UI」 페이지, 라벨 「미션 6 MVP — 기록 CRUD」 아래 14개 화면(2026-11-10 추가 상태 4개 포함: 수입 입력 · 카테고리 펼침 · 삭제 실패 · 사진 불러오기 실패)과 「NOTE · 미션 6 MVP」(메시지 모음 · 진행 중 버튼). 기존 대시보드 시안(홈 · 달력 · 리포트 · 보상)은 「미션 7 이후」로 표시했다.
+- Figma(2단계, 2026-11-09 완료): 「디자인 시스템 · UI」 페이지, 기록 CRUD 라벨 아래 14개 화면(2026-11-10 추가 상태 4개 포함: 수입 입력 · 카테고리 펼침 · 삭제 실패 · 사진 불러오기 실패)과 노트(메시지 모음 · 진행 중 버튼). 기존 대시보드 시안(홈 · 달력 · 리포트 · 보상)은 로그인 이후 단계로 표시했다.
 - Figma(A안, 2026-11-10): 라벨 「홈 · 달력 · 리포트」 아래 4개 화면(홈 · 홈 기록 없음 · 달력 · 리포트). 기존 14개 화면의 왼쪽 메뉴도 홈 · 기록 · 달력 · 리포트로 바꿨다. 시안 이미지는 `docs/design/app/` 17~20번.
