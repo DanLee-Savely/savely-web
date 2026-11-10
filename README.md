@@ -6,7 +6,7 @@
 ## 배포 URL
 - 실서비스(Cloudflare Workers): https://www.savelyglobal.com/home
 - Vercel 사본은 만들지 않고 실서비스 주소로 제출했다
-- 미션 6 기록 체험판: https://www.savelyglobal.com/app (배포 전 — 같은 Worker에 `/app*` 라우트를 더해 배포한다)
+- 미션 6 기록 체험판: https://www.savelyglobal.com/app (배포 전 — 같은 Worker에 `/app` · `/app/*` 라우트를 더해 배포한다)
 
 ## 서비스 소개
 세이블리(Savely)는 직접 적으며 소비를 돌아보는 가계부 앱이다(iOS · Android, 출시 전).
@@ -26,7 +26,7 @@
 | 프레임워크 | Next.js 16 (App Router) · React 19 · TypeScript(strict) |
 | 스타일 | Tailwind CSS 4 · shadcn/ui(Radix) · lucide-react · 디자인 변수(`src/styles/tokens.css`) |
 | 글꼴 | Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자) |
-| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`, 미션 6 배포 시 `/app*`) |
+| 배포 | Cloudflare Workers(OpenNext, 라우트 `/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`, `/app` · `/app/*`) |
 | 저장 | Cloudflare D1(출시 알림 이메일 · 기록 체험판, 서로 다른 데이터베이스) · R2(기록 사진) · Rate Limiting 바인딩 |
 | 검사 | Vitest(도메인 · 상태 클래스) · Playwright(시안 비교 스크린샷) · ESLint |
 

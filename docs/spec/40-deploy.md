@@ -51,7 +51,7 @@ npx shadcn@latest add button card dialog sheet input checkbox carousel tooltip
 ## 3. Cloudflare (실서비스)
 1. **D1 생성:** `npx wrangler d1 create savely-waitlist` → 출력된 `database_id`를 `wrangler.jsonc`의 `d1_databases`에 `binding: "DB"`로 기록한다(`database_id`는 비밀값이 아님)
 2. **마이그레이션 적용:** `npx wrangler d1 migrations apply savely-waitlist --remote`
-3. **Route 설정:** `wrangler.jsonc`의 `routes`에 `www.savelyglobal.com/home*`와 `www.savelyglobal.com/_next/*`(정적 파일 · 이미지 최적화), 검색엔진용 `/robots.txt` · `/sitemap.xml`(`src/app/robots.ts` · `sitemap.ts`). 새 경로(예 `/app*`)는 화면이 생길 때 추가한다. 도메인 전체(`/*`)는 다른 용도의 경로가 있을 수 있어 잡지 않는다
+3. **Route 설정:** `wrangler.jsonc`의 `routes`에 `www.savelyglobal.com/home*`와 `www.savelyglobal.com/_next/*`(정적 파일 · 이미지 최적화), 검색엔진용 `/robots.txt` · `/sitemap.xml`(`src/app/robots.ts` · `sitemap.ts`), 미션 6 기록 체험판 `/app` · `/app/*`(2026-11-10). 새 경로는 화면이 생길 때 그 경로만 추가한다(`/app*`처럼 넓게 잡지 않음). 도메인 전체(`/*`)는 다른 용도의 경로가 있을 수 있어 잡지 않는다
    - www 레코드는 Cloudflare 프록시(주황 구름)가 켜져 있어야 한다(Cloudflare 공식 문서)
 4. **GitHub 자동 배포:** Cloudflare 대시보드 → Workers & Pages → 해당 Worker → Settings → Builds에서 GitHub 저장소 연결 (**사용자가 직접**)
    - 빌드 명령 예: `npx opennextjs-cloudflare build` / 배포 명령 예: `npx opennextjs-cloudflare deploy`

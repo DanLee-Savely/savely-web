@@ -2,9 +2,12 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
 	"name": "savely-web",
-	// 이 프로젝트가 받는 경로만 연다(도메인의 다른 경로는 건드리지 않음, 00-decisions F8). 앱을 만들면 /app* 를 추가한다
+	// 이 프로젝트가 받는 경로만 연다(도메인의 다른 경로는 건드리지 않음, 00-decisions F8 · M12)
+	// /app은 /app* 대신 /app · /app/* 로 연다(/apple 같은 다른 경로를 받지 않게)
 	"routes": [
 		{ "pattern": "www.savelyglobal.com/home*", "zone_name": "savelyglobal.com" },
+		{ "pattern": "www.savelyglobal.com/app", "zone_name": "savelyglobal.com" },
+		{ "pattern": "www.savelyglobal.com/app/*", "zone_name": "savelyglobal.com" },
 		{ "pattern": "www.savelyglobal.com/_next/*", "zone_name": "savelyglobal.com" },
 		{ "pattern": "www.savelyglobal.com/robots.txt", "zone_name": "savelyglobal.com" },
 		{ "pattern": "www.savelyglobal.com/sitemap.xml", "zone_name": "savelyglobal.com" }

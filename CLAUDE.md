@@ -49,8 +49,8 @@
 - Next.js App Router + TypeScript(strict) + Tailwind CSS + shadcn/ui, lucide-react
 - 글꼴: Pretendard(화면 글자) · JetBrains Mono(금액 · 숫자). Figma는 Noto Sans KR로 그려서 1~2px 차이는 허용한다.
 - **basePath 없음 (2026-10-30, 00-decisions F8).** 메인은 `src/app/home/` → `/home`, 이후 앱은 같은 프로젝트의 `/app` 등에 붙인다. 링크 · 이미지 문자열 경로는 `/home/...`처럼 실제 경로를 그대로 쓴다.
-- **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`(새 경로가 생기면 그 경로만 추가, 예 `/app*`). 출시 알림 저장은 D1(바인딩 `DB`)
-- **기록 체험판 /app (미션 6, 70-mvp-records §6 · §8):** 같은 Worker에 `/app*` 라우트를 더한다
+- **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/app` · `/app/*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`(새 경로가 생기면 그 경로만 추가). 출시 알림 저장은 D1(바인딩 `DB`)
+- **기록 체험판 /app (미션 6, 70-mvp-records §6 · §8):** 같은 Worker의 `/app` · `/app/*` 라우트(`/app*`은 `/apple` 등까지 잡아 쓰지 않음)
   - 바인딩: D1 `RECORDS_DB`(`savely-records`, 마이그레이션 `migrations-records/`) · R2 `RECORD_IMAGES`(`savely-record-images`, 공개 주소 없음) · 요청 제한 `RECORDS_RATE_LIMITER`(IP당 1분 쓰기 10회)
   - 출시 알림 DB와 **별도 데이터베이스**다(누구나 쓰고 지우는 데이터를 개인정보와 섞지 않음)
   - 테이블 `records`: id(UUID, 서버 생성) · kind · amount(1 ~ 999,999,999,999) · record_date(`'YYYY-MM-DD'`) · category_id · title(60자) · payment_method · reason · feeling · memo(200자) · image_key · created_at · updated_at. 수입은 지출 전용 칸(결제수단 · 왜 썼나요 · 기분)이 비어 있어야 한다
