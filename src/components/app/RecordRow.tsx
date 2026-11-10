@@ -13,7 +13,8 @@ const { categories, paymentMethods, reasons, list, form } = appContent;
 export function RecordRow({ record: r, compact }: { record: RecordData; compact?: boolean }) {
   const income = r.kind === "income";
   const category = categories[r.categoryId];
-  const sub = [category, r.paymentMethod && paymentMethods[r.paymentMethod], r.reason && reasons[r.reason]].filter(Boolean);
+  // 내용이 없으면 제목 자리에 카테고리를 쓰므로 보조줄에서는 뺀다(「식비 / 식비」 중복 방지)
+  const sub = [r.title && category, r.paymentMethod && paymentMethods[r.paymentMethod], r.reason && reasons[r.reason]].filter(Boolean);
   return (
     <li className="border-b border-sv-border-2 last:border-b-0">
       <Link
@@ -28,7 +29,7 @@ export function RecordRow({ record: r, compact }: { record: RecordData; compact?
           <p className="truncate sv-text-label-15 text-sv-text">{r.title ?? category}</p>
           <p className="truncate sv-text-support-13 text-sv-text-3">
             {sub.join(" · ")}
-            {!compact && <span className="md:hidden"> · {formatDay(r.date)}</span>}
+            {!compact && <span className="md:hidden">{sub.length ? " · " : ""}{formatDay(r.date)}</span>}
           </p>
         </div>
         {!compact && <p className="hidden sv-text-support-13 text-sv-text-2 md:block">{formatDay(r.date)}</p>}
