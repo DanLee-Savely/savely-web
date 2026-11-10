@@ -258,6 +258,7 @@ CREATE INDEX records_date_idx ON records (record_date DESC, created_at DESC);
 
 **수입 카테고리 (6개):**
 `salary` 급여 · `allowance` 용돈 · `side_income` 부수입 · `refund` 환급 · `interest` 이자수익 · `etc_income` 기타
+- 「이자수익」은 문구 규칙의 금지 표현 「수익」을 포함하지만 앱 · 서버와 같은 이름이라 예외로 둔다(사용자 2026-11-10).
 
 ### 6-4. R2 (사진)
 

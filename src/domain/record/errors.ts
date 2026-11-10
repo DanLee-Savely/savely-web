@@ -1,4 +1,5 @@
 import { DomainError } from "../DomainError";
+import type { RecordFieldErrors } from "./RecordEntry";
 
 // 기록 도메인 오류 (70-mvp-records §7). 화면 문구 변환은 app/app/records/actions.ts 한 곳에서만 한다
 
@@ -55,7 +56,7 @@ export class RecordNotFoundError extends DomainError {
 export class InvalidRecordError extends DomainError {
   readonly code = "INVALID_RECORD";
 
-  constructor(readonly errors: Readonly<Partial<Record<string, string>>>) {
+  constructor(readonly errors: RecordFieldErrors) {
     super();
   }
 }

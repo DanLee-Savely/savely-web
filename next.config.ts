@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // 기록 사진(5MB 이하) + 입력값이 Server Action 본문에 함께 오므로 기본 1MB → 6MB (70-mvp-records §6-4)
+  experimental: {
+    serverActions: { bodySizeLimit: "6mb" },
+  },
   turbopack: {
     rules: {
       "*.css": {

@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 const variants = {
   primary: "bg-sv-accent text-sv-on-accent hover:bg-sv-accent-strong active:bg-sv-accent-deep",
   secondary: "bg-sv-surface-2 text-sv-text hover:bg-sv-surface-3",
+  outline: "border border-sv-border bg-sv-surface text-sv-text hover:bg-sv-surface-2",
+  "outline-danger": "border border-sv-border bg-sv-surface text-sv-danger hover:bg-sv-surface-2",
 };
 const sizes = {
   m: "h-[45px] px-5 sv-text-label-13",
