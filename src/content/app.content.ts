@@ -3,7 +3,7 @@
 export const appContent = {
   meta: { title: "세이블리 웹 체험판" },
   notice: "공개 체험판이에요. 누구나 볼 수 있으니 실제 소비 내역이나 개인정보는 적지 마세요.", // N1
-  nav: { records: "기록", footer: "세이블리 웹 체험판" },
+  nav: { home: "홈", records: "기록", calendar: "달력", report: "리포트", footer: "세이블리 웹 체험판" }, // N2
 
   kinds: { expense: "지출", income: "수입" },
   categories: {
