@@ -22,6 +22,7 @@
 | 섹션 구현 | `docs/spec/10-sections.md`, `docs/spec/content.json`, `docs/spec/20-interactions.md` + 시안 이미지 `docs/design/` — 절차는 스킬 `implement-section` |
 | 출시 알림 · API · 개인정보 | `docs/spec/30-waitlist.md` |
 | /app 기록 체험판 | `docs/spec/70-mvp-records.md` (화면 · 테이블 · 데이터 처리 · 문구 · QA) + 시안 이미지 `docs/design/app/` (Figma MCP 대신 먼저 사용) |
+| 대화로 기록하기 · 기록 종류 4가지 | `docs/spec/80-record-assistant.md` (v2.1 — 70과 다르면 80이 우선) |
 | 프로젝트 생성 · 배포 | `docs/spec/40-deploy.md` |
 | 검수 | `docs/spec/50-acceptance.md` |
 | 상세 수치 원본 | `docs/figma/*.txt`, `docs/figma/tokens.json` (Figma에서 추출한 구조 덤프) |
@@ -53,7 +54,8 @@
 - **기록 체험판 /app (70-mvp-records §6 · §8):** 같은 Worker의 `/app*` 라우트(정확 일치 `/app`은 쿼리가 붙으면 받지 못함, 00-decisions M12)
   - 바인딩: D1 `RECORDS_DB`(`savely-records`, 마이그레이션 `migrations-records/`) · R2 `RECORD_IMAGES`(`savely-record-images`, 공개 주소 없음) · 요청 제한 `RECORDS_RATE_LIMITER`(IP당 1분 쓰기 10회)
   - 출시 알림 DB와 **별도 데이터베이스**다(누구나 쓰고 지우는 데이터를 개인정보와 섞지 않음)
-  - 테이블 `records`: id(UUID, 서버 생성) · kind · amount(1 ~ 999,999,999,999) · record_date(`'YYYY-MM-DD'`) · category_id · title(60자) · payment_method · reason · feeling · memo(200자) · image_key · created_at · updated_at. 수입은 지출 전용 칸(결제수단 · 왜 썼나요 · 기분)이 비어 있어야 한다
+  - 테이블 `records`: id(UUID, 서버 생성 — 대화 저장만 초안 카드마다 브라우저가 만든다, 80 K16) · kind(지출 · 수입 · 상환 · 저축) · amount(1 ~ 999,999,999,999) · record_date(`'YYYY-MM-DD'`) · category_id(41종, 비어 있을 수 있음) · title(60자) · payment_method · card_name(20자, 카드 결제일 때만) · reason · feeling · memo(200자) · image_key · created_at · updated_at. 지출이 아니면 지출 전용 칸(결제수단 · 카드 이름 · 왜 썼나요 · 기분)이 비어 있어야 한다
+  - 새 테이블(마이그레이션 `0002`, 80 §5): `cards`(등록 카드 30장) · `recurring_items`(고정지출 · 고정수입 30개) · `assistant_usage`(날짜별 OpenAI 호출 수). 마이그레이션과 D1 쿼리는 `src/infrastructure/record/d1.test.ts`가 Node 내장 SQLite로 확인한다
   - 데이터 처리: D1 · R2는 서버 코드에서 바인딩으로만 접근(`container.ts`). 검증은 브라우저 · 서버가 같은 도메인 클래스로 하고 DB CHECK가 마지막 방어선. SQL은 바인딩 파라미터(`?`)만. 「오늘」은 Asia/Seoul, 날짜는 문자열 그대로(`new Date('YYYY-MM-DD')` 금지). 사진은 앞부분 바이트로 형식 확인 · 5MB 이하 · 원래 파일 이름 저장 안 함 · 브라우저에서 다시 저장해 위치 정보 제거. 로그에는 기록 id와 오류 종류만(금액 · 내용 · 메모 금지)
   - `/app`은 검색 제외(noindex). InMemory 저장소는 테스트 전용
 - **Vercel:** 쓰지 않는다(00-decisions B6 · M12). 주소는 실서비스 하나만 쓴다.
