@@ -4,7 +4,7 @@ import { MonthKey } from "@/domain/record/MonthKey";
 import { RecordDate } from "@/domain/record/RecordDate";
 import { FEELINGS, type RecordData } from "@/domain/record/RecordEntry";
 import type { RecordStatsReader } from "@/domain/record/RecordStatsReader";
-import { average, type MonthView, monthView } from "./monthView";
+import { average, type MonthView, monthView, totalCount } from "./monthView";
 
 export type CalendarCell = { date: string; day: number; inMonth: boolean; amount: number; isToday: boolean; isFuture: boolean };
 export type CalendarDay = {
@@ -49,7 +49,7 @@ export class GetMonthCalendarService {
       today,
       month: monthView(month),
       expense: totals.expense.sum,
-      count: totals.expense.count + totals.income.count,
+      count: totalCount(totals),
       dailyAverage: average(totals.expense.sum, month.elapsedDays),
       cells: this.cells(month, daily),
       selected: this.day(selected, entries.map((e) => e.toData())),

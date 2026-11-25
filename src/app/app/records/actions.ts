@@ -11,7 +11,7 @@ import { createRecordsServer } from "@/infrastructure/container";
 
 export type RecordActionResult = { errors?: RecordFieldErrors; formError?: string };
 
-const DRAFT_FIELDS: (keyof RecordDraft)[] = ["kind", "amount", "date", "categoryId", "title", "paymentMethod", "reason", "feeling", "memo"];
+const DRAFT_FIELDS: (keyof RecordDraft)[] = ["kind", "amount", "date", "categoryId", "title", "paymentMethod", "cardName", "reason", "feeling", "memo"];
 
 const readDraft = (f: FormData) => Object.fromEntries(DRAFT_FIELDS.map((k) => [k, String(f.get(k) ?? "")])) as RecordDraft;
 

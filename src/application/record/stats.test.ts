@@ -12,7 +12,7 @@ const row = (date: string, amount: number, over: Partial<RecordData> = {}): Reco
   n++;
   return {
     id: `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`, kind: "expense", amount, date, categoryId: "food", title: null,
-    paymentMethod: null, reason: null, feeling: null, memo: null, imageKey: null,
+    paymentMethod: null, cardName: null, reason: null, feeling: null, memo: null, imageKey: null,
     createdAt: `2026-10-26T00:00:${String(n % 60).padStart(2, "0")}.000Z`, updatedAt: "2026-10-26T00:00:00.000Z", ...over,
   };
 };
@@ -97,7 +97,49 @@ describe("리포트", () => {
 
   it("빈 달: 모두 0, 가장 많이 쓴 주 없음, 충동 인사이트 없음", async () => {
     const r = await (await setup(october)).report.execute("2026-08");
-    expect(r).toMatchObject({ count: 0, expense: 0, impulse: null, categories: [] });
+    expect(r).toMatchObject({ count: 0, empty: true, expense: 0, impulse: null, categories: [] });
     expect(r.weeks.some((w) => w.isMax)).toBe(false);
+  });
+});
+
+// 80-record-assistant §4 · K3 · K5 · K6 — 앱의 화면별 처리와 같게
+describe("상환 · 저축 · 카테고리 없는 기록", () => {
+  const mixed = [
+    ...october,
+    row("2026-10-26", 500000, { kind: "transfer", categoryId: "card_bill" }),
+    row("2026-10-25", 300000, { kind: "savings", categoryId: "savings_deposit" }),
+    row("2026-10-26", 4500, { categoryId: null }), // 금액만 적은 지출
+    row("2026-10-24", 2000, { categoryId: "etc_expense" }),
+  ];
+
+  it("상환 · 저축은 지출 합계 · 막대 · 카테고리에 들지 않고 건수에만 든다", async () => {
+    const s = await setup(mixed);
+    const h = await s.home.execute();
+    expect(h).toMatchObject({ todayCount: 6, todaySpent: 22900, expense: 110200, income: 3000000, count: 11 });
+    expect(h.last7Total).toBe(47700 + 4500 + 2000);
+    const c = await s.calendar.execute(undefined, undefined);
+    expect([c.expense, c.count, c.selected.spent, c.selected.count]).toEqual([110200, 11, 22900, 6]);
+    expect(c.cells.find((x) => x.date === "2026-10-25")?.amount).toBe(0); // 저축만 있는 날
+    const r = await s.report.execute(undefined);
+    expect(r).toMatchObject({ count: 11, empty: false, expense: 110200 });
+    expect(r.categories.some((x) => x.categoryId === "card_bill" || x.categoryId === "savings_deposit")).toBe(false);
+  });
+
+  it("카테고리를 고르지 않은 지출은 「기타」에 합친다", async () => {
+    const r = await (await setup(mixed)).report.execute(undefined);
+    expect(r.categories.find((x) => x.categoryId === "etc_expense")).toEqual({ categoryId: "etc_expense", sum: 6500, percent: 6 });
+    expect(r.categories.reduce((s, x) => s + x.sum, 0)).toBe(r.expense);
+    const only = await (await setup([row("2026-10-26", 4500, { categoryId: null })])).report.execute(undefined);
+    expect(only.categories).toEqual([{ categoryId: "etc_expense", sum: 4500, percent: 100 }]);
+  });
+
+  it("리포트 빈 상태 · 지난달 비교는 지출 기준 — 수입 · 상환 · 저축만 있는 달은 빈 달", async () => {
+    const noExpense = [
+      row("2026-10-10", 3000000, { kind: "income", categoryId: "salary" }),
+      row("2026-10-11", 500000, { kind: "transfer", categoryId: "card_bill" }),
+    ];
+    expect(await (await setup(noExpense)).report.execute(undefined)).toMatchObject({ count: 2, empty: true, expense: 0 });
+    const prevIncomeOnly = [row("2026-10-02", 100), row("2026-09-02", 3000000, { kind: "income", categoryId: "salary" })];
+    expect((await (await setup(prevIncomeOnly)).report.execute(undefined)).compare.state).toBe("none");
   });
 });

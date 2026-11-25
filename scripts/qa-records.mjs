@@ -31,7 +31,8 @@ await newForm();
 await page.getByRole("button", { name: "저장하기" }).click();
 await page.locator("#field-amount-error").waitFor();
 const q1 = [await text("#field-amount-error"), await text("#field-categoryId-error"), await page.evaluate(() => document.activeElement?.id)];
-log("Q1", q1[0] === "금액을 입력해 주세요" && q1[1] === "카테고리를 골라 주세요" && q1[2] === "field-amount" && count() === 0, `E1 「${q1[0]}」 · E4 「${q1[1]}」 · 포커스 ${q1[2]} · 저장 ${count()}건`);
+// 카테고리는 선택 사항이라(80-record-assistant K7) 비워도 오류가 없다 — 금액 오류만 나온다
+log("Q1", q1[0] === "금액을 입력해 주세요" && q1[1] === "" && q1[2] === "field-amount" && count() === 0, `E1 「${q1[0]}」 · 카테고리 오류 「${q1[1]}」(없어야 함) · 포커스 ${q1[2]} · 저장 ${count()}건`);
 await page.screenshot({ path: `${S}/qa-q1.png` });
 
 // Q2 잘못된 형식

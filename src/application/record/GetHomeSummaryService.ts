@@ -3,16 +3,16 @@ import { MonthKey } from "@/domain/record/MonthKey";
 import { RecordDate } from "@/domain/record/RecordDate";
 import type { RecordData } from "@/domain/record/RecordEntry";
 import type { RecordStatsReader } from "@/domain/record/RecordStatsReader";
-import { average, type MonthView, monthView, percent } from "./monthView";
+import { average, type MonthView, monthView, percent, totalCount } from "./monthView";
 
 export type HomeSummary = {
   today: string;
   month: MonthView;
-  /** 오늘 기록 건수(지출 + 수입) · 오늘 쓴 돈(지출) · 최근 만든 순 최대 3건 */
+  /** 오늘 기록 건수(구분 4가지 모두) · 오늘 쓴 돈(지출) · 최근 만든 순 최대 3건 */
   todayCount: number;
   todaySpent: number;
   todayRecords: RecordData[];
-  /** 이번 달(1일 ~ 오늘) */
+  /** 이번 달(1일 ~ 오늘). count는 구분 4가지 모두(K3) */
   expense: number;
   income: number;
   count: number;
@@ -24,7 +24,7 @@ export type HomeSummary = {
   topCategories: { categoryId: string; sum: number; percent: number }[];
 };
 
-// 홈 (§4-8): 기록만 읽어 오늘 · 이번 달 · 최근 7일 · 많이 쓴 곳을 계산. 수입은 수입 줄에만(M19)
+// 홈 (§4-8): 기록만 읽어 오늘 · 이번 달 · 최근 7일 · 많이 쓴 곳을 계산. 수입은 수입 줄에만(M19), 상환 · 저축은 건수에만 든다
 export class GetHomeSummaryService {
   constructor(
     private readonly stats: RecordStatsReader,
@@ -52,7 +52,7 @@ export class GetHomeSummaryService {
       todayRecords: todayRecords.slice(0, 3),
       expense,
       income: totals.income.sum,
-      count: totals.expense.count + totals.income.count,
+      count: totalCount(totals),
       dailyAverage: average(expense, month.elapsedDays),
       last7,
       last7Total: last7.reduce((s, d) => s + d.amount, 0),

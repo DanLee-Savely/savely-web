@@ -24,7 +24,6 @@ export default async function NewRecordPage({ searchParams }: PageProps<"/app/re
         action={createRecord}
         submitLabel={form.save}
         cancelHref="/app/records"
-        hint={form.hint}
       />
     </>
   );

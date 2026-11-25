@@ -1,4 +1,5 @@
-import { type RecordData, RecordEntry } from "@/domain/record/RecordEntry";
+import { CategoryCatalog } from "@/domain/record/CategoryCatalog";
+import { KINDS, type RecordData, RecordEntry } from "@/domain/record/RecordEntry";
 import type { CategorySum, KindTotals, RecordStatsReader } from "@/domain/record/RecordStatsReader";
 import type { InMemoryRecordRepository } from "./InMemoryRecordRepository";
 
@@ -23,7 +24,7 @@ export class InMemoryRecordStatsReader implements RecordStatsReader {
       const list = rows.filter((r) => r.kind === kind);
       return { sum: list.reduce((s, r) => s + r.amount, 0), count: list.length };
     };
-    return { expense: of("expense"), income: of("income") };
+    return Object.fromEntries(KINDS.map((k) => [k, of(k)])) as KindTotals;
   }
 
   async dailyExpense(from: string, to: string): Promise<Record<string, number>> {
@@ -31,7 +32,7 @@ export class InMemoryRecordStatsReader implements RecordStatsReader {
   }
 
   async categoryExpense(from: string, to: string): Promise<CategorySum[]> {
-    return Object.entries(tally(this.range(from, to, "expense"), (r) => r.categoryId, (r) => r.amount))
+    return Object.entries(tally(this.range(from, to, "expense"), (r) => r.categoryId ?? CategoryCatalog.uncategorizedExpense, (r) => r.amount))
       .map(([categoryId, sum]) => ({ categoryId, sum }))
       .sort((a, b) => b.sum - a.sum || a.categoryId.localeCompare(b.categoryId));
   }

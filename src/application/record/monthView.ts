@@ -1,4 +1,5 @@
 import type { MonthKey } from "@/domain/record/MonthKey";
+import type { KindTotals } from "@/domain/record/RecordStatsReader";
 
 /** 화면에 넘길 달 정보(평범한 값). prev · next는 'YYYY-MM', 미래 달은 null */
 export type MonthView = {
@@ -28,3 +29,6 @@ export const monthView = (m: MonthKey): MonthView => ({
 /** 원 단위 반올림 하루 평균 · 정수 반올림 비율(%) (§4-8 계산 규칙). 분모 0이면 0 */
 export const average = (sum: number, days: number) => (days ? Math.round(sum / days) : 0);
 export const percent = (part: number, total: number) => (total ? Math.round((part / total) * 100) : 0);
+
+/** 「기록 n건」: 지출 · 수입 · 상환 · 저축을 모두 센다(K3) */
+export const totalCount = (totals: KindTotals): number => Object.values(totals).reduce((n, k) => n + k.count, 0);

@@ -1,17 +1,21 @@
-// /app 기록 체험판 화면 문구. 원본: docs/spec/70-mvp-records.md §9(확정 M13) · §6-3(값 표시 이름)
+// /app 기록 체험판 화면 문구. 원본: docs/spec/70-mvp-records.md §9(확정 M13) · §6-3(값 표시 이름) · 80-record-assistant §4(구분 · 카테고리)
 // §9에 없는 것(항목 이름 · 안내 · 자리표시)은 시안 docs/design/app/ 의 문구다. {n} 등은 코드에서 채운다
 export const appContent = {
   meta: { title: "세이블리 웹 체험판" },
   notice: "공개 체험판이에요. 누구나 볼 수 있으니 실제 소비 내역이나 개인정보는 적지 마세요.", // N1
   nav: { home: "홈", records: "기록", calendar: "달력", report: "리포트", footer: "세이블리 웹 체험판" }, // N2
 
-  kinds: { expense: "지출", income: "수입" },
+  kinds: { expense: "지출", income: "수입", transfer: "상환", savings: "저축" },
+  // 이름은 앱 seed.dart와 같다(41종)
   categories: {
-    food: "식비", cafe: "카페", grocery: "마트·생필품", transport: "교통", fuel: "주유", parking: "주차·통행료",
+    food: "식비", cafe: "카페", grocery: "마트·생필품", convenience: "편의점", transport: "교통", fuel: "주유", parking: "주차·통행료",
     car: "차량 정비", housing: "주거·관리비", telecom: "통신", shopping: "쇼핑", medical: "병원비", beauty: "미용",
     health: "건강·운동", culture: "문화·여가", subscription: "구독", education: "교육", travel: "여행", alcohol: "술·유흥",
     event: "경조사", pet: "반려동물", baby: "육아", insurance: "보험", etc_expense: "기타",
     salary: "급여", allowance: "용돈", side_income: "부수입", refund: "환급", interest: "이자수익", etc_income: "기타",
+    card_bill: "카드값 상환", loan_payment: "대출 상환", interest_payment: "이자 납입",
+    savings_deposit: "예적금", emergency_fund: "비상금", house_savings: "청약", invest: "ETF·주식", fund: "펀드", pension: "연금",
+    forex: "외화", etc_savings: "기타 저축",
   } as Record<string, string>,
   paymentMethods: { cash: "현금", check_card: "체크카드", credit_card: "신용카드", bank_transfer: "계좌이체", other: "기타" } as Record<string, string>,
   reasons: { need: "필요해서", impulse: "충동적", value: "가치소비", fixed: "필수지출", other: "기타" } as Record<string, string>,
@@ -36,16 +40,16 @@ export const appContent = {
     required: "필수",
     labels: {
       kind: "구분", amount: "금액", date: "날짜", title: "내용", memo: "메모", categoryId: "카테고리",
-      paymentMethod: "결제수단", reason: "왜 썼나요", feeling: "그때 기분",
+      paymentMethod: "결제수단", cardName: "카드 이름", reason: "왜 썼나요", feeling: "그때 기분",
     },
     won: "원",
     titlePlaceholder: "예: 점심 김치찌개",
+    cardNamePlaceholder: "예: 삼성카드", // 앱 문구
     memoPlaceholder: "남기고 싶은 말이 있다면 적어 주세요",
     more: "더보기 +{n}",
     less: "접기",
     expenseInfo: "지출 정보",
-    expenseInfoHint: "선택 · 수입이면 숨겨져요",
-    hint: "금액 · 날짜 · 카테고리만 채우면 저장할 수 있어요",
+    expenseInfoHint: "선택 · 지출일 때만 보여요", // 2026-11-25 사용자 — 상환 · 저축에서도 숨겨진다
     editHint: "고친 내용은 저장하면 바로 반영돼요",
     cancel: "취소",
     save: "저장하기",
@@ -84,7 +88,7 @@ export const appContent = {
     edit: "수정",
     remove: "삭제",
     empty: "—",
-    labels: { date: "날짜", categoryId: "카테고리", paymentMethod: "결제수단", reason: "왜 썼나요", feeling: "그때 기분", memo: "메모" },
+    labels: { date: "날짜", categoryId: "카테고리", paymentMethod: "결제수단", cardName: "카드 이름", reason: "왜 썼나요", feeling: "그때 기분", memo: "메모" },
     times: "처음 적은 시각 {created} · 마지막으로 고친 시각 {updated}",
   },
 
@@ -171,7 +175,8 @@ export const appContent = {
   errors: {
     amount: { AMOUNT_REQUIRED: "금액을 입력해 주세요", INVALID_AMOUNT: "1원 이상 1조 원 미만으로 입력해 주세요" }, // E1 · E2
     date: { DATE_REQUIRED: "날짜를 골라 주세요", INVALID_DATE: "날짜를 골라 주세요", FUTURE_DATE: "오늘 이후 날짜는 기록할 수 없어요" }, // E13 · E3
-    categoryId: { INVALID_CATEGORY: "카테고리를 골라 주세요" }, // E4
+    categoryId: { INVALID_CATEGORY: "카테고리를 골라 주세요" }, // E4 — 카테고리는 선택 사항(K7)이라 구분과 맞지 않는 값이 왔을 때만 나온다
+    cardName: { TEXT_TOO_LONG: "카드 이름은 20자까지 쓸 수 있어요" }, // 초안 — E5 · E6과 같은 꼴(확인 필요)
     title: { TEXT_TOO_LONG: "내용은 60자까지 쓸 수 있어요" }, // E5
     memo: { TEXT_TOO_LONG: "메모는 200자까지 쓸 수 있어요" }, // E6
     image: { INVALID_IMAGE_TYPE: "JPG, PNG, WEBP 사진만 올릴 수 있어요", IMAGE_TOO_LARGE: "5MB 이하 사진만 올릴 수 있어요" }, // E7 · E8
@@ -187,6 +192,22 @@ export const appContent = {
 /** 도메인 오류 code → 화면 문구 (브라우저 검사 · 서버 결과가 같이 쓴다) */
 export const errorMessage = (field: string, code: string): string =>
   appContent.errors[field]?.[code] ?? appContent.errors.form[code] ?? appContent.errors.form.SERVER_ERROR;
+
+/** 기록의 제목: 내용 → 카테고리 이름 → 구분 이름 (앱과 같은 순서. 카테고리 없이 금액만 적은 기록도 빈칸이 되지 않게) */
+export const recordTitle = (r: { title: string | null; categoryId: string | null; kind: keyof typeof appContent.kinds }): string =>
+  r.title ?? (r.categoryId ? appContent.categories[r.categoryId] : undefined) ?? appContent.kinds[r.kind];
+
+/** 행 보조줄: 카테고리 · 결제수단(+ 카드 이름) · 왜 썼나요. 제목 자리에 카테고리를 썼으면(내용 없음) 보조줄에서는 뺀다 */
+export const recordSub = (r: { title: string | null; categoryId: string | null; paymentMethod: string | null; cardName: string | null; reason: string | null }): string => {
+  const { categories, paymentMethods, reasons } = appContent;
+  const payment = r.paymentMethod && [paymentMethods[r.paymentMethod], r.cardName].filter(Boolean).join(" ");
+  return [r.title && r.categoryId && categories[r.categoryId], payment, r.reason && reasons[r.reason]].filter(Boolean).join(" · ");
+};
+
+/** 금액 표기(K2): 수입만 「+」와 초록, 상환은 흐린 색, 지출 · 저축은 기본색 */
+export type AmountTone = "income" | "muted" | "plain";
+export const amountTone = (kind: string): AmountTone => (kind === "income" ? "income" : kind === "transfer" ? "muted" : "plain");
+export const amountSign = (kind: string): string => (kind === "income" ? "+" : "");
 
 /** 문구의 {이름} 자리를 채운다 */
 export const fill = (text: string, values: Record<string, string | number>): string =>

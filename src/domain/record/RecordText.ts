@@ -26,3 +26,14 @@ export class RecordMemo {
     return new RecordMemo(read(raw, RecordMemo.MAX));
   }
 }
+
+// 값 객체: 카드 이름 20자 (앱 기록 화면 · 초안 검증기와 같음). 줄바꿈 · 겹친 빈칸은 한 칸으로 줄인다
+// 자르지 않는다 — 잘린 이름은 등록한 카드와 맞지 않는 다른 이름이 된다
+export class RecordCardName {
+  static readonly MAX = 20;
+  private constructor(readonly value: string | null) {}
+
+  static create(raw: string): RecordCardName {
+    return new RecordCardName(read(raw.replace(/[\s\u0000-\u001f\u007f]+/g, " "), RecordCardName.MAX));
+  }
+}
