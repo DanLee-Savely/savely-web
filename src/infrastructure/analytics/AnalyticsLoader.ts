@@ -32,8 +32,12 @@ export class AnalyticsLoader {
     return this.decided;
   }
 
-  /** 네이버 스크립트를 다 불러온 뒤 */
-  naverLoaded(): void {
+  /**
+   * 네이버로 페이지뷰를 한 번 보낸다. 스크립트를 다 불러온 뒤와, 화면 안에서 경로가 바뀔 때마다 부른다 —
+   * 네이버 스크립트는 화면 안 이동(/app의 메뉴 이동 등)을 스스로 잡지 못한다(2026-11-27 나가는 요청으로 확인, 명세 §2-2-7).
+   * 스크립트가 아직 없으면 아무 일도 없다
+   */
+  naverPageView(): void {
     this.naver?.pageView();
   }
 }

@@ -17,7 +17,7 @@ import { ListRecordsService } from "@/application/record/ListRecordsService";
 import { UpdateRecordService } from "@/application/record/UpdateRecordService";
 import { RegisterWaitlistService } from "@/application/waitlist/RegisterWaitlistService";
 import type { ImageStorage } from "@/domain/record/ImageStorage";
-import { ANALYTICS_HOSTNAME, GA4_MEASUREMENT_ID, GA_DEBUG_PARAM, INTERNAL_PARAM, NAVER_ANALYTICS_ID } from "@/lib/analytics/config";
+import { ANALYTICS_HOSTNAME, GA_DEBUG_PARAM, GOOGLE_TAG_ID, INTERNAL_PARAM, NAVER_ANALYTICS_ID } from "@/lib/analytics/config";
 import { AnalyticsLoader } from "./analytics/AnalyticsLoader";
 import { GtagAnalytics, type GtagWindow } from "./analytics/GtagAnalytics";
 import { InternalTraffic } from "./analytics/InternalTraffic";
@@ -46,9 +46,9 @@ const search = (): string => browser()?.location.search ?? "";
 const onProduction = (): boolean => browser()?.location.hostname === ANALYTICS_HOSTNAME;
 const gaDebug = (): boolean => process.env.NODE_ENV === "development" && new URLSearchParams(search()).get(GA_DEBUG_PARAM) === "1";
 const internalTraffic = new InternalTraffic(INTERNAL_PARAM, () => window.localStorage);
-const gtagAnalytics = GA4_MEASUREMENT_ID
+const gtagAnalytics = GOOGLE_TAG_ID
   ? new GtagAnalytics({
-      measurementId: GA4_MEASUREMENT_ID,
+      tagId: GOOGLE_TAG_ID,
       window: browser,
       enabled: () => onProduction() || gaDebug(),
       // 이 방문의 주소에 표시가 있으면 먼저 남긴다 — 첫 이벤트부터 internal이 붙게

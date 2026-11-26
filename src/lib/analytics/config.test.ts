@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { homeContent } from "@/content/home.content";
-import { ANALYTICS_HOSTNAME, GA4_MEASUREMENT_ID, NAVER_ANALYTICS_ID } from "./config";
+import { ANALYTICS_HOSTNAME, GA4_MEASUREMENT_ID, GOOGLE_TAG_ID, NAVER_ANALYTICS_ID } from "./config";
 
 // 측정 ID와 개인정보처리방침은 같이 움직인다 (90-measurement-search §2-6)
 describe("방문 통계 설정", () => {
-  it("측정 ID는 비어 있거나 올바른 꼴이다", () => {
+  it("ID는 비어 있거나 올바른 꼴이다 — 주소에 그대로 들어가는 값이라 글자 종류를 좁힌다", () => {
+    expect(GOOGLE_TAG_ID === "" || /^(GTM|G|GT|AW)-[A-Z0-9]+$/.test(GOOGLE_TAG_ID)).toBe(true);
     expect(GA4_MEASUREMENT_ID === "" || /^G-[A-Z0-9]+$/.test(GA4_MEASUREMENT_ID)).toBe(true);
     expect(NAVER_ANALYTICS_ID === "" || /^[A-Za-z0-9_]+$/.test(NAVER_ANALYTICS_ID)).toBe(true);
   });

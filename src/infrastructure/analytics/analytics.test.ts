@@ -15,7 +15,7 @@ const blocked = () => {
 };
 const gtagOf = (over: Partial<ConstructorParameters<typeof GtagAnalytics>[0]> = {}) => {
   const win: GtagWindow = {};
-  const gtag = new GtagAnalytics({ measurementId: "G-TEST123", window: () => win, enabled: () => true, internal: () => false, debug: () => false, ...over });
+  const gtag = new GtagAnalytics({ tagId: "GTM-TEST123", window: () => win, enabled: () => true, internal: () => false, debug: () => false, ...over });
   /** 큐에 쌓인 호출(arguments 객체를 배열로) */
   const calls = () => (win.dataLayer ?? []).map((args) => Array.from(args as ArrayLike<unknown>));
   return { win, gtag, calls };
@@ -49,17 +49,26 @@ describe("GtagAnalytics — 이벤트 → GA4 호출", () => {
     expect(calls().at(-1)).toEqual(["event", "waitlist_open", { source: "gnb" }]);
   });
 
-  it("본인 방문이면 traffic_type=internal, 개발 중 확인이면 debug_mode를 set으로 붙인다", () => {
-    expect(gtagOf().calls()).toEqual([]);
+  it("본인 방문이면 traffic_type=internal, 개발 중 확인이면 debug_mode를 이벤트마다 싣는다", () => {
     const internal = gtagOf({ internal: () => true });
     internal.gtag.track({ name: "section_view", section: "hero" });
-    expect(internal.calls()[1]).toEqual(["set", { traffic_type: "internal" }]);
-    const debug = gtagOf({ debug: () => true });
-    debug.gtag.start();
-    expect(debug.calls()[1]).toEqual(["set", { debug_mode: true }]);
+    expect(internal.calls()).toHaveLength(2); // js + 이벤트 — set은 쓰지 않는다
+    expect(internal.calls()[1]).toEqual(["event", "section_view", { section: "hero", traffic_type: "internal" }]);
+    const debug = gtagOf({ debug: () => true, internal: () => true });
+    debug.gtag.track({ name: "assistant_save", count: 2 });
+    expect(debug.calls()[1]).toEqual(["event", "assistant_save", { count: 2, traffic_type: "internal", debug_mode: true }]);
     const plain = gtagOf();
-    plain.gtag.start();
-    expect(plain.calls().map((c) => c[0])).toEqual(["js"]);
+    plain.gtag.track({ name: "section_view", section: "hero" });
+    expect(plain.calls()[1]).toEqual(["event", "section_view", { section: "hero" }]);
+  });
+
+  it("표시는 방문을 시작할 때 한 번 정한다 — 화면 안 이동으로 주소의 디버그 표시가 사라져도 그대로 붙는다", () => {
+    let debugging = true;
+    const { gtag, calls } = gtagOf({ debug: () => debugging });
+    gtag.track({ name: "assistant_open", entry: "deeplink" });
+    debugging = false;
+    gtag.track({ name: "assistant_send", drafts: 1 });
+    expect(calls().slice(1).map((c) => (c[2] as Record<string, unknown>).debug_mode)).toEqual([true, true]);
   });
 
   it("보내면 안 되는 방문(실서비스 주소가 아님)과 서버에서는 큐도 만들지 않는다", () => {
@@ -67,7 +76,7 @@ describe("GtagAnalytics — 이벤트 → GA4 호출", () => {
     off.gtag.track({ name: "section_view", section: "hero" });
     expect(off.win).toEqual({});
     expect(off.gtag.start()).toBe(false);
-    const server = new GtagAnalytics({ measurementId: "G-TEST123", window: () => null, enabled: () => true, internal: () => false, debug: () => false });
+    const server = new GtagAnalytics({ tagId: "GTM-TEST123", window: () => null, enabled: () => true, internal: () => false, debug: () => false });
     expect(() => server.track({ name: "section_view", section: "hero" })).not.toThrow();
   });
 
@@ -80,8 +89,8 @@ describe("GtagAnalytics — 이벤트 → GA4 호출", () => {
     expect(calls().slice(1)).toEqual([["event", "assistant_open", { entry: "deeplink" }], ["event", "assistant_send", { drafts: 2 }]]);
   });
 
-  it("스크립트 주소는 Google 태그 설치 안내의 주소에 측정 ID를 붙인 것이다", () => {
-    expect(gtagOf().gtag.scriptSrc).toBe("https://www.googletagmanager.com/gtm.js?id=G-TEST123");
+  it("스크립트 주소는 설치 코드의 주소(gtm.js?id=)에 태그 ID를 붙인 것이다", () => {
+    expect(gtagOf().gtag.scriptSrc).toBe("https://www.googletagmanager.com/gtm.js?id=GTM-TEST123");
   });
 });
 
@@ -120,6 +129,17 @@ describe("NaverAnalyticsScript", () => {
     expect(views).toBe(1);
   });
 
+  it("부를 때마다 페이지뷰를 한 번 보낸다 — 화면 안에서 경로가 바뀔 때 다시 부른다", () => {
+    let views = 0;
+    const win: NaverWindow = { wcs: {}, wcs_do: () => void views++ };
+    const script = new NaverAnalyticsScript("s_test123", () => win);
+    script.pageView();
+    script.pageView();
+    script.pageView();
+    expect(views).toBe(3);
+    expect(win.wcs_add).toEqual({ wa: "s_test123" });
+  });
+
   it("스크립트가 아직 없으면(막혔거나 못 불러옴) 아무것도 하지 않는다", () => {
     const win: NaverWindow = {};
     expect(() => new NaverAnalyticsScript("s_test123", () => win).pageView()).not.toThrow();
@@ -132,12 +152,12 @@ describe("AnalyticsLoader — 스크립트를 넣을지", () => {
     const store = memory();
     const internal = new InternalTraffic("sv_internal", () => store);
     const win: GtagWindow = {};
-    const gtag = opts.ga ? new GtagAnalytics({ measurementId: "G-TEST123", window: () => win, enabled: () => opts.production, internal: () => internal.marked, debug: () => false }) : null;
+    const gtag = opts.ga ? new GtagAnalytics({ tagId: "GTM-TEST123", window: () => win, enabled: () => opts.production, internal: () => internal.marked, debug: () => false }) : null;
     const naver = opts.naver ? new NaverAnalyticsScript("s_test123", () => ({})) : null;
     return { internal, plan: new AnalyticsLoader(gtag, naver, internal, { onProduction: () => opts.production, search: () => opts.search ?? "" }).plan() };
   };
 
-  it("ID가 비어 있으면(구현체 없음) 실서비스 주소에서도 아무것도 넣지 않는다 — 지금 상태", () => {
+  it("ID가 비어 있으면(구현체 없음) 실서비스 주소에서도 아무것도 넣지 않는다", () => {
     expect(loader({ ga: false, naver: false, production: true }).plan).toEqual(NO_SCRIPTS);
   });
 
@@ -146,7 +166,7 @@ describe("AnalyticsLoader — 스크립트를 넣을지", () => {
   });
 
   it("ID가 있고 실서비스 주소면 두 스크립트를 넣는다", () => {
-    expect(loader({ ga: true, naver: true, production: true }).plan).toEqual({ gtagSrc: "https://www.googletagmanager.com/gtm.js?id=G-TEST123", naverSrc: "//wcs.naver.net/wcslog.js" });
+    expect(loader({ ga: true, naver: true, production: true }).plan).toEqual({ gtagSrc: "https://www.googletagmanager.com/gtm.js?id=GTM-TEST123", naverSrc: "https://wcs.pstatic.net/wcslog.js" });
   });
 
   it("통계 도구가 꺼져 있어도 본인 방문 표시는 남긴다", () => {
