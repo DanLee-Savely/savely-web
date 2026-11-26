@@ -11,14 +11,15 @@ import type { RecurringItemData } from "@/domain/recurring/RecurringItem";
 import type { Assistant } from "@/hooks/useAssistant";
 import type { AssistantMessage, AssistantSession, DraftCard } from "@/interaction/AssistantSession";
 import { cn } from "@/lib/utils";
-import { bubble, CardDraftView, HelpView, RecurringAskView, RecurringCardsView, RecurringDueView, RecurringListView, RecurringRemoveView, UnfilledView } from "./AssistantBlocks";
+import { bubble, CardDraftView, HelpView, QueryAnswerView, RecurringAskView, RecurringCardsView, RecurringDueView, RecurringListView, RecurringRemoveView, UnfilledView } from "./AssistantBlocks";
 import { AssistantConfirm } from "./AssistantConfirm";
 import { DraftCardView } from "./DraftCardView";
 import { DraftEditSheet } from "./DraftEditSheet";
 import { RecurringEditSheet } from "./RecurringEditSheet";
 
 const c = assistantContent;
-type Leaving = "close" | "manual";
+/** 패널을 닫는 길: 닫기 · 직접 입력으로 · 질문의 답에서 「자세히 보기」(그 화면으로 간다) */
+type Leaving = "close" | "manual" | { href: string };
 /** 열려 있는 수정 시트: 기록 초안 카드 · 등록 전의 고정지출 카드 · 등록한 고정지출 */
 type Sheet = { type: "draft"; id: string } | { type: "recurringCard"; id: string } | { type: "recurringItem"; item: RecurringItemData };
 
@@ -45,6 +46,7 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
   const leave = (how: Leaving) => {
     assistant.close();
     if (how === "manual") router.push(`/app/records/new?date=${session.screenDate}`);
+    else if (how !== "close") router.push(how.href);
   };
   /** 저장하지 않은 카드가 있으면 먼저 묻는다(등록하지 않은 고정지출 · 카드 등록 카드는 묻지 않는다 — 기록 초안이 아니다) */
   const tryLeave = (how: Leaving) => (pending.length ? setLeaving(how) : leave(how));
@@ -85,6 +87,7 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
             showActions={i === lastSaved}
             onSheet={setSheet}
             onManual={() => tryLeave("manual")}
+            onDetail={(href) => tryLeave({ href })}
             onMore={() => inputRef.current?.focus()}
             onExample={fillInput}
           />
@@ -247,11 +250,13 @@ type MessageProps = {
   showActions: boolean;
   onSheet: (sheet: Sheet) => void;
   onManual: () => void;
+  /** 질문의 답에서 「자세히 보기」 — 저장하지 않은 카드가 있으면 나가기 전에 묻는다 */
+  onDetail: (href: string) => void;
   onMore: () => void;
   onExample: (example: string) => void;
 };
 
-function Message({ index, message: m, session, assistant, showActions, onSheet, onManual, onMore, onExample }: MessageProps) {
+function Message({ index, message: m, session, assistant, showActions, onSheet, onManual, onDetail, onMore, onExample }: MessageProps) {
   const { change } = assistant;
   switch (m.type) {
     case "user":
@@ -309,6 +314,8 @@ function Message({ index, message: m, session, assistant, showActions, onSheet, 
       return <RecurringListView items={m.items} onEdit={(item) => onSheet({ type: "recurringItem", item })} />;
     case "recurringRemove":
       return <RecurringRemoveView candidates={m.candidates} removedIds={m.removedIds} kept={m.kept} onRemove={(id) => void assistant.deleteRecurring(id)} onKeep={() => change((s) => s.keepRecurring(index))} />;
+    case "answer":
+      return <QueryAnswerView text={m.text} items={m.items} more={m.more} onDetail={() => onDetail(m.href)} />;
     case "cardDraft":
       return <CardDraftView name={m.name} method={m.method} registered={m.registered} onMethod={(method) => change((s) => s.setCardMethod(m.id, method))} onRegister={() => void assistant.submitCard(m.id, m.name, m.method)} />;
   }

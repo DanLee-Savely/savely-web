@@ -142,6 +142,13 @@ describe("D1 집계 = 테스트용 집계", () => {
     expect(categories).toEqual([{ categoryId: "food", sum: 9000 }, { categoryId: "etc_expense", sum: 6500 }, { categoryId: "cafe", sum: 4800 }]);
     expect(await memory.categoryExpense(...range)).toEqual(categories);
 
+    // 카테고리 하나의 합계 · 건수 — 「기타」에는 카테고리 없는 지출이 합쳐지고, 지출이 아닌 카테고리도 읽는다
+    for (const id of ["food", "cafe", "etc_expense", "salary", "card_bill", "savings_deposit", "pet"]) {
+      expect(await memory.categoryTotal(...range, id), id).toEqual(await d1.categoryTotal(...range, id));
+    }
+    expect(await d1.categoryTotal(...range, "etc_expense")).toMatchObject({ sum: 6500 });
+    expect(await d1.categoryTotal(...range, "pet")).toEqual({ sum: 0, count: 0 });
+
     expect(await memory.dailyExpense(...range)).toEqual(await d1.dailyExpense(...range));
     expect(await memory.reasonCounts(...range)).toEqual(await d1.reasonCounts(...range));
     expect(await memory.feelingCounts(...range)).toEqual(await d1.feelingCounts(...range));

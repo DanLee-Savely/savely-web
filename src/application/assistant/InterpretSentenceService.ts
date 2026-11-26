@@ -1,7 +1,9 @@
+import { AmountReader } from "@/domain/assistant/AmountReader";
 import { type AssistantUsage, type DraftOrganizer, OrganizeFailedError, type OrganizeRequest, type OrganizeResult, type RequestLimiter } from "@/domain/assistant/DraftOrganizer";
 import { CheckedRecordParser, type CheckedParseResult, DRAFT_LIMITS, DraftValidator } from "@/domain/assistant/DraftValidator";
 import { HelpRequest } from "@/domain/assistant/HelpRequest";
 import type { KnownCard, ParsedDraft } from "@/domain/assistant/ParsedDraft";
+import { RecordQueryParser } from "@/domain/assistant/RecordQueryParser";
 import { RuleRecordParser } from "@/domain/assistant/RuleRecordParser";
 import { CardCommandParser } from "@/domain/card/CardCommandParser";
 import type { CardRepository } from "@/domain/card/OwnedCard";
@@ -10,6 +12,7 @@ import type { Clock } from "@/domain/record/Clock";
 import { RecordDate } from "@/domain/record/RecordDate";
 import { RecurringCommandParser, type RecurringDraft } from "@/domain/recurring/RecurringCommandParser";
 import type { RecurringItemData, RecurringItemRepository } from "@/domain/recurring/RecurringItem";
+import type { AnswerRecordQueryService, QueryReply } from "./AnswerRecordQueryService";
 
 /** 초안 한 건. ai는 OpenAI가 만들었거나 카테고리를 채운 것 — 카드에 「AI가 정리」를 붙인다(U-W2) */
 export type InterpretedDraft = ParsedDraft & { ai: boolean };
@@ -32,6 +35,8 @@ export type InterpretOutcome =
   | { type: "help" }
   | { type: "recurring"; reply: RecurringReply }
   | { type: "card"; reply: CardReply }
+  /** 기록에서 숫자를 찾아 달라는 질문의 답. 읽기 전용이다 — 저장 · 수정 · 삭제와 이어지지 않는다 */
+  | { type: "query"; reply: QueryReply }
   | { type: "drafts"; result: InterpretResult };
 
 /** 바깥 도우미(OpenAI) 쪽 준비물. 키가 없으면 organizer가 null이다 — 규칙만으로 정리한다 */
@@ -49,8 +54,11 @@ export type AssistantAi = {
 };
 
 // 문장 한 번을 기록 초안으로 정리한다 (80-record-assistant §2).
-// 읽는 순서는 앱과 같다: ① 도움말 → ② 고정지출 → ③ 카드 등록 → ④ 기록 규칙 파서 → ⑤ 읽지 못한 부분만 OpenAI → ⑥ 검증기.
-// ① ~ ③은 규칙으로만 읽는다(앱과 같다) — OpenAI로 보내지 않는다.
+// 판정 순서는 앱과 같다(앱 chat_input_router.dart) — 위에서부터 먼저 맞는 것으로 정한다:
+// ① 도움말 → ② 고정지출 → ③ 카드 등록 → ④ 금액이 있으면 기록 → ⑤ 질문(대화로 물어보기) → ⑥ 그 외(기록 경로가 실패 문구를 보여 준다).
+// 500자를 넘는 문장은 무엇으로도 읽지 않고 기록 경로로 넘긴다(기록 경로가 길이를 안내한다).
+// 기록 경로: 규칙 파서 → 읽지 못한 부분만 OpenAI → 검증기.
+// ① ~ ③ · ⑤는 규칙으로만 읽는다(앱과 같다) — OpenAI로 보내지 않는다.
 // OpenAI는 보조다 — 규칙이 읽은 부분은 보내지 않고, 실패 · 한도 · 잔액 소진이면 ⑤를 건너뛴다(사용자에게 보이는 결과는 규칙만 쓴 것과 같다).
 // 입력 문장을 로그 · 오류에 싣지 않는다 — 실패는 ParseFailedError(이유 코드)로만 알린다
 export class InterpretSentenceService {
@@ -61,27 +69,33 @@ export class InterpretSentenceService {
     private readonly ai: AssistantAi,
     private readonly cards: CardRepository,
     private readonly recurring: RecurringItemRepository,
+    private readonly answer: AnswerRecordQueryService,
   ) {
     this.validator = new DraftValidator(clock);
   }
 
   async execute(command: InterpretCommand): Promise<InterpretOutcome> {
-    const { text } = command;
-    // ① 도움말
-    if (HelpRequest.matches(text)) return { type: "help" };
     // 등록한 카드 — 문장에 이름이 그대로 있으면 카드 이름을 채운다
     const known: KnownCard[] = (await this.cards.list()).map((c) => ({ name: c.name, method: c.method }));
     const parser = new RuleRecordParser(known);
-    // 길이 한도를 넘은 문장은 ④가 안내한다
-    if (this.validator.acceptsInput(text)) {
-      // ② 고정지출 → ③ 카드 등록. 「카드값 80만원 매월 14일 고정지출 추가」는 고정지출이다
-      const recurring = await this.recurringReply(command, parser);
-      if (recurring) return { type: "recurring", reply: recurring };
-      const card = InterpretSentenceService.cardReply(text.trim());
-      if (card) return { type: "card", reply: card };
-    }
-    // ④ 기록 → ⑤ 읽지 못한 부분만 OpenAI → ⑥ 검증기
-    return { type: "drafts", result: await this.drafts(command, parser, known.map((c) => c.name)) };
+    // 길이 한도를 넘은 문장은 무엇으로도 읽지 않는다 — 기록 경로가 안내한다
+    const routed = this.validator.acceptsInput(command.text) ? await this.route(command, parser) : null;
+    return routed ?? { type: "drafts", result: await this.drafts(command, parser, known.map((c) => c.name)) };
+  }
+
+  /** ① ~ ⑤ 가운데 먼저 맞는 것. 기록으로 정리할 문장이면 null */
+  private async route(command: InterpretCommand, parser: RuleRecordParser): Promise<InterpretOutcome | null> {
+    const { text } = command;
+    if (HelpRequest.matches(text)) return { type: "help" };
+    // 「카드값 80만원 매월 14일 고정지출 추가」는 고정지출이다 — 금액이 있어도 낱말이 있으면 고정지출
+    const recurring = await this.recurringReply(command, parser);
+    if (recurring) return { type: "recurring", reply: recurring };
+    const card = InterpretSentenceService.cardReply(text.trim());
+    if (card) return { type: "card", reply: card };
+    // 금액이 있으면 언제나 기록이다 — 질문으로 보내지 않는다
+    if (AmountReader.read(text).length) return null;
+    const query = RecordQueryParser.parse(text, RecordDate.today(this.clock));
+    return query && { type: "query", reply: await this.answer.execute(query) };
   }
 
   private async recurringReply({ text, assumeRegister }: InterpretCommand, parser: RuleRecordParser): Promise<RecurringReply | null> {

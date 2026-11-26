@@ -10,6 +10,9 @@ const SQL = {
   // 카테고리를 고르지 않은 지출은 「기타」에 합친다(K5, CategoryCatalog.uncategorizedExpense와 같은 값)
   categories: `SELECT COALESCE(category_id, 'etc_expense') AS k, SUM(amount) AS sum FROM records WHERE kind = 'expense' AND ${RANGE}
 GROUP BY k ORDER BY sum DESC, k`,
+  // 「기타」를 물으면 카테고리를 고르지 않은 지출도 함께 센다 — 위 categories와 같은 숫자가 나와야 한다
+  category: `SELECT COALESCE(SUM(amount), 0) AS sum, COUNT(*) AS n FROM records WHERE ${RANGE}
+AND (category_id = ?3 OR (?3 = 'etc_expense' AND kind = 'expense' AND category_id IS NULL))`,
   reasons: `SELECT reason AS k, COUNT(*) AS n FROM records WHERE kind = 'expense' AND reason IS NOT NULL AND ${RANGE} GROUP BY reason`,
   feelings: `SELECT feeling AS k, COUNT(*) AS n FROM records WHERE kind = 'expense' AND feeling IS NOT NULL AND ${RANGE} GROUP BY feeling`,
   impulse: `SELECT COUNT(*) AS n FROM records WHERE kind = 'expense' AND reason = 'impulse'
@@ -37,6 +40,11 @@ export class D1RecordStatsReader implements RecordStatsReader {
 
   async categoryExpense(from: string, to: string): Promise<CategorySum[]> {
     return (await this.rows(SQL.categories, from, to)).map((r) => ({ categoryId: r.k, sum: r.sum }));
+  }
+
+  async categoryTotal(from: string, to: string, categoryId: string): Promise<{ sum: number; count: number }> {
+    const row = await this.db.prepare(SQL.category).bind(from, to, categoryId).first<{ sum: number; n: number }>();
+    return { sum: row?.sum ?? 0, count: row?.n ?? 0 };
   }
 
   async reasonCounts(from: string, to: string): Promise<Record<string, number>> {

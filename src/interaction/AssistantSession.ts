@@ -1,8 +1,11 @@
 import type { CardReply, InterpretOutcome, InterpretResult, RecurringReply } from "@/application/assistant/InterpretSentenceService";
-import { assistantContent, cardRegistered, draftsReady, greeting, recurringRegistered, savedSummary, unparsedNote } from "@/content/assistant.content";
+import type { QueryListItem, QueryReply } from "@/application/assistant/AnswerRecordQueryService";
+import { assistantContent, cardRegistered, draftsReady, greeting, queryAnswer, recurringRegistered, savedSummary, unparsedNote } from "@/content/assistant.content";
 import type { UnfilledRecords } from "@/domain/assistant/AssistantInsights";
 import { DRAFT_LIMITS } from "@/domain/assistant/DraftValidator";
 import type { ParsedDraft, ParseFailure } from "@/domain/assistant/ParsedDraft";
+import type { RecordQuery } from "@/domain/assistant/RecordQueryParser";
+import { CategoryCatalog } from "@/domain/record/CategoryCatalog";
 import type { RecurringDraft } from "@/domain/recurring/RecurringCommandParser";
 import type { RecurringDue, RecurringItemData } from "@/domain/recurring/RecurringItem";
 
@@ -61,6 +64,8 @@ export type AssistantMessage =
   | { type: "recurringList"; items: RecurringItemData[] }
   /** 지울 고정지출을 확인하는 묶음. 「삭제하기」를 눌러야 지워진다 */
   | { type: "recurringRemove"; candidates: RecurringItemData[]; removedIds: string[]; kept: boolean }
+  /** 질문의 답(H) — 한 줄 답, 그날 목록(하루를 물었을 때만), 줄인 건수, 「자세히 보기」가 갈 화면. 저장되는 것은 없다 */
+  | { type: "answer"; text: string; items: QueryListItem[]; more: number; href: string }
   /** 등록할 카드 한 장 — 이름과 종류(신용 · 체크). 「등록하기」를 눌러야 등록된다 */
   | { type: "cardDraft"; id: string; name: string; method: string; registered: boolean };
 
@@ -110,8 +115,12 @@ export class AssistantSession {
   receiveOutcome(outcome: InterpretOutcome, newId: () => string): AssistantSession {
     if (this.phase !== "parsing") return this;
     if (outcome.type === "drafts") return this.receive(outcome.result, newId);
-    const reply = outcome.type === "help" ? [{ type: "help" } as const] : outcome.type === "card" ? cardMessages(outcome.reply, newId) : recurringMessages(outcome.reply, newId);
-    // 기록 초안을 만들지 않으므로 저장 대상과 「못 알아들음」 횟수는 그대로다
+    const reply =
+      outcome.type === "help" ? [{ type: "help" } as const]
+      : outcome.type === "card" ? cardMessages(outcome.reply, newId)
+      : outcome.type === "query" ? [queryMessage(outcome.reply, this.today)]
+      : recurringMessages(outcome.reply, newId);
+    // 기록 초안을 만들지 않으므로 저장 대상(정리해 둔 카드)과 「못 알아들음」 횟수는 그대로다
     return this.with([...this.messages, ...reply], this.pending.length ? "draftsReady" : "idle");
   }
 
@@ -327,6 +336,22 @@ export class AssistantSession {
     return new AssistantSession(this.screenDate, this.today, messages, phase, this.failStreak);
   }
 }
+
+/** 「자세히 보기」가 갈 화면: 하루는 달력의 그날, 달은 리포트, 주는 달력(이번 주가 다음 달에 걸치면 오늘이 든 달) */
+const queryHref = ({ period, from, to }: RecordQuery, today: string): string => {
+  if (period === "day") return `/app/calendar?month=${from.slice(0, 7)}&date=${from}`;
+  if (period === "thisMonth" || period === "lastMonth") return `/app/report?month=${from.slice(0, 7)}`;
+  return `/app/calendar?month=${(to > today ? today : to).slice(0, 7)}`;
+};
+
+/** 질문의 답: 답하지 않는 질문이면 안내, 그 기간에 기록이 없으면 안내, 아니면 숫자 한 줄(+ 그날 목록) */
+const queryMessage = (reply: QueryReply, today: string): AssistantMessage => {
+  if (reply.status === "rejected") return notice(c.query[reply.reason]);
+  const { query, count, sum, items } = reply;
+  if (count === 0) return notice(c.query.empty);
+  const category = query.categoryId === null ? null : (CategoryCatalog.names[query.categoryId] ?? null);
+  return { type: "answer", text: queryAnswer(query, count, sum, category, today), items, more: query.kind === "dayList" ? count - items.length : 0, href: queryHref(query, today) };
+};
 
 /** 카드를 등록하려는 말의 답: 이름이 없으면 안내, 20자를 넘으면 안내, 아니면 등록 카드 */
 const cardMessages = (reply: CardReply, newId: () => string): AssistantMessage[] => {

@@ -116,6 +116,18 @@ export const assistantContent = {
     },
   },
 
+  // ── 대화로 물어보기(H). 앱이 답 문구를 정하기 전에 웹이 먼저 정했다(2026-11-26 사용자 확정) — 앱이 정하면 다시 대조한다 ──
+  query: {
+    periods: { thisWeek: "이번 주", lastWeek: "지난주", thisMonth: "이번 달", lastMonth: "지난달" },
+    expense: "지출",
+    income: "수입",
+    records: "기록",
+    empty: "그 기간에는 기록이 없어요",
+    unknownWord: "무엇을 묻는지 알아듣지 못했어요. 「이번 달 카페 얼마」처럼 적어 주세요",
+    futurePeriod: "아직 오지 않은 날은 답할 수 없어요",
+    detail: "자세히 보기",
+  },
+
   confirmSave: { title: "이 내용으로 저장할까요?", cancel: "취소", confirm: "확인" },
   confirmExit: {
     title: "작성 중인 기록을 지울까요?",
@@ -174,12 +186,33 @@ export const helpItems = (today: string): { label: string; examples: string[] }[
   { label: "매달 나가는 돈 등록하기", examples: ["넷플릭스 17000원 매달 15일 고정지출"] },
   { label: "등록한 고정지출 보기·지우기", examples: ["고정지출 보여줘"] },
   { label: "카드 등록하기", examples: ["삼성카드 등록해줘"] },
+  // 웹 — 앱 목록에는 아직 없다(2026-11-26 사용자). 합계 · 카테고리 · 그날 목록을 하나씩 보여 준다
+  { label: "적은 기록 물어보기", examples: ["이번 달 얼마 썼지", "이번 달 카페 얼마", "어제 뭐 썼지"] },
 ];
 
 /** 자주 적는 항목 칩 — 금액을 늘 함께 적는다. 긴 내용은 12자로 줄인다(카드에는 전체가 들어간다) */
 export const frequentChip = (title: string, amount: number): string => {
   const chars = [...title];
   return `${chars.length > 12 ? `${chars.slice(0, 11).join("")}…` : title} ${formatAmount(amount)}원`;
+};
+
+type Asked = { kind: string; period: string; from: string; categoryId: string | null };
+/** 질문이 가리킨 기간의 이름 — 「이번 달」 · 「지난주」 · 「어제」 · 「11월 20일」(올해가 아니면 해를 붙인다) */
+const queryPeriod = ({ period, from }: Asked, today: string): string => {
+  if (period !== "day") return c.query.periods[period as keyof typeof c.query.periods];
+  const word = { [today]: "오늘", [RecordDateReader.addDays(today, -1)]: "어제", [RecordDateReader.addDays(today, -2)]: "그저께" }[from];
+  return word ?? `${from.slice(0, 4) === today.slice(0, 4) ? "" : `${Number(from.slice(0, 4))}년 `}${monthDay(from)}`;
+};
+/**
+ * 질문의 답 한 줄(H, 초안). 숫자만 답한다 — 평가 · 조언 · 지난 기간과의 비교를 넣지 않는다.
+ * `이번 달 지출: 12건, 345,000원` · `이번 달 카페: 3건, 13,500원` · `이번 달 수입: 1건, 3,000,000원` · `어제 기록: 4건, 지출 합계 21,000원`.
+ * 기간을 적지 않은 질문도 기간 이름으로 시작하므로 어느 기간의 숫자인지 드러난다
+ */
+export const queryAnswer = (query: Asked, count: number, sum: number, categoryName: string | null, today: string): string => {
+  const period = queryPeriod(query, today);
+  if (query.kind === "dayList") return `${period} ${c.query.records}: ${count}건, ${c.query.expense} 합계 ${formatAmount(sum)}원`;
+  const subject = query.kind === "categoryTotal" ? categoryName : query.kind === "incomeTotal" ? c.query.income : c.query.expense;
+  return `${period} ${subject}: ${count}건, ${formatAmount(sum)}원`;
 };
 
 /** 채우지 않은 기록 알림. 권유일 뿐이다 — 재촉하는 말을 넣지 않는다 */

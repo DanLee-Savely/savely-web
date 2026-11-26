@@ -74,7 +74,8 @@ export function useAssistant(today: string) {
     const res = await interpretSentence(text, sent.screenDate, sent.askingRecurring).catch((): InterpretResponse => ({ ok: false, failure: "failed" }));
     change((s) => (res.ok ? s.receiveOutcome(res.outcome, newId) : s.failed(res.failure)));
     // 기록 문장인데 카드가 안 나왔으면 고쳐 쓰기 쉽게 문장을 입력칸에 되돌린다
-    const made = res.ok && (res.outcome.type !== "drafts" || (res.outcome.result.drafts.length > 0 && sent.pending.length < DRAFT_LIMITS.maxDrafts));
+    // 답하지 않은 질문(알아듣지 못한 낱말 · 미래)도 같다
+    const made = res.ok && (res.outcome.type === "query" ? res.outcome.reply.status === "answered" : res.outcome.type !== "drafts" || (res.outcome.result.drafts.length > 0 && sent.pending.length < DRAFT_LIMITS.maxDrafts));
     if (!made) setInput((now) => now || text);
   };
 

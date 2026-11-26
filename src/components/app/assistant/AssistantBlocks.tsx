@@ -3,7 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CategoryIcon } from "@/components/app/CategoryIcon";
 import { AppButton } from "@/components/common/AppButton";
-import { amountSign, amountTone, appContent } from "@/content/app.content";
+import type { QueryListItem } from "@/application/assistant/AnswerRecordQueryService";
+import { amountSign, amountTone, appContent, recordTitle } from "@/content/app.content";
 import { assistantContent, helpItems, recurringDay, recurringDueAsk, recurringOverdue, unfilledMore, unfilledNotice } from "@/content/assistant.content";
 import type { UnfilledRecords } from "@/domain/assistant/AssistantInsights";
 import type { RecurringDraft } from "@/domain/recurring/RecurringCommandParser";
@@ -13,6 +14,7 @@ import { formatAmount } from "@/lib/recordFormat";
 import { cn } from "@/lib/utils";
 
 // 대화 패널의 블록들(시안 38~42): 「할 수 있는 일」 · 채우지 않은 기록 · 고정지출 질문 · 등록 카드 · 목록 · 삭제 확인 · 카드 등록.
+// 질문의 답(대화로 물어보기)은 시안이 없어 같은 패널의 말풍선 · 기록 줄 · 버튼을 그대로 쓴다.
 // 표시와 입력 전달만 한다. 등록 · 삭제는 버튼을 눌렀을 때만 일어난다(문장만으로는 아무것도 바뀌지 않는다)
 
 const { kinds, categories, paymentMethods, form } = appContent;
@@ -266,6 +268,32 @@ export function CardDraftView({ name, method, registered, onMethod, onRegister }
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** 질문의 답(H): 숫자 한 줄 · 그날 목록(하루를 물었을 때만, 5건까지) · 「외 n건」 · 「자세히 보기」. 읽기 전용이다 — 여기서 바뀌는 것은 없다 */
+export function QueryAnswerView({ text, items, more, onDetail }: { text: string; items: QueryListItem[]; more: number; onDetail: () => void }) {
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <Bubble>{text}</Bubble>
+      {items.length > 0 && (
+        <ul className="flex w-full flex-col gap-2">
+          {items.map((r) => (
+            <li key={r.id} className={cn(box, "flex items-center gap-2")}>
+              <CategoryIcon categoryId={r.categoryId} income={r.kind === "income"} className="size-8 bg-transparent" />
+              <span className="min-w-0 flex-1 truncate sv-text-label-13 text-sv-text">{recordTitle({ title: r.title, categoryId: r.categoryId, kind: r.kind as keyof typeof kinds })}</span>
+              <Amount kind={r.kind} amount={r.amount} />
+            </li>
+          ))}
+        </ul>
+      )}
+      {more > 0 && <p className="sv-text-support-13 text-sv-text-3">{unfilledMore(more)}</p>}
+      {/* 이동이지만 버튼이다 — 저장하지 않은 카드가 있으면 나가기 전에 확인 창이 먼저 뜬다 */}
+      <AppButton variant="outline" onClick={onDetail}>
+        {c.query.detail}
+        <ChevronRight aria-hidden className="size-4" />
+      </AppButton>
     </div>
   );
 }

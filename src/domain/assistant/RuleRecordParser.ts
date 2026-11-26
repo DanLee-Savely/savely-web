@@ -197,6 +197,15 @@ export class RuleRecordParser {
     return RuleRecordParser.best(inKind.filter((m) => m.categoryId !== null)) ?? RuleRecordParser.best(inKind);
   }
 
+  /**
+   * [text]에서 구분과 카테고리를 읽는다 — 기록 초안을 만들 때와 **같은 사전, 같은 규칙**이다. 낱말을 찾지 못하면 null.
+   * 대화로 물어보기가 「이번 달 카페 얼마」의 카테고리를 읽는 데 쓴다(사전을 따로 두면 기록과 질문이 같은 낱말을 다르게 읽는다)
+   */
+  static classifyText(text: string): { kind: string; categoryId: string | null } | null {
+    const match = RuleRecordParser.classify(text);
+    return match && { kind: match.kind, categoryId: match.categoryId };
+  }
+
   private static findKeywords(lower: string, tokens: string[]): Match[] {
     const found: Match[] = [];
     const look = (keyword: string, kind: string, categoryId: string | null): void => {

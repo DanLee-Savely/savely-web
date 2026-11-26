@@ -9,6 +9,7 @@ import { InMemoryRecordRepository } from "@/infrastructure/record/InMemoryRecord
 import { InMemoryRecordStatsReader } from "@/infrastructure/record/InMemoryRecordStatsReader";
 import { SqliteD1 } from "@/infrastructure/record/testing/sqliteD1";
 import { InMemoryCardRepository, InMemoryRecurringItemRepository } from "@/infrastructure/assistant/InMemoryAssistantStores";
+import { AnswerRecordQueryService } from "./AnswerRecordQueryService";
 import { type InterpretResult, InterpretSentenceService } from "./InterpretSentenceService";
 import { type DraftSaveItem, InvalidDraftsError, SaveDraftsService } from "./SaveDraftsService";
 
@@ -39,7 +40,7 @@ const interpreter = (answer: OrganizeResult | Error | null, over: { allow?: bool
   const recurring = new InMemoryRecurringItemRepository();
   const service = new InterpretSentenceService(clock, {
     organizer, limiter: { allow: async () => over.allow ?? true }, usage, dailyLimit: over.dailyLimit ?? 300, onFailure: (f) => failures.push(f), onUsage: () => {},
-  }, cards, recurring);
+  }, cards, recurring, new AnswerRecordQueryService(new InMemoryRecordStatsReader(new InMemoryRecordRepository())));
   return { calls, failures, usage, service, cards, recurring };
 };
 /** 기록 문장의 결과(초안). 다른 결과(도움말 · 고정지출 · 카드)가 나오면 테스트가 틀린 것이다 */

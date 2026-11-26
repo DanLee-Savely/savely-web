@@ -11,6 +11,7 @@ const PAIRS = {
   "date-sentences.json": "record_chat_sentences_dates.json",
   "recurring-sentences.json": "recurring_sentences.json",
   "card-sentences.json": "card_sentences.json",
+  "query-sentences.json": "record_query_sentences.json",
 };
 const KEYS = ["id", "text", "expect", "cards", "unparsed", "assume"];
 const pick = (c) => JSON.stringify(Object.fromEntries(KEYS.filter((k) => k in c).map((k) => [k, c[k]])));

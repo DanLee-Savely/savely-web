@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { QueryListItem, QueryReply } from "@/application/assistant/AnswerRecordQueryService";
 import type { InterpretedDraft, InterpretResult } from "@/application/assistant/InterpretSentenceService";
+import type { RecordQuery } from "@/domain/assistant/RecordQueryParser";
 import { AssistantSession } from "./AssistantSession";
 
 const TODAY = "2026-11-24";
@@ -207,5 +209,57 @@ describe("AssistantSession", () => {
     expect([s.messages[0].type === "recurringAsk" && s.messages[0].candidates.map((x) => x.draft.title), cardDrafts(s).map((x) => [x.title, x.dayOfMonth, x.registered])]).toEqual([["통신"], [["월세", 25, false]]]);
     s = s.pickCandidate(0, newId);
     expect([cardDrafts(s).length, s.messages.filter((m) => m.type === "recurringDrafts").length, s.pickCandidate(5, newId)]).toEqual([2, 1, s]);
+  });
+});
+
+describe("AssistantSession — 대화로 물어보기(H)", () => {
+  const query = (over: Partial<RecordQuery> = {}): RecordQuery => ({ kind: "periodTotal", period: "thisMonth", from: "2026-11-01", to: "2026-11-30", categoryId: null, categoryKind: null, periodAssumed: false, ...over });
+  const ask = (s: AssistantSession, reply: QueryReply) => s.send("이번 달 얼마 썼지").receiveOutcome({ type: "query", reply }, newId);
+  const answered = (q: RecordQuery, count: number, sum: number, items: QueryListItem[] = []): QueryReply => ({ status: "answered", query: q, count, sum, items });
+
+  it("합계를 물으면 숫자 한 줄과 「자세히 보기」가 붙는다 — 달은 리포트로", () => {
+    const s = ask(start(), answered(query(), 12, 345000));
+    expect(s.messages.at(-1)).toEqual({ type: "answer", text: "이번 달 지출: 12건, 345,000원", items: [], more: 0, href: "/app/report?month=2026-11" });
+    expect([s.phase, s.pending.length]).toEqual(["idle", 0]);
+    const cafe = ask(start(), answered(query({ kind: "categoryTotal", period: "lastMonth", from: "2026-10-01", to: "2026-10-31", categoryId: "cafe", categoryKind: "expense" }), 3, 13500));
+    expect(cafe.messages.at(-1)).toMatchObject({ text: "지난달 카페: 3건, 13,500원", href: "/app/report?month=2026-10" });
+    const income = ask(start(), answered(query({ kind: "incomeTotal" }), 1, 3000000));
+    expect(income.messages.at(-1)).toMatchObject({ text: "이번 달 수입: 1건, 3,000,000원" });
+  });
+
+  it("주는 달력으로 — 이번 주가 다음 달에 걸치면 오늘이 든 달", () => {
+    const week = ask(start(), answered(query({ period: "thisWeek", from: "2026-11-23", to: "2026-11-29" }), 2, 9000));
+    expect(week.messages.at(-1)).toMatchObject({ text: "이번 주 지출: 2건, 9,000원", href: "/app/calendar?month=2026-11" });
+    const crossing = AssistantSession.start("2026-11-30", "2026-11-30").send("이번 주 지출").receiveOutcome({ type: "query", reply: answered(query({ period: "thisWeek", from: "2026-11-30", to: "2026-12-06" }), 1, 5000) }, newId);
+    expect(crossing.messages.at(-1)).toMatchObject({ href: "/app/calendar?month=2026-11" });
+    const last = AssistantSession.start("2026-12-02", "2026-12-02").send("지난주 지출").receiveOutcome({ type: "query", reply: answered(query({ period: "lastWeek", from: "2026-11-23", to: "2026-11-29" }), 1, 5000) }, newId);
+    expect(last.messages.at(-1)).toMatchObject({ text: "지난주 지출: 1건, 5,000원", href: "/app/calendar?month=2026-11" });
+  });
+
+  it("그날 목록 — 5건까지 보여 주고 나머지는 건수로, 달력의 그날로 간다", () => {
+    const items = Array.from({ length: 5 }, (_, i): QueryListItem => ({ id: `r-${i}`, kind: "expense", amount: 1000, title: `항목 ${i}`, categoryId: null }));
+    const s = ask(start(), answered(query({ kind: "dayList", period: "day", from: "2026-11-23", to: "2026-11-23" }), 7, 7000, items));
+    expect(s.messages.at(-1)).toEqual({ type: "answer", text: "어제 기록: 7건, 지출 합계 7,000원", items, more: 2, href: "/app/calendar?month=2026-11&date=2026-11-23" });
+    const older = ask(start(), answered(query({ kind: "dayList", period: "day", from: "2026-11-20", to: "2026-11-20" }), 1, 0, items.slice(0, 1)));
+    expect(older.messages.at(-1)).toMatchObject({ text: "11월 20일 기록: 1건, 지출 합계 0원", more: 0 });
+  });
+
+  it("그 기간에 기록이 없으면 안내만 한다", () => {
+    const s = ask(start(), answered(query(), 0, 0));
+    expect(lastNotice(s)).toMatchObject({ text: "그 기간에는 기록이 없어요", offerManual: false });
+  });
+
+  it("답하지 않는 질문은 안내한다 — 「못 알아들음」 횟수에 세지 않는다(직접 입력을 권하지 않는다)", () => {
+    let s = start();
+    for (let i = 0; i < 3; i++) s = ask(s, { status: "rejected", reason: "unknownWord" });
+    expect(lastNotice(s)).toEqual({ type: "notice", text: "무엇을 묻는지 알아듣지 못했어요. 「이번 달 카페 얼마」처럼 적어 주세요", offerManual: false });
+    expect(lastNotice(ask(start(), { status: "rejected", reason: "futurePeriod" }))?.text).toBe("아직 오지 않은 날은 답할 수 없어요");
+  });
+
+  it("저장하지 않은 카드가 있는 중에 물으면 카드는 그대로 두고 답만 덧붙인다", () => {
+    const ready = start().send("커피 4500원").receive(result([draft()]), newId);
+    const s = ask(ready, answered(query(), 3, 20000));
+    expect([s.phase, s.pending.length, s.messages.at(-1)?.type]).toEqual(["draftsReady", 1, "answer"]);
+    expect(s.saveGroups).toHaveLength(1);
   });
 });

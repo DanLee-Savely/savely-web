@@ -11,6 +11,8 @@ export interface RecordStatsReader {
   dailyExpense(from: string, to: string): Promise<Record<string, number>>;
   /** 지출 카테고리별 합계, 많은 순. 카테고리를 고르지 않은 지출은 「기타」(etc_expense)에 합친다(K5) */
   categoryExpense(from: string, to: string): Promise<CategorySum[]>;
+  /** 카테고리 하나의 합계 · 건수(구분 4가지 어느 카테고리든). 「기타」(etc_expense)에는 카테고리를 고르지 않은 지출을 합친다(K5) — 대화로 물어보기의 답 */
+  categoryTotal(from: string, to: string, categoryId: string): Promise<{ sum: number; count: number }>;
   /** 이유 · 기분 값 → 지출 기록 건수 (적지 않은 기록 제외) */
   reasonCounts(from: string, to: string): Promise<Record<string, number>>;
   feelingCounts(from: string, to: string): Promise<Record<string, number>>;

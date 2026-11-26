@@ -13,6 +13,7 @@ import { InMemoryCardRepository, InMemoryRecurringItemRepository } from "@/infra
 import { InMemoryRecordRepository } from "@/infrastructure/record/InMemoryRecordRepository";
 import { InMemoryRecordStatsReader } from "@/infrastructure/record/InMemoryRecordStatsReader";
 import { SqliteD1 } from "@/infrastructure/record/testing/sqliteD1";
+import { AnswerRecordQueryService } from "./AnswerRecordQueryService";
 import { GetAssistantEntryService } from "./GetAssistantEntryService";
 import { InterpretSentenceService } from "./InterpretSentenceService";
 import { ListRecurringItemsService, RegisterRecurringItemService, RemoveRecurringItemService, UpdateRecurringItemService } from "./RecurringItemServices";
@@ -46,7 +47,7 @@ const setup = () => {
   const newId = () => `id-${++seq}`;
   return {
     cards, recurring, records,
-    interpret: new InterpretSentenceService(clock, ai, cards, recurring),
+    interpret: new InterpretSentenceService(clock, ai, cards, recurring, new AnswerRecordQueryService(new InMemoryRecordStatsReader(records))),
     registerCard: new RegisterCardService(cards, clock, newId),
     register: new RegisterRecurringItemService(recurring, clock, newId),
     update: new UpdateRecurringItemService(recurring, clock),
@@ -119,7 +120,7 @@ describe("F — 「할 수 있는 일」의 예시는 적힌 대로 동작한다
   it("예시마다 의도한 결과가 나온다(날짜 예시는 오늘에서 5일 전)", async () => {
     const s = setup();
     const items = helpItems(TODAY);
-    expect(items.map((i) => i.label)).toEqual(["쓴 돈·들어온 돈 기록하기", "지난 날의 기록 적기", "금액만 먼저 적고 나중에 채우기", "매달 나가는 돈 등록하기", "등록한 고정지출 보기·지우기", "카드 등록하기"]);
+    expect(items.map((i) => i.label)).toEqual(["쓴 돈·들어온 돈 기록하기", "지난 날의 기록 적기", "금액만 먼저 적고 나중에 채우기", "매달 나가는 돈 등록하기", "등록한 고정지출 보기·지우기", "카드 등록하기", "적은 기록 물어보기"]);
     expect(items[1].examples).toEqual(["어제 커피 만원", "11월 19일 커피 만원"]);
     const run = async (i: number, k = 0) => say(s, items[i].examples[k]);
     expect(await run(0)).toMatchObject({ type: "drafts", result: { drafts: [{ amount: 9000 }, { amount: 4500 }] } });
@@ -129,6 +130,9 @@ describe("F — 「할 수 있는 일」의 예시는 적힌 대로 동작한다
     expect(await run(3)).toMatchObject({ type: "recurring", reply: { intent: "register", cards: [{ dayOfMonth: 15 }] } });
     expect(await run(4)).toMatchObject({ type: "recurring", reply: { intent: "list" } });
     expect(await run(5)).toMatchObject({ type: "card", reply: { name: "삼성카드" } });
+    expect(await run(6, 0)).toMatchObject({ type: "query", reply: { status: "answered", query: { kind: "periodTotal", period: "thisMonth" } } });
+    expect(await run(6, 1)).toMatchObject({ type: "query", reply: { status: "answered", query: { kind: "categoryTotal", categoryId: "cafe" } } });
+    expect(await run(6, 2)).toMatchObject({ type: "query", reply: { status: "answered", query: { kind: "dayList", from: "2026-11-23" } } });
   });
 });
 

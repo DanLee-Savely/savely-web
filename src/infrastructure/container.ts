@@ -1,3 +1,4 @@
+import { AnswerRecordQueryService } from "@/application/assistant/AnswerRecordQueryService";
 import { GetAssistantEntryService } from "@/application/assistant/GetAssistantEntryService";
 import { InterpretSentenceService } from "@/application/assistant/InterpretSentenceService";
 import { ListRecurringItemsService, RegisterRecurringItemService, RemoveRecurringItemService, UpdateRecurringItemService } from "@/application/assistant/RecurringItemServices";
@@ -127,7 +128,7 @@ export async function createAssistantServer(): Promise<AssistantServer> {
   const cards = new D1CardRepository(env.RECORDS_DB);
   const recurring = new D1RecurringItemRepository(env.RECORDS_DB);
   return {
-    interpret: new InterpretSentenceService(clock, ai, cards, recurring),
+    interpret: new InterpretSentenceService(clock, ai, cards, recurring, new AnswerRecordQueryService(stats)),
     save: new SaveDraftsService(new D1RecordRepository(env.RECORDS_DB), stats, clock),
     entry: new GetAssistantEntryService(stats, recurring, clock),
     registerCard: new RegisterCardService(cards, clock),

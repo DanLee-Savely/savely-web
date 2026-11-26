@@ -37,6 +37,11 @@ export class InMemoryRecordStatsReader implements RecordStatsReader {
       .sort((a, b) => b.sum - a.sum || a.categoryId.localeCompare(b.categoryId));
   }
 
+  async categoryTotal(from: string, to: string, categoryId: string): Promise<{ sum: number; count: number }> {
+    const list = this.range(from, to).filter((r) => (r.categoryId ?? (r.kind === "expense" ? CategoryCatalog.uncategorizedExpense : null)) === categoryId);
+    return { sum: list.reduce((s, r) => s + r.amount, 0), count: list.length };
+  }
+
   async reasonCounts(from: string, to: string): Promise<Record<string, number>> {
     return tally(this.range(from, to, "expense"), (r) => r.reason, () => 1);
   }
