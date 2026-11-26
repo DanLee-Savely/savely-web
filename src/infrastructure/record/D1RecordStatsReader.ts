@@ -1,4 +1,4 @@
-import type { RecordEntry } from "@/domain/record/RecordEntry";
+import { KINDS, type RecordEntry } from "@/domain/record/RecordEntry";
 import type { CategorySum, KindTotals, RecordStatsReader } from "@/domain/record/RecordStatsReader";
 import { type RecordRow, toEntry } from "./D1RecordRepository";
 
@@ -7,13 +7,18 @@ const RANGE = "record_date BETWEEN ?1 AND ?2";
 const SQL = {
   kinds: `SELECT kind AS k, SUM(amount) AS sum, COUNT(*) AS n FROM records WHERE ${RANGE} GROUP BY kind`,
   daily: `SELECT record_date AS k, SUM(amount) AS sum FROM records WHERE kind = 'expense' AND ${RANGE} GROUP BY record_date`,
-  categories: `SELECT category_id AS k, SUM(amount) AS sum FROM records WHERE kind = 'expense' AND ${RANGE}
-GROUP BY category_id ORDER BY sum DESC, category_id`,
+  // 카테고리를 고르지 않은 지출은 「기타」에 합친다(K5, CategoryCatalog.uncategorizedExpense와 같은 값)
+  categories: `SELECT COALESCE(category_id, 'etc_expense') AS k, SUM(amount) AS sum FROM records WHERE kind = 'expense' AND ${RANGE}
+GROUP BY k ORDER BY sum DESC, k`,
+  // 「기타」를 물으면 카테고리를 고르지 않은 지출도 함께 센다 — 위 categories와 같은 숫자가 나와야 한다
+  category: `SELECT COALESCE(SUM(amount), 0) AS sum, COUNT(*) AS n FROM records WHERE ${RANGE}
+AND (category_id = ?3 OR (?3 = 'etc_expense' AND kind = 'expense' AND category_id IS NULL))`,
   reasons: `SELECT reason AS k, COUNT(*) AS n FROM records WHERE kind = 'expense' AND reason IS NOT NULL AND ${RANGE} GROUP BY reason`,
   feelings: `SELECT feeling AS k, COUNT(*) AS n FROM records WHERE kind = 'expense' AND feeling IS NOT NULL AND ${RANGE} GROUP BY feeling`,
   impulse: `SELECT COUNT(*) AS n FROM records WHERE kind = 'expense' AND reason = 'impulse'
 AND feeling IN ('unsatisfied', 'regret') AND ${RANGE}`,
   day: "SELECT * FROM records WHERE record_date = ?1 ORDER BY created_at DESC",
+  between: `SELECT * FROM records WHERE ${RANGE} ORDER BY record_date DESC, created_at DESC LIMIT ?3`,
 };
 type Agg = { k: string; sum: number; n: number };
 
@@ -25,9 +30,8 @@ export class D1RecordStatsReader implements RecordStatsReader {
   }
 
   async kindTotals(from: string, to: string): Promise<KindTotals> {
-    const totals: KindTotals = { expense: { sum: 0, count: 0 }, income: { sum: 0, count: 0 } };
-    for (const r of await this.rows(SQL.kinds, from, to)) totals[r.k as keyof KindTotals] = { sum: r.sum, count: r.n };
-    return totals;
+    const found = new Map((await this.rows(SQL.kinds, from, to)).map((r) => [r.k, { sum: r.sum, count: r.n }]));
+    return Object.fromEntries(KINDS.map((k) => [k, found.get(k) ?? { sum: 0, count: 0 }])) as KindTotals;
   }
 
   async dailyExpense(from: string, to: string): Promise<Record<string, number>> {
@@ -36,6 +40,11 @@ export class D1RecordStatsReader implements RecordStatsReader {
 
   async categoryExpense(from: string, to: string): Promise<CategorySum[]> {
     return (await this.rows(SQL.categories, from, to)).map((r) => ({ categoryId: r.k, sum: r.sum }));
+  }
+
+  async categoryTotal(from: string, to: string, categoryId: string): Promise<{ sum: number; count: number }> {
+    const row = await this.db.prepare(SQL.category).bind(from, to, categoryId).first<{ sum: number; n: number }>();
+    return { sum: row?.sum ?? 0, count: row?.n ?? 0 };
   }
 
   async reasonCounts(from: string, to: string): Promise<Record<string, number>> {
@@ -52,5 +61,9 @@ export class D1RecordStatsReader implements RecordStatsReader {
 
   async recordsOn(date: string): Promise<RecordEntry[]> {
     return (await this.db.prepare(SQL.day).bind(date).all<RecordRow>()).results.map(toEntry);
+  }
+
+  async recordsBetween(from: string, to: string, limit: number): Promise<RecordEntry[]> {
+    return (await this.db.prepare(SQL.between).bind(from, to, limit).all<RecordRow>()).results.map(toEntry);
   }
 }

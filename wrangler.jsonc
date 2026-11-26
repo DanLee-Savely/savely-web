@@ -48,6 +48,18 @@
 			"name": "RECORDS_RATE_LIMITER",
 			"namespace_id": "1002",
 			"simple": { "limit": 10, "period": 60 }
+		},
+		// 대화로 기록하기 — OpenAI 호출: 같은 IP 1분 6회 (80-record-assistant §7). 넘으면 규칙만으로 정리한다
+		{
+			"name": "ASSISTANT_RATE_LIMITER",
+			"namespace_id": "1003",
+			"simple": { "limit": 6, "period": 60 }
+		},
+		// 대화로 기록하기 — 문장 보내기: 같은 IP 1분 20회 (80 K17)
+		{
+			"name": "ASSISTANT_SEND_RATE_LIMITER",
+			"namespace_id": "1004",
+			"simple": { "limit": 20, "period": 60 }
 		}
 	],
 	// 출시 알림 저장소 (30-waitlist §4). 표는 migrations/ — wrangler d1 migrations apply savely-waitlist --remote
@@ -72,6 +84,12 @@
 	],
 	"vars": {
 		// 다른 출처에서 오는 신청 허용 목록. 쉼표로 구분. 지금은 없음(Vercel 사본을 만들지 않음, 00-decisions B6)
-		"WAITLIST_ALLOWED_ORIGINS": ""
+		"WAITLIST_ALLOWED_ORIGINS": "",
+		// 대화로 기록하기가 쓰는 OpenAI 모델 (80-record-assistant §6-1). 모델이 폐기되면 코드 수정 없이 여기만 바꾼다
+		"OPENAI_MODEL": "gpt-6-luna"
+	},
+	// 비밀 값: 빠진 채 배포되지 않게 이름을 적어 둔다(값은 wrangler secret put · 로컬은 .dev.vars). 여기 없는 .dev.vars 값은 로컬에서 읽히지 않는다
+	"secrets": {
+		"required": ["OPENAI_API_KEY"]
 	}
 }

@@ -3,16 +3,19 @@ import { MonthKey } from "@/domain/record/MonthKey";
 import { FEELINGS, REASONS } from "@/domain/record/RecordEntry";
 import type { RecordStatsReader } from "@/domain/record/RecordStatsReader";
 import { type WeekState, WeekBuckets } from "@/domain/record/WeekBuckets";
-import { average, type MonthView, monthView, percent } from "./monthView";
+import { average, type MonthView, monthView, percent, totalCount } from "./monthView";
 
 export type CompareState = "more" | "less" | "same" | "none";
 export type MonthlyReport = {
   month: MonthView;
+  /** 기록 건수(구분 4가지 모두, K3) */
   count: number;
+  /** 지출이 한 건도 없는 달 — 리포트는 지출만 다루므로 빈 화면을 보여 준다(앱과 같음, K6) */
+  empty: boolean;
   expense: number;
   income: number;
   dailyAverage: number;
-  /** 지난달 같은 기간 지출과 비교(M21). 지난달 기록이 0건이면 none */
+  /** 지난달 같은 기간 지출과 비교(M21). 지난달 지출이 0건이면 none(앱과 같음, K6) */
   compare: { state: CompareState; diff: number };
   /** 주 구간(M20). 예정 구간은 amount null */
   weeks: { from: number; to: number; amount: number | null; state: WeekState; isMax: boolean }[];
@@ -47,10 +50,11 @@ export class GetMonthlyReportService {
     ]);
     const expense = totals.expense.sum;
     const diff = expense - prevSame.expense.sum;
-    const none = prevAll.expense.count + prevAll.income.count === 0;
+    const none = prevAll.expense.count === 0;
     return {
       month: monthView(m),
-      count: totals.expense.count + totals.income.count,
+      count: totalCount(totals),
+      empty: totals.expense.count === 0,
       expense,
       income: totals.income.sum,
       dailyAverage: average(expense, m.elapsedDays),

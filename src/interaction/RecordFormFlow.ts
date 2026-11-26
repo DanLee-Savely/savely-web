@@ -5,12 +5,12 @@ export type RecordFormStatus = "idle" | "editing" | "submitting" | "done" | "err
 
 // 첫 오류 칸을 찾는 순서 = 화면 순서(왼쪽 열 → 오른쪽 열 → 사진)
 const FIELD_ORDER: RecordField[] = [
-  "kind", "amount", "date", "title", "memo", "categoryId", "paymentMethod", "reason", "feeling", "image",
+  "kind", "amount", "date", "title", "memo", "categoryId", "paymentMethod", "cardName", "reason", "feeling", "image",
 ];
-const EXPENSE_ONLY = ["paymentMethod", "reason", "feeling"] as const;
+const EXPENSE_ONLY = ["paymentMethod", "cardName", "reason", "feeling"] as const;
 
 export const emptyDraft = (date: string): RecordDraft => ({
-  kind: "expense", amount: "", date, categoryId: "", title: "", paymentMethod: "", reason: "", feeling: "", memo: "",
+  kind: "expense", amount: "", date, categoryId: "", title: "", paymentMethod: "", cardName: "", reason: "", feeling: "", memo: "",
 });
 
 // 기록 폼(등록 · 수정) 상태: idle → editing → submitting → done / error. 칸별 오류(도메인 code)와 폼 위 오류를 보관한다
@@ -37,10 +37,10 @@ export class RecordFormFlow {
     return this.next({ ...this.draft, [field]: value }, this.without(field));
   }
 
-  /** 구분 바꾸기: 카테고리 선택을 풀고, 수입이면 지출 전용 칸 값을 비운다 (§4-3) */
+  /** 구분 바꾸기: 카테고리 선택을 풀고, 지출이 아니면 지출 전용 칸 값을 비운다 (§4-3 · 80 §4-1) */
   setKind(kind: string): RecordFormFlow {
     if (this.locked || kind === this.draft.kind) return this;
-    const cleared = kind === "income" ? Object.fromEntries(EXPENSE_ONLY.map((f) => [f, ""])) : {};
+    const cleared = kind !== "expense" ? Object.fromEntries(EXPENSE_ONLY.map((f) => [f, ""])) : {};
     return this.next({ ...this.draft, ...cleared, kind, categoryId: "" }, this.without("kind", "categoryId", ...EXPENSE_ONLY));
   }
 

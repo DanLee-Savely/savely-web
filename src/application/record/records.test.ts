@@ -13,7 +13,7 @@ import { UpdateRecordService } from "./UpdateRecordService";
 let tick = 0;
 const clock = { now: () => new Date(Date.UTC(2026, 10, 10, 3, 0, tick++)) };
 const draft = (over: Partial<RecordDraft> = {}): RecordDraft => ({
-  kind: "expense", amount: "9000", date: "2026-11-10", categoryId: "food", title: "", paymentMethod: "", reason: "", feeling: "", memo: "", ...over,
+  kind: "expense", amount: "9000", date: "2026-11-10", categoryId: "food", title: "", paymentMethod: "", cardName: "", reason: "", feeling: "", memo: "", ...over,
 });
 const JPG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
 let n = 0;
@@ -35,6 +35,19 @@ describe("기록 서비스", () => {
     const created = await s.create.execute({ draft: draft(), image: JPG });
     expect(created.imageKey?.startsWith(`${created.id}/`)).toBe(true);
     expect(await s.get.execute(created.id)).toEqual(created);
+  });
+
+  it("상환 · 저축 · 카테고리 없는 기록 · 카드 이름도 저장하고 다시 읽는다", async () => {
+    const s = setup();
+    const transfer = await s.create.execute({ draft: draft({ kind: "transfer", categoryId: "card_bill" }), image: null });
+    const bare = await s.create.execute({ draft: draft({ categoryId: "" }), image: null });
+    const card = await s.create.execute({ draft: draft({ paymentMethod: "credit_card", cardName: "삼성카드" }), image: null });
+    expect(await s.get.execute(transfer.id)).toMatchObject({ kind: "transfer", categoryId: "card_bill", paymentMethod: null });
+    expect((await s.get.execute(bare.id)).categoryId).toBeNull();
+    expect((await s.get.execute(card.id)).cardName).toBe("삼성카드");
+    // 결제수단을 카드가 아닌 것으로 바꾸면 카드 이름도 지워진다
+    const cash = await s.update.execute({ id: card.id, draft: draft({ paymentMethod: "cash", cardName: "삼성카드" }), image: null, removeImage: false });
+    expect(cash.cardName).toBeNull();
   });
 
   it("검증에 실패하면 사진도 기록도 저장하지 않는다", async () => {

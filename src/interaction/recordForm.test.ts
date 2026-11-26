@@ -21,19 +21,32 @@ describe("PageWindow", () => {
 });
 
 describe("RecordFormFlow", () => {
-  it("빈 값으로 저장하면 칸별 오류와 첫 오류 칸(화면 순서)", () => {
-    const f = start().submit(clock);
-    expect(f).toMatchObject({ status: "error", errors: { amount: "AMOUNT_REQUIRED", categoryId: "INVALID_CATEGORY" }, firstErrorField: "amount" });
+  it("빈 값으로 저장하면 칸별 오류와 첫 오류 칸(화면 순서) — 카테고리는 비워도 된다", () => {
+    const f = start().set("memo", "a".repeat(201)).submit(clock);
+    expect(f).toMatchObject({ status: "error", errors: { amount: "AMOUNT_REQUIRED", memo: "TEXT_TOO_LONG" }, firstErrorField: "amount" });
+    expect(f.errors.categoryId).toBeUndefined();
   });
 
   it("고친 칸의 오류만 지운다", () => {
-    const f = start().submit(clock).set("amount", "9000");
-    expect(f).toMatchObject({ status: "editing", errors: { categoryId: "INVALID_CATEGORY" }, firstErrorField: "categoryId" });
+    const f = start().set("memo", "a".repeat(201)).submit(clock).set("amount", "9000");
+    expect(f).toMatchObject({ status: "editing", errors: { memo: "TEXT_TOO_LONG" }, firstErrorField: "memo" });
+  });
+
+  it("금액과 날짜만 채워도 저장 중으로 넘어간다", () => {
+    expect(start().set("amount", "4500").submit(clock).status).toBe("submitting");
   });
 
   it("수입으로 바꾸면 카테고리 선택이 풀리고 지출 전용 칸이 비워진다", () => {
     const f = start().set("categoryId", "cafe").set("paymentMethod", "cash").set("reason", "need").set("feeling", "regret").setKind("income");
     expect(f.draft).toMatchObject({ kind: "income", categoryId: "", paymentMethod: "", reason: "", feeling: "" });
+  });
+
+  it("상환 · 저축으로 바꿔도 지출 전용 칸(카드 이름 포함)이 비워지고, 지출로 돌아오면 그대로 빈칸", () => {
+    const filled = start().set("categoryId", "cafe").set("paymentMethod", "credit_card").set("cardName", "삼성카드").set("reason", "need");
+    for (const kind of ["transfer", "savings"]) {
+      expect(filled.setKind(kind).draft).toMatchObject({ kind, categoryId: "", paymentMethod: "", cardName: "", reason: "", feeling: "" });
+    }
+    expect(filled.setKind("transfer").setKind("expense").draft).toMatchObject({ kind: "expense", paymentMethod: "", cardName: "" });
   });
 
   it("통과하면 저장 중 — 잠긴 동안 입력 · 두 번째 제출은 무시", () => {

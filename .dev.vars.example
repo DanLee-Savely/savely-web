@@ -1,0 +1,6 @@
+# 로컬 개발용 비밀 값의 이름만 적은 본보기다. 이 파일을 .dev.vars로 복사한 뒤 값을 채운다(.dev.vars는 커밋하지 않는다).
+# 운영 값은 `npx wrangler secret put OPENAI_API_KEY`로 넣는다.
+# wrangler.jsonc의 secrets.required에 적힌 이름만 로컬에서 읽힌다 — 새 비밀 값을 쓰려면 거기에도 이름을 더한다.
+
+# 대화로 기록하기: 규칙 파서가 읽지 못한 부분을 정리하는 OpenAI API 키 (docs/spec/80-record-assistant.md §6-5). 비워 두면 규칙만으로 정리한다
+OPENAI_API_KEY=

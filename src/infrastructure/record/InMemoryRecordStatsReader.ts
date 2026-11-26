@@ -1,4 +1,5 @@
-import { type RecordData, RecordEntry } from "@/domain/record/RecordEntry";
+import { CategoryCatalog } from "@/domain/record/CategoryCatalog";
+import { KINDS, type RecordData, RecordEntry } from "@/domain/record/RecordEntry";
 import type { CategorySum, KindTotals, RecordStatsReader } from "@/domain/record/RecordStatsReader";
 import type { InMemoryRecordRepository } from "./InMemoryRecordRepository";
 
@@ -23,7 +24,7 @@ export class InMemoryRecordStatsReader implements RecordStatsReader {
       const list = rows.filter((r) => r.kind === kind);
       return { sum: list.reduce((s, r) => s + r.amount, 0), count: list.length };
     };
-    return { expense: of("expense"), income: of("income") };
+    return Object.fromEntries(KINDS.map((k) => [k, of(k)])) as KindTotals;
   }
 
   async dailyExpense(from: string, to: string): Promise<Record<string, number>> {
@@ -31,9 +32,14 @@ export class InMemoryRecordStatsReader implements RecordStatsReader {
   }
 
   async categoryExpense(from: string, to: string): Promise<CategorySum[]> {
-    return Object.entries(tally(this.range(from, to, "expense"), (r) => r.categoryId, (r) => r.amount))
+    return Object.entries(tally(this.range(from, to, "expense"), (r) => r.categoryId ?? CategoryCatalog.uncategorizedExpense, (r) => r.amount))
       .map(([categoryId, sum]) => ({ categoryId, sum }))
       .sort((a, b) => b.sum - a.sum || a.categoryId.localeCompare(b.categoryId));
+  }
+
+  async categoryTotal(from: string, to: string, categoryId: string): Promise<{ sum: number; count: number }> {
+    const list = this.range(from, to).filter((r) => (r.categoryId ?? (r.kind === "expense" ? CategoryCatalog.uncategorizedExpense : null)) === categoryId);
+    return { sum: list.reduce((s, r) => s + r.amount, 0), count: list.length };
   }
 
   async reasonCounts(from: string, to: string): Promise<Record<string, number>> {
@@ -46,6 +52,13 @@ export class InMemoryRecordStatsReader implements RecordStatsReader {
 
   async impulseRegretCount(from: string, to: string): Promise<number> {
     return this.range(from, to, "expense").filter((r) => r.reason === "impulse" && (r.feeling === "unsatisfied" || r.feeling === "regret")).length;
+  }
+
+  async recordsBetween(from: string, to: string, limit: number): Promise<RecordEntry[]> {
+    return this.range(from, to)
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
+      .slice(0, limit)
+      .map(RecordEntry.restore);
   }
 
   async recordsOn(date: string): Promise<RecordEntry[]> {

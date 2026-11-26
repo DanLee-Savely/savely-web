@@ -22,7 +22,7 @@ export default async function ReportPage({ searchParams }: PageProps<"/app/repor
         title={report.title}
         actions={<MonthNav base="/app/report" year={m.year} month={m.month} prev={m.prev} next={m.next} />}
       />
-      {r.count ? (
+      {!r.empty ? (
         <div className="flex flex-col gap-5">
           <div className="grid gap-5 xl:grid-cols-2">
             <SummaryCard r={r} />

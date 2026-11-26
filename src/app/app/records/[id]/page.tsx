@@ -5,14 +5,17 @@ import { DeleteRecordButton } from "@/components/app/DeleteRecordButton";
 import { PageHeader } from "@/components/app/PageHeader";
 import { RecordPhoto } from "@/components/app/RecordPhoto";
 import { AppButton } from "@/components/common/AppButton";
-import { appContent } from "@/content/app.content";
+import { amountSign, amountTone, appContent, recordTitle } from "@/content/app.content";
+import { CARD_METHODS } from "@/domain/record/RecordEntry";
 import { RecordNotFoundError } from "@/domain/record/errors";
 import { createRecordsServer } from "@/infrastructure/container";
 import { formatAmount, formatDay, formatTime, imageUrl } from "@/lib/recordFormat";
 
 const { detail, kinds, categories, paymentMethods, reasons, feelings, form } = appContent;
+const TONE = { income: "text-sv-accent", muted: "text-sv-text-2", plain: "text-sv-text" };
 
-// 상세 /app/records/[id] (§4-2). 빈 선택 항목은 「—」. 수입은 지출 전용 줄을 보여 주지 않는다
+// 상세 /app/records/[id] (§4-2). 빈 선택 항목은 「—」. 지출이 아니면 지출 전용 줄을 보여 주지 않는다
+// 「카드 이름」 줄은 카드 결제일 때만(80 K12). 금액은 수입만 + 초록, 상환은 흐린 색(K2)
 export default async function RecordPage({ params }: PageProps<"/app/records/[id]">) {
   const { id } = await params;
   const r = await (await createRecordsServer()).get.execute(id).catch((e) => {
@@ -22,10 +25,11 @@ export default async function RecordPage({ params }: PageProps<"/app/records/[id
   const expense = r.kind === "expense";
   const rows: [string, string | null][] = [
     [detail.labels.date, formatDay(r.date)],
-    [detail.labels.categoryId, categories[r.categoryId]],
+    [detail.labels.categoryId, r.categoryId && categories[r.categoryId]],
     ...(expense
       ? ([
           [detail.labels.paymentMethod, r.paymentMethod && paymentMethods[r.paymentMethod]],
+          ...(r.paymentMethod && CARD_METHODS.includes(r.paymentMethod) ? [[detail.labels.cardName, r.cardName]] : []),
           [detail.labels.reason, r.reason && reasons[r.reason]],
           [detail.labels.feeling, r.feeling && feelings[r.feeling]],
         ] as [string, string | null][])
@@ -37,7 +41,7 @@ export default async function RecordPage({ params }: PageProps<"/app/records/[id
     <>
       <PageHeader
         back={{ href: "/app/records", label: detail.backToList }}
-        title={r.title ?? categories[r.categoryId]}
+        title={recordTitle(r)}
         actions={
           <>
             <AppButton asChild variant="outline">
@@ -53,8 +57,8 @@ export default async function RecordPage({ params }: PageProps<"/app/records/[id
       <div className="grid items-start gap-5 xl:grid-cols-[1fr_440px]">
         <article className="rounded-sv-lg border border-sv-border-2 bg-sv-surface p-7">
           <span className="rounded-sv-pill bg-sv-surface-2 px-2.5 py-1 sv-text-label-13 text-sv-text-2">{kinds[r.kind]}</span>
-          <p className={`mt-3 mb-6 sv-text-amount-44 ${expense ? "text-sv-text" : "text-sv-accent"}`}>
-            {!expense && "+"}
+          <p className={`mt-3 mb-6 sv-text-amount-44 ${TONE[amountTone(r.kind)]}`}>
+            {amountSign(r.kind)}
             {formatAmount(r.amount)}
             <span className="ml-1.5 sv-text-label-15 text-sv-text-2">{form.won}</span>
           </p>

@@ -51,7 +51,7 @@ npx shadcn@latest add button card dialog sheet input checkbox carousel tooltip
 ## 3. Cloudflare (실서비스)
 1. **D1 생성:** `npx wrangler d1 create savely-waitlist` → 출력된 `database_id`를 `wrangler.jsonc`의 `d1_databases`에 `binding: "DB"`로 기록한다(`database_id`는 비밀값이 아님)
 2. **마이그레이션 적용:** `npx wrangler d1 migrations apply savely-waitlist --remote`
-3. **Route 설정:** `wrangler.jsonc`의 `routes`에 `www.savelyglobal.com/home*`와 `www.savelyglobal.com/_next/*`(정적 파일 · 이미지 최적화), 검색엔진용 `/robots.txt` · `/sitemap.xml`(`src/app/robots.ts` · `sitemap.ts`), 미션 6 기록 체험판 `/app*`(2026-11-10. 정확 일치 `/app`은 쿼리가 붙은 요청을 받지 못해 `*`로 끝냄, 00-decisions M12). 새 경로는 화면이 생길 때 그 경로만 추가한다. 도메인 전체(`/*`)는 다른 용도의 경로가 있을 수 있어 잡지 않는다
+3. **Route 설정:** `wrangler.jsonc`의 `routes`에 `www.savelyglobal.com/home*`와 `www.savelyglobal.com/_next/*`(정적 파일 · 이미지 최적화), 검색엔진용 `/robots.txt` · `/sitemap.xml`(`src/app/robots.ts` · `sitemap.ts`), 기록 체험판 `/app*`(2026-11-10. 정확 일치 `/app`은 쿼리가 붙은 요청을 받지 못해 `*`로 끝냄, 00-decisions M12). 새 경로는 화면이 생길 때 그 경로만 추가한다. 도메인 전체(`/*`)는 다른 용도의 경로가 있을 수 있어 잡지 않는다
    - www 레코드는 Cloudflare 프록시(주황 구름)가 켜져 있어야 한다(Cloudflare 공식 문서)
 4. **GitHub 자동 배포:** Cloudflare 대시보드 → Workers & Pages → 해당 Worker → Settings → Builds에서 GitHub 저장소 연결 (**사용자가 직접**)
    - 빌드 명령 예: `npx opennextjs-cloudflare build` / 배포 명령 예: `npx opennextjs-cloudflare deploy`
@@ -63,17 +63,17 @@ npx shadcn@latest add button card dialog sheet input checkbox carousel tooltip
    - 기존 `survey.savelyglobal.com`은 건드리지 않는다
 6. **환경 변수:** `WAITLIST_ALLOWED_ORIGINS` = Vercel 배포 도메인
 
-## 4. Vercel (제출용)
+## 4. Vercel (쓰지 않음 — B6 · M12)
 1. Vercel 대시보드에서 GitHub 저장소 `DanLee-Savely/savely-web`을 가져온다 (**사용자가 직접**, GitHub 권한 승인 필요)
 2. 환경 변수 `NEXT_PUBLIC_WAITLIST_API_URL=https://www.savelyglobal.com`
 3. Vercel 주소도 메인은 `https://<프로젝트>.vercel.app/home`이다. 루트(`/`)는 `next.config`의 `redirects`로 `/home`에 보낸다
-4. 확인: 시크릿 창과 모바일에서 페이지 · 이미지 · 인터랙션 · 출시 알림 신청까지 직접 확인한다(미션 5 요건)
+4. 확인: 시크릿 창과 모바일에서 페이지 · 이미지 · 인터랙션 · 출시 알림 신청까지 직접 확인한다
 
 ## 5. 비밀값 원칙
 - API 토큰 · 비밀키는 저장소에 넣지 않는다. 대시보드 환경 변수로 넣는다(**사용자가 직접**).
 - 로컬 개발용 비밀값은 `.dev.vars` / `.env.local`(둘 다 `.gitignore`)
 - 에이전트는 이 파일들을 읽지 않는다.
 
-## 6. 커스텀 도메인 · 분석 (미션 5 심화)
+## 6. 커스텀 도메인 · 분석
 - 커스텀 도메인 연결은 실서비스(Cloudflare)로 충족된다. README에 두 주소를 모두 적는다.
 - Vercel Analytics는 선택 사항이다.

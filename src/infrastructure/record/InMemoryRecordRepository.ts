@@ -21,6 +21,12 @@ export class InMemoryRecordRepository implements RecordRepository {
     this.rows.set(entry.id, entry.toData());
   }
 
+  async insertMany(entries: RecordEntry[]): Promise<number> {
+    const fresh = entries.filter((e) => !this.rows.has(e.id));
+    for (const e of fresh) this.rows.set(e.id, e.toData());
+    return fresh.length;
+  }
+
   async update(entry: RecordEntry): Promise<boolean> {
     if (!this.rows.has(entry.id)) return false;
     this.rows.set(entry.id, entry.toData());

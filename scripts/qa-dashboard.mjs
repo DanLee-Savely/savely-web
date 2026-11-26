@@ -1,4 +1,4 @@
-// 미션 6 홈 · 달력 · 리포트 QA 자동 점검 (docs/spec/70-mvp-records.md §10 Q23~Q30 → 결과 docs/spec/71-mvp-qa.md)
+// 홈 · 달력 · 리포트 QA 자동 점검 (docs/spec/70-mvp-records.md §10 Q23~Q30 → 결과 docs/spec/71-mvp-qa.md)
 // 준비: npm run preview(로컬 D1). 실행: node scripts/qa-dashboard.mjs <결과 폴더>
 // 로컬 D1의 records를 지우고 다시 채우며 표 이름을 잠시 바꾸므로 실서비스에는 쓰지 않는다
 import { chromium } from "playwright";

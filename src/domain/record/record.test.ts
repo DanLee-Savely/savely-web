@@ -5,13 +5,13 @@ import { AmountRequiredError, DateRequiredError, FutureDateError, ImageTooLargeE
 import { ImageFile } from "./ImageFile";
 import { RecordDate } from "./RecordDate";
 import { type RecordDraft, RecordEntry } from "./RecordEntry";
-import { RecordMemo, RecordTitle } from "./RecordText";
+import { RecordCardName, RecordMemo, RecordTitle } from "./RecordText";
 
 // 2026-11-10 00:30 (한국) = 2026-11-09 15:30 UTC
 const clock = { now: () => new Date("2026-11-09T15:30:00Z") };
 const draft = (over: Partial<RecordDraft> = {}): RecordDraft => ({
   kind: "expense", amount: "9,000", date: "2026-11-10", categoryId: "cafe", title: "", paymentMethod: "check_card",
-  reason: "need", feeling: "meh", memo: "", ...over,
+  cardName: "", reason: "need", feeling: "meh", memo: "", ...over,
 });
 const JPG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]);
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
@@ -75,20 +75,41 @@ describe("ImageFile", () => {
   });
 });
 
+describe("RecordCardName", () => {
+  it("20자까지, 줄바꿈 · 겹친 빈칸은 한 칸으로, 빈칸은 null", () => {
+    expect(RecordCardName.create("가".repeat(20)).value).toHaveLength(20);
+    expect(() => RecordCardName.create("가".repeat(21))).toThrow(TextTooLongError);
+    expect(RecordCardName.create(" 삼성카드 \n  taptap ").value).toBe("삼성카드 taptap");
+    expect(RecordCardName.create("  ").value).toBeNull();
+  });
+});
+
 describe("CategoryCatalog", () => {
-  it("지출 23 · 수입 6 · 먼저 보여 줄 11, 구분과 맞지 않으면 거부", () => {
-    expect([CategoryCatalog.expense.length, CategoryCatalog.income.length, CategoryCatalog.featured.length]).toEqual([23, 6, 11]);
-    expect(CategoryCatalog.featured.every((c) => CategoryCatalog.expense.includes(c))).toBe(true);
+  it("지출 24 · 수입 6 · 상환 3 · 저축 8 = 41종, 먼저 보여 줄 12, 편의점은 마트·생필품 다음", () => {
+    const { expense, income, transfer, savings, all, featured } = CategoryCatalog;
+    expect([expense.length, income.length, transfer.length, savings.length, all.length, featured.length]).toEqual([24, 6, 3, 8, 41, 12]);
+    expect(new Set(all).size).toBe(41);
+    expect(expense.indexOf("convenience")).toBe(expense.indexOf("grocery") + 1);
+    expect(featured.every((c) => expense.includes(c))).toBe(true);
+  });
+
+  it("구분과 맞지 않으면 거부, 고르지 않은 것(빈칸)은 받는다", () => {
     expect(() => CategoryCatalog.assert("expense", "salary")).toThrow();
     expect(() => CategoryCatalog.assert("income", "salary")).not.toThrow();
+    expect(() => CategoryCatalog.assert("transfer", "card_bill")).not.toThrow();
+    expect(() => CategoryCatalog.assert("savings", "card_bill")).toThrow();
+    expect(() => CategoryCatalog.assert("savings", "invest")).not.toThrow();
+    expect(() => CategoryCatalog.assert("expense", "")).not.toThrow();
+    expect(CategoryCatalog.of("nope")).toEqual([]);
   });
 });
 
 describe("RecordEntry", () => {
   it("칸별 오류를 한꺼번에 모은다", () => {
-    expect(RecordEntry.check(draft({ amount: "", categoryId: "", date: "2026-11-11", title: "가".repeat(61) }), clock)).toEqual({
+    expect(RecordEntry.check(draft({ amount: "", categoryId: "salary", date: "2026-11-11", title: "가".repeat(61) }), clock)).toEqual({
       amount: "AMOUNT_REQUIRED", categoryId: "INVALID_CATEGORY", date: "FUTURE_DATE", title: "TEXT_TOO_LONG",
     });
+    expect(RecordEntry.check(draft({ kind: "gift" }), clock)).toMatchObject({ kind: "INVALID_OPTION" });
     expect(RecordEntry.check(draft({ paymentMethod: "bitcoin" }), clock, GIF)).toEqual({ paymentMethod: "INVALID_OPTION", image: "INVALID_IMAGE_TYPE" });
     expect(() => RecordEntry.create(ID, draft({ amount: "0" }), clock)).toThrow(InvalidRecordError);
   });
@@ -96,13 +117,35 @@ describe("RecordEntry", () => {
   it("지출 기록을 만든다 — 시각은 서버 시계, 빈 선택은 null", () => {
     expect(RecordEntry.create(ID, draft({ feeling: "" }), clock).toData()).toEqual({
       id: ID, kind: "expense", amount: 9000, date: "2026-11-10", categoryId: "cafe", title: null, paymentMethod: "check_card",
-      reason: "need", feeling: null, memo: null, imageKey: null, createdAt: "2026-11-09T15:30:00.000Z", updatedAt: "2026-11-09T15:30:00.000Z",
+      cardName: null, reason: "need", feeling: null, memo: null, imageKey: null, createdAt: "2026-11-09T15:30:00.000Z", updatedAt: "2026-11-09T15:30:00.000Z",
     });
   });
 
   it("수입이면 지출 전용 항목을 비운다(목록 밖 값이 와도 무시)", () => {
     const data = RecordEntry.create(ID, draft({ kind: "income", categoryId: "salary", paymentMethod: "bitcoin" }), clock).toData();
     expect(data).toMatchObject({ kind: "income", paymentMethod: null, reason: null, feeling: null });
+  });
+
+  it("상환 · 저축도 지출 전용 항목(결제수단 · 카드 이름 · 이유 · 기분)을 비운다", () => {
+    const transfer = RecordEntry.create(ID, draft({ kind: "transfer", categoryId: "card_bill", cardName: "삼성카드" }), clock).toData();
+    expect(transfer).toMatchObject({ kind: "transfer", categoryId: "card_bill", paymentMethod: null, cardName: null, reason: null, feeling: null });
+    const savings = RecordEntry.create(ID, draft({ kind: "savings", categoryId: "invest" }), clock).toData();
+    expect(savings).toMatchObject({ kind: "savings", categoryId: "invest", paymentMethod: null, reason: null });
+    expect(RecordEntry.check(draft({ kind: "transfer", categoryId: "food" }), clock)).toEqual({ categoryId: "INVALID_CATEGORY" });
+  });
+
+  it("카테고리 없이도 저장된다 — 금액만 적은 기록", () => {
+    const data = RecordEntry.create(ID, draft({ categoryId: "", paymentMethod: "", reason: "", feeling: "" }), clock).toData();
+    expect(data).toMatchObject({ amount: 9000, categoryId: null, title: null });
+  });
+
+  it("카드 이름은 지출 · 카드 결제일 때만 남고, 20자를 넘으면 오류", () => {
+    expect(RecordEntry.create(ID, draft({ cardName: " 삼성카드 " }), clock).toData().cardName).toBe("삼성카드");
+    expect(RecordEntry.create(ID, draft({ paymentMethod: "credit_card", cardName: "현대카드" }), clock).toData().cardName).toBe("현대카드");
+    // 카드 결제가 아니면 적혀 있어도 비운다(길이도 보지 않는다)
+    expect(RecordEntry.create(ID, draft({ paymentMethod: "cash", cardName: "가".repeat(30) }), clock).toData().cardName).toBeNull();
+    expect(RecordEntry.create(ID, draft({ paymentMethod: "", cardName: "삼성카드" }), clock).toData().cardName).toBeNull();
+    expect(RecordEntry.check(draft({ cardName: "가".repeat(21) }), clock)).toEqual({ cardName: "TEXT_TOO_LONG" });
   });
 
   it("수정하면 id · 사진 · 처음 시각은 그대로, 고친 시각만 바뀐다", () => {

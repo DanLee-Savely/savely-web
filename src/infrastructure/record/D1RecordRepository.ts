@@ -1,15 +1,16 @@
 import { type RecordData, RecordEntry } from "@/domain/record/RecordEntry";
 import type { RecordPage, RecordRepository } from "@/domain/record/RecordRepository";
 
-// Cloudflare D1 (migrations-records/0001_create_records.sql). 값은 모두 바인딩 파라미터로 넘긴다
+// Cloudflare D1 (migrations-records/0001 · 0002). 값은 모두 바인딩 파라미터로 넘긴다
 export type RecordRow = {
   id: string;
   kind: RecordData["kind"];
   amount: number;
   record_date: string;
-  category_id: string;
+  category_id: string | null;
   title: string | null;
   payment_method: string | null;
+  card_name: string | null;
   reason: string | null;
   feeling: string | null;
   memo: string | null;
@@ -18,11 +19,12 @@ export type RecordRow = {
   updated_at: string;
 };
 
-const COLUMNS = `id, kind, amount, record_date, category_id, title, payment_method, reason, feeling, memo, image_key, created_at, updated_at`;
+const COLUMNS = `id, kind, amount, record_date, category_id, title, payment_method, card_name, reason, feeling, memo, image_key, created_at, updated_at`;
 const LIST = `SELECT * FROM records ORDER BY record_date DESC, created_at DESC LIMIT ?1 OFFSET ?2`;
-const INSERT = `INSERT INTO records (${COLUMNS}) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`;
+const INSERT = `INSERT INTO records (${COLUMNS}) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`;
+const INSERT_NEW = `${INSERT} ON CONFLICT(id) DO NOTHING`;
 const UPDATE = `UPDATE records SET kind = ?2, amount = ?3, record_date = ?4, category_id = ?5, title = ?6, payment_method = ?7,
-reason = ?8, feeling = ?9, memo = ?10, image_key = ?11, updated_at = ?13 WHERE id = ?1`;
+card_name = ?8, reason = ?9, feeling = ?10, memo = ?11, image_key = ?12, updated_at = ?14 WHERE id = ?1`;
 
 export const toEntry = (r: RecordRow): RecordEntry =>
   RecordEntry.restore({
@@ -33,6 +35,7 @@ export const toEntry = (r: RecordRow): RecordEntry =>
     categoryId: r.category_id,
     title: r.title,
     paymentMethod: r.payment_method,
+    cardName: r.card_name,
     reason: r.reason,
     feeling: r.feeling,
     memo: r.memo,
@@ -41,10 +44,10 @@ export const toEntry = (r: RecordRow): RecordEntry =>
     updatedAt: r.updated_at,
   });
 
-// ?1~?13 순서 = COLUMNS 순서
+// ?1~?14 순서 = COLUMNS 순서
 const values = (e: RecordEntry) => {
   const d = e.toData();
-  return [d.id, d.kind, d.amount, d.date, d.categoryId, d.title, d.paymentMethod, d.reason, d.feeling, d.memo, d.imageKey, d.createdAt, d.updatedAt];
+  return [d.id, d.kind, d.amount, d.date, d.categoryId, d.title, d.paymentMethod, d.cardName, d.reason, d.feeling, d.memo, d.imageKey, d.createdAt, d.updatedAt];
 };
 
 export class D1RecordRepository implements RecordRepository {
@@ -65,6 +68,13 @@ export class D1RecordRepository implements RecordRepository {
 
   async insert(entry: RecordEntry): Promise<void> {
     await this.db.prepare(INSERT).bind(...values(entry)).run();
+  }
+
+  async insertMany(entries: RecordEntry[]): Promise<number> {
+    if (!entries.length) return 0;
+    // D1 batch는 한 트랜잭션이다 — 하나라도 실패하면 모두 되돌린다
+    const results = await this.db.batch(entries.map((e) => this.db.prepare(INSERT_NEW).bind(...values(e))));
+    return results.reduce((n, r) => n + r.meta.changes, 0);
   }
 
   async update(entry: RecordEntry): Promise<boolean> {
