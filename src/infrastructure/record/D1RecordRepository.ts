@@ -22,6 +22,7 @@ export type RecordRow = {
 const COLUMNS = `id, kind, amount, record_date, category_id, title, payment_method, card_name, reason, feeling, memo, image_key, created_at, updated_at`;
 const LIST = `SELECT * FROM records ORDER BY record_date DESC, created_at DESC LIMIT ?1 OFFSET ?2`;
 const INSERT = `INSERT INTO records (${COLUMNS}) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`;
+const INSERT_NEW = `${INSERT} ON CONFLICT(id) DO NOTHING`;
 const UPDATE = `UPDATE records SET kind = ?2, amount = ?3, record_date = ?4, category_id = ?5, title = ?6, payment_method = ?7,
 card_name = ?8, reason = ?9, feeling = ?10, memo = ?11, image_key = ?12, updated_at = ?14 WHERE id = ?1`;
 
@@ -67,6 +68,13 @@ export class D1RecordRepository implements RecordRepository {
 
   async insert(entry: RecordEntry): Promise<void> {
     await this.db.prepare(INSERT).bind(...values(entry)).run();
+  }
+
+  async insertMany(entries: RecordEntry[]): Promise<number> {
+    if (!entries.length) return 0;
+    // D1 batch는 한 트랜잭션이다 — 하나라도 실패하면 모두 되돌린다
+    const results = await this.db.batch(entries.map((e) => this.db.prepare(INSERT_NEW).bind(...values(e))));
+    return results.reduce((n, r) => n + r.meta.changes, 0);
   }
 
   async update(entry: RecordEntry): Promise<boolean> {

@@ -1,3 +1,5 @@
+import { InterpretSentenceService } from "@/application/assistant/InterpretSentenceService";
+import { SaveDraftsService } from "@/application/assistant/SaveDraftsService";
 import { CreateRecordService } from "@/application/record/CreateRecordService";
 import { DeleteRecordService } from "@/application/record/DeleteRecordService";
 import { GetHomeSummaryService } from "@/application/record/GetHomeSummaryService";
@@ -79,6 +81,25 @@ export async function createRecordsServer(): Promise<RecordsServer> {
     calendar: new GetMonthCalendarService(stats, clock),
     report: new GetMonthlyReportService(stats, clock),
     images,
+    limiter: new WriteRateLimiter(env.RECORDS_RATE_LIMITER),
+  };
+}
+
+// 대화로 기록하기 (80-record-assistant). 문장 해석은 서버에서만 한다 — 키워드 사전 · (다음 단계의) OpenAI 호출이 브라우저로 나가지 않는다
+export type AssistantServer = {
+  interpret: InterpretSentenceService;
+  save: SaveDraftsService;
+  /** 저장은 기록 쓰기 제한을 함께 쓴다 — 저장 확인 한 번 = 요청 1회 */
+  limiter: WriteRateLimiter;
+};
+
+export async function createAssistantServer(): Promise<AssistantServer> {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  if (!env.RECORDS_DB) throw new Error("RECORDS_DB 바인딩이 없어요");
+  return {
+    interpret: new InterpretSentenceService(clock),
+    save: new SaveDraftsService(new D1RecordRepository(env.RECORDS_DB), new D1RecordStatsReader(env.RECORDS_DB), clock),
     limiter: new WriteRateLimiter(env.RECORDS_RATE_LIMITER),
   };
 }

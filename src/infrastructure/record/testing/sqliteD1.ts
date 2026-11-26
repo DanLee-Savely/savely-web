@@ -28,6 +28,11 @@ class SqliteStatement {
     return { results: this.db.prepare(this.sql).all(...this.params) as T[] };
   }
 
+  async runOrAll(): Promise<{ results: unknown[]; meta: { changes: number } }> {
+    if (/^\s*select/i.test(this.sql)) return { ...(await this.all()), meta: { changes: 0 } };
+    return { results: [], ...(await this.run()) };
+  }
+
   async first<T>(): Promise<T | null> {
     return (this.db.prepare(this.sql).get(...this.params) as T | undefined) ?? null;
   }
@@ -61,8 +66,18 @@ export class SqliteD1 {
     return new SqliteStatement(this.db, sql);
   }
 
-  async batch(statements: SqliteStatement[]): Promise<{ results: unknown[] }[]> {
-    return Promise.all(statements.map((s) => s.all()));
+  /** D1처럼 한 트랜잭션으로 실행한다 — 하나라도 실패하면 모두 되돌린다. SELECT는 행을, 나머지는 바뀐 행 수를 돌려준다 */
+  async batch(statements: SqliteStatement[]): Promise<{ results: unknown[]; meta: { changes: number } }[]> {
+    this.db.exec("BEGIN");
+    try {
+      const out = [];
+      for (const s of statements) out.push(await s.runOrAll());
+      this.db.exec("COMMIT");
+      return out;
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
   }
 
   /** D1 저장소 생성자에 넘길 때 */
