@@ -10,6 +10,8 @@ export class StepSequencer {
     readonly step = 0,
     /** 사용자가 단계를 골랐는가 — 자동 진행이 꺼진 화면(동작 줄이기)도 고른 단계는 보여 준다 */
     readonly picked = false,
+    /** 사용자가 고른 단계에 머문다 — 자동 진행이 끝났다 (I7) */
+    readonly held = false,
   ) {
     if (delays.length === 0) throw new RangeError("delays가 비어 있어요");
     if (!Number.isInteger(step) || step < 0 || step >= this.stepCount) throw new RangeError("step이 범위를 벗어났어요");
@@ -24,9 +26,9 @@ export class StepSequencer {
     return this.done ? null : this.delays[this.step];
   }
 
-  /** 한 번 재생이 마지막 단계에 닿았으면 true. 반복 재생은 끝나지 않는다 */
+  /** 한 번 재생이 마지막 단계에 닿았거나, 사용자가 고른 단계에 머물기로 했으면 true. 반복 재생은 스스로 끝나지 않는다 */
   get done(): boolean {
-    return !this.loop && this.step === this.stepCount - 1;
+    return this.held || (!this.loop && this.step === this.stepCount - 1);
   }
 
   advance(): StepSequencer {
@@ -45,6 +47,14 @@ export class StepSequencer {
    */
   select(step: number): StepSequencer {
     return new StepSequencer(this.delays, this.loop, step, true);
+  }
+
+  /**
+   * 사용자가 고른 단계로 이동하고 거기에 머문다 (I7). 자동 진행은 다시 시작하지 않는다 —
+   * 둘 중 하나를 고르는 스위치는 고른 쪽에 머물러야 한다(순환하는 I5는 select로 이어 간다)
+   */
+  hold(step: number): StepSequencer {
+    return new StepSequencer(this.delays, this.loop, step, true, true);
   }
 
   private at(step: number): StepSequencer {

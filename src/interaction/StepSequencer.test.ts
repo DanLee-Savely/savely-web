@@ -30,6 +30,15 @@ describe("StepSequencer", () => {
     expect(s.advance().advance().step).toBe(0);
   });
 
+  it("hold는 그 단계로 가서 머문다 — 자동 진행을 다시 시작하지 않는다", () => {
+    const before = new StepSequencer([6000]).hold(1);
+    expect(before).toMatchObject({ step: 1, picked: true, held: true, done: true, nextDelay: null });
+    // 자동으로 넘어간 뒤 앞 단계를 다시 골라도 또 넘어가지 않는다
+    const back = new StepSequencer([6000]).advance().hold(0);
+    expect(back).toMatchObject({ step: 0, done: true, nextDelay: null });
+    expect(back.advance()).toBe(back);
+  });
+
   it("이동해도 원래 객체는 바뀌지 않는다", () => {
     const s = new StepSequencer([800]);
     s.advance();
