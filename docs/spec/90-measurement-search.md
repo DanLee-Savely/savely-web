@@ -2,7 +2,7 @@
 
 작성 2026-11-26 · 상태: **§4 문구 · §2-6 개인정보처리방침 문안 대표 승인 (2026-11-26). 배포는 대표 요청 시에만, 측정 코드와 방침 변경은 같은 배포로.**
 
-> **구현 상태 (2026-11-26):** 구현 완료 · `feat/measurement-search` 브랜치에 커밋 · **배포하지 않음.** 측정 ID가 비어 있고, 방침 6번 문장을 다시 정하기 전에는 배포하지 않는다(§2-7 대표 결정 · 배포 전 할 일).
+> **구현 상태 (2026-11-27):** 구현 완료 · GA4 · 네이버 ID 입력 · `feat/measurement-search` 브랜치에 커밋 · **배포하지 않음.** 방침 6번 문장을 다시 정하기 전에는 배포하지 않는다(§2-7 대표 결정 · §2-8 확인 결과).
 
 ## 0. 목적과 범위
 
@@ -142,9 +142,9 @@ npx wrangler d1 execute savely-waitlist --remote --command "SELECT source, COUNT
 
 4단계에서 광고 전환 스크립트나 리마케팅을 쓰게 되면 "행태정보" 항목이 추가로 필요해질 수 있다(작성지침의 행태정보 기재 사항). 지금 범위에서는 쓰지 않는다.
 
-### 2-7. 구현 기록 (Claude Code 2026-11-26) — ID는 비어 있고 배포하지 않았다
+### 2-7. 구현 기록 (Claude Code 2026-11-26) — 배포하지 않았다
 
-**상태:** 구현 · 로컬 확인 완료. `GA4_MEASUREMENT_ID` · `NAVER_ANALYTICS_ID`가 빈 값이라 지금은 아무것도 불러오지 않고 아무것도 보내지 않는다(Noop). **ID를 넣는 배포에는 §2-6 방침 변경이 함께 들어 있어야 한다** — 방침은 이 작업에 이미 들어 있고, `src/lib/analytics/config.test.ts`가 방침의 해당 항목이 있는지 확인한다.
+**상태:** 구현 · 로컬 확인 완료. 2026-11-26 대표가 ID를 전달해 `src/lib/analytics/config.ts`에 넣었다(Google 태그 ID `GTM-5MBT2278` · GA4 측정 ID `G-2ZNQ5RB05K`(참고용) · 네이버 `wa`). 값이 있어도 실서비스 주소에서만 보내므로 로컬 · 미리보기에서는 아무것도 불러오지 않는다. ID를 받은 뒤의 대조 · 확인은 §2-8. **ID를 넣는 배포에는 §2-6 방침 변경이 함께 들어 있어야 한다** — 방침은 이 작업에 이미 들어 있고, `src/lib/analytics/config.test.ts`가 방침의 해당 항목이 있는지 확인한다.
 
 | 무엇 | 어디 |
 |---|---|
@@ -167,10 +167,10 @@ npx wrangler d1 execute savely-waitlist --remote --command "SELECT source, COUNT
 
 | # | 결과 |
 |---|---|
-| 1 DebugView | **미확인** — 측정 ID가 없다. 대신 개발 서버에 임시 ID를 넣고 Google로 가는 요청을 막은 채 큐(`dataLayer`)를 읽어 확인했다: `section_view` 9개 섹션이 순서대로 한 번씩 · `waitlist_open`(source · last_section) · `generate_lead` · `demo_click` · `assistant_open`(진입점 6곳의 entry) · `assistant_send`(drafts) · `assistant_save`(count) · `traffic_type=internal` · `debug_mode` |
+| 1 DebugView | ID를 받은 뒤의 결과는 §2-8 확인 1. (ID를 받기 전에는) 개발 서버에 임시 ID를 넣고 Google로 가는 요청을 막은 채 큐(`dataLayer`)를 읽어 확인했다: `section_view` 9개 섹션이 순서대로 한 번씩 · `waitlist_open`(source · last_section) · `generate_lead` · `demo_click` · `assistant_open`(진입점 6곳의 entry) · `assistant_send`(drafts) · `assistant_save`(count) · `traffic_type=internal` · `debug_mode` |
 | 2 보내지 않는 것 | 위 큐에 이메일 · 문장 · 금액 없음. 이벤트 유형에 글자를 싣는 칸이 없고 단위 테스트가 값의 꼴(낱말 · 숫자)을 확인한다. **실제 네트워크 요청 본문은 ID가 생긴 뒤 다시 확인** |
 | 3 localhost | 통과 — 로컬 Worker에서 우리 서버 밖으로 나간 요청 0, `dataLayer` · `gtag` · `wcs` 없음, 통계 스크립트 태그 0 |
-| 4 네이버 실시간 분석 | **미확인** — 발급 ID가 없다. /app 화면 안 이동 집계(§2-2-7)도 그때 확인 |
+| 4 네이버 실시간 분석 | 화면 안 이동은 §2-8 확인 3(나가는 요청으로 확인하고 고침). **실시간 분석 화면은 배포 뒤 대표 계정에서 확인** |
 | 5 `?sv_internal=1` | 통과 — 브라우저에 `sv_internal=1` 저장, 이후 이벤트 앞에 `set { traffic_type: "internal" }` |
 | 6 구조화 데이터 | 구조는 단위 테스트 · 로컬 응답으로 확인. **온라인 검사기는 미확인**(공개 주소에 배포된 뒤) |
 | 7 방침 · 쿠키 차단 | 방침 변경 포함. 쿠키 · 사이트 저장소를 모두 막은 조건(쿠키를 쓰고 읽지 못함 · `cookieEnabled` false · 저장소에 닿으면 SecurityError)을 브라우저에 만들어 확인: 신청 완료 · 대화로 기록(카드 2장 → 저장) · 홈 칩의 답 · 직접 입력 폼 저장 · 달력 · 리포트 정상, 서버가 쿠키를 주는 응답 없음. **실제 브라우저 설정으로는 확인하지 못했다**(시험 브라우저가 그 설정을 받지 않음) |
@@ -185,9 +185,9 @@ npx wrangler d1 execute savely-waitlist --remote --command "SELECT source, COUNT
 3. 방침 개정일은 **실제 배포일**로 맞춘다.
 
 **배포 전 할 일 (순서대로)**
-1. 대표: GA4 측정 ID · 네이버 발급 ID 전달(관리 화면의 설치 코드와 함께) → `src/lib/analytics/config.ts`에 넣고 설치 코드와 대조
-2. Claude Code: 쿠키를 막은 브라우저에서 GA4 · 네이버로 요청이 나가는지 확인 → 보고 (위 결정 2번)
-3. 대표: 방침 6번 문장 확정 → 반영
+1. ~~대표: GA4 측정 ID · 네이버 발급 ID 전달 → `config.ts`에 넣고 설치 코드와 대조~~ 완료(§2-8)
+2. ~~Claude Code: 쿠키를 막은 브라우저에서 GA4 · 네이버로 요청이 나가는지 확인 → 보고~~ 완료(§2-8 확인 2)
+3. 대표: 방침 6번 문장(또는 쿠키를 막은 브라우저에서의 동작) 확정 → 반영. U6 · U7도 함께 본다
 4. Claude Code: 방침 개정일을 배포하는 날로 고친다(`home.content.ts` · `content.json`의 `privacy.effective`, `src/lib/guideSeo.ts`의 `/home/privacy` 수정일) → 대표 요청 시 배포
 5. 배포 뒤: §5의 미확인 항목(DebugView · 요청 본문 · 네이버 실시간 분석 · 구조화 데이터 검사기) 확인
 
@@ -196,15 +196,60 @@ npx wrangler d1 execute savely-waitlist --remote --command "SELECT source, COUNT
 - **개정일.** 지금 적힌 2026-11-26은 앞선 개정(OpenAI 전송)을 배포한 날이다. 이번 변경을 배포하는 날로 고친다 → 위 대표 결정 3번.
 - **방침 5번 「2개월 뒤 자동으로 지워지고」**는 GA4 데이터 보관 설정(§3-1 A2)이 기본값(2개월)일 때만 맞다.
 
+### 2-8. ID를 받은 뒤의 대조와 확인 (Claude Code 2026-11-26 ~ 27)
+
+**설치 코드 대조**
+
+| 도구 | 받은 설치 코드 | 구현 | 다른 점 |
+|---|---|---|---|
+| GA4 | `gtm.js?id=GTM-5MBT2278` + `dataLayer` + `gtag('js', new Date())`, config 줄 없음 | 같은 주소 · 같은 순서 | 불러오는 때만 다르다 — `<head>`의 async 대신 `next/script` `afterInteractive`(§2-2-8) |
+| 네이버 | `//wcs.pstatic.net/wcslog.js` → `wcs_add["wa"]` → `window.wcs`가 있으면 `wcs_do()` | 같은 순서. 주소는 `https://wcs.pstatic.net/wcslog.js` | 처음 구현의 `wcs.naver.net`은 광고 전환 가이드의 주소였다 → 받은 코드의 주소로 고쳤다 |
+
+**고친 것**
+1. **디버그 · 본인 방문 표시를 이벤트마다 싣는다.** 이 설치 코드에서는 `gtag('set', { debug_mode })`가 요청에 붙지 않았다(나가는 요청으로 확인. `gtag('config', 측정 ID, {…})`도 붙지 않았다). 이벤트 매개변수로 넣으면 `ep.debug_mode=true` · `tt=internal`이 붙는다.
+2. **네이버 페이지뷰를 화면 안 이동 때 다시 보낸다**(§2-2-7). 아래 3번 확인 결과에 따라 구현했다 — 경로가 바뀔 때 `wcs_do()`를 한 번 더 부른다. 쿼리만 바뀐 이동(달력의 달 넘기기)은 세지 않는다.
+
+**확인 1 — 개발 서버 `?sv_ga_debug=1`로 GA4에 이벤트가 들어가는가**
+- 들어간다. `www.google-analytics.com/g/collect`가 `tid=G-2ZNQ5RB05K`로 204를 답했다.
+- 우리가 보내는 이벤트(`section_view` 등)에는 `ep.debug_mode=true` · `tt=internal`이 붙는다(2026-11-27 07:46 한국 시간에 한 번 실제로 보냄). **DebugView 화면은 대표 계정이라 직접 보지 못했다** — 화면에서 확인하려면 DebugView를 연 채로 `npm run dev` → `http://localhost:3000/home?sv_ga_debug=1`을 연다.
+- **Google 태그가 스스로 보내는 이벤트(`page_view` · `scroll` · `form_start`)에는 디버그 · 본인 방문 표시가 붙지 않는다.** 그래서 ① DebugView에는 우리 이벤트만 보이고 ② 대표 본인 방문의 페이지뷰는 `traffic_type` 필터로 빠지지 않는다 → §6 U6.
+- 「향상된 측정」이 켜져 있어 `scroll` · `form_start`가 함께 나간다. `form_start`에는 칸의 종류(email) · 칸 번호 · 폼이 있는 주소가 실리고 **입력한 값은 없다**(요청 주소 · 본문에서 이메일 · 문장 · 금액을 찾았고 없었다).
+- ⚠️ 이 확인 중 2026-11-26 19:01(한국 시간)에 **디버그 표시 없이** 이벤트 20개가 localhost 주소로 GA4에 들어갔다(표시가 붙지 않는다는 것을 그때 알았다). 보고서에 localhost 방문으로 남는다.
+
+**확인 2 — 쿠키를 막은 브라우저에서 GA4 · 네이버로 요청이 나가는가** (방침 6번 문장용)
+
+Chromium의 「모든 쿠키 차단」 프로필 설정으로 확인했다(쿠키를 쓰지 못함 · 사이트 저장소에 닿으면 오류). 수집 서버로 가는 요청은 중간에서 가로채 읽기만 했다(실제로 보내지 않음).
+
+| | 평소 브라우저 | 쿠키를 모두 막은 브라우저 |
+|---|---|---|
+| GA4 수집 요청(`google-analytics.com/g/collect`) | 나간다 | **나가지 않는다**(Google 태그는 실행되지만 요청 0건 — 한 방문 전체에서) |
+| 네이버 페이지뷰(`wcs.naver.com/b`) — 페이지를 새로 열 때 | 나간다 | **나가지 않는다**(네이버 스크립트가 저장소 오류로 멈춘다) |
+| 네이버 페이지뷰 — 화면 안에서 이동할 때(위 2번으로 다시 부르는 것) | 나간다 | **나간다**(3번 이동에 3건) |
+| `nam.veta.naver.com/nac/2` | 나간다 | **나간다** |
+| 남는 쿠키 | `_ga` · `_ga_2ZNQ5RB05K` · `wcs_bt` · `_fwb` | 없음 |
+| 신청 · 체험판 | 정상 | 정상(통계 스크립트가 불러와진 상태에서 신청 완료 · 대화로 기록 저장 · 화면 이동 확인). 네이버 스크립트 안에서 오류가 나지만 사이트 동작에는 영향이 없다 |
+
+- 즉 「쿠키를 막으면 방문 통계에 포함되지 않아요」는 **GA4에 대해서는 맞고, 네이버에 대해서는 지금 구현으로는 맞지 않는다** — 화면 안 이동의 페이지뷰와 `nam.veta.naver.com` 요청이 나간다.
+- `nam.veta.naver.com/nac/2`는 네이버 스크립트가 스스로 부르는 요청이다(`ssl.pstatic.net/melona/libs/gfp-nac-module/synchronizer.js`를 함께 불러온다). 주소로 보아 네이버 광고 쪽 서버로 보이지만 **무엇을 하는 요청인지는 확인하지 못했다.** 방침 6번의 「맞춤형 광고에는 쓰지 않아요」와 관련될 수 있다 → §6 U7.
+- 확인한 브라우저는 Chromium뿐이다. Safari · Firefox는 확인하지 못했다. 「서드파티 쿠키만 차단」(여러 브라우저의 기본값)은 이 사이트 이름으로 남는 쿠키를 막지 않으므로 통계에 그대로 포함된다.
+
+**확인 3 — /app 안에서 화면을 옮길 때 네이버로 페이지뷰가 다시 나가는가**
+- 고치기 전: **나가지 않았다**(메뉴로 4번 이동, 네이버 요청 0건). GA4는 Google 태그가 스스로 `page_view`를 보냈다.
+- 고친 뒤: 이동마다 한 건씩, 옮겨 간 주소로 나간다(`/app/records` · `/app/calendar` · `/app/report` · `/app`). 쿼리만 바뀐 이동은 0건.
+
+**대표가 정할 것 (제안)**
+- **쿠키 · 사이트 저장소를 쓸 수 없는 브라우저에서는 통계 스크립트를 아예 불러오지 않게** 하면, 방침 6번 문장이 두 도구 모두에 대해 사실이 되고 `nam.veta.naver.com` 요청과 네이버 스크립트 오류도 없어진다. 구현은 작다(스크립트를 넣기 전에 한 번 검사). 문구 변경은 필요 없다.
+- 본인 방문 제외(U6)도 같은 방식이 확실하다: `sv_internal` 표시가 있는 브라우저에서는 통계 스크립트를 불러오지 않는다. 지금의 `traffic_type=internal`은 우리 이벤트에만 붙어 페이지뷰가 남는다.
+
 ## 3. 검색엔진 등록과 기술 점검 (1단계)
 
 ### 3-1. 대표님 계정 작업 (코드 아님, 화면 안내 가능)
 
 | # | 할 일 | 결과물 |
 |---|---|---|
-| A1 | GA4 속성 만들기 → 웹 데이터 스트림 `https://www.savelyglobal.com` → 측정 ID 확인 | `G-…` (Claude Code에 전달) |
-| A2 | GA4: Google 신호 끔 · 데이터 보관 기본 유지 · 맞춤 측정기준 등록(§2-3) · `generate_lead` 핵심 이벤트 · 내부 트래픽 필터(§2-2-6) | — |
-| A3 | 네이버 애널리틱스(analytics.naver.com) 사이트 등록 | 발급 ID(`wa`) |
+| A1 | **완료 2026-11-26** — SAVELY 계정에 속성 「세이블리 웹」(대한민국 시간 · 원화, 업종 금융) 생성, 웹 스트림 「세이블리 웹사이트」 `https://www.savelyglobal.com` (스트림 ID 16420614674) | 측정 ID `G-2ZNQ5RB05K`, 설치 코드의 Google 태그 ID `GTM-5MBT2278` (설치 코드: `gtm.js?id=GTM-5MBT2278` + dataLayer + `gtag('js', new Date())`, config 없음) |
+| A2 | **완료 2026-11-26** — Google 신호 꺼짐 확인 · 데이터 보관 이벤트 2개월 · 사용자 데이터 2개월(기본 14개월에서 변경) · 「새 사용자 활동 시 재설정」 끔 · 광고 개인 최적화 307개 지역 모두 차단 · 내부 트래픽 필터(traffic_type=internal) 활성 · `generate_lead` 핵심 이벤트(값 없음, 이벤트당 1회) · 맞춤 측정기준 8개(section · source · last_section · code · placement · entry · kind · guide_slug) · 맞춤 측정항목 2개(drafts · count, 일반) | — |
+| A3 | **완료 2026-11-26** — 네이버 애널리틱스 사이트 등록 | 발급 ID `8b75e2a9bc0b00`. 네이버가 준 공통 스크립트 주소는 `//wcs.pstatic.net/wcslog.js` (명세 작성 때 쓴 `wcs.naver.net`과 다름 — 네이버가 준 주소를 따른다) |
 | A4 | 구글 서치콘솔: 「도메인」 속성 `savelyglobal.com`으로 등록, Cloudflare DNS에 TXT 레코드 추가로 소유 확인 (코드 수정 없음. www와 survey 하위 도메인까지 함께 확인됨) | 소유 확인 |
 | A5 | 서치콘솔: 사이트맵 `https://www.savelyglobal.com/sitemap.xml` 제출, URL 검사로 `/home` 색인 요청 | — |
 | A6 | 네이버 서치어드바이저: `https://www.savelyglobal.com` 등록 상태 확인(코드에 확인 태그는 이미 있음), 사이트맵 제출, robots.txt 수집 확인, 웹페이지 수집 요청 `/home` | — |
@@ -290,7 +335,9 @@ npx wrangler d1 execute savely-waitlist --remote --command "SELECT source, COUNT
 | U2 | 네이버 연관 채널 정확한 형식 | 서치어드바이저 가이드 확인 |
 | U3 | 네이버 애널리틱스의 화면 안 이동 집계 · 본인 방문 제외 방법 | 설치 후 실시간 분석으로 확인 · 네이버 애널리틱스 도움말 |
 | U4 | 하루 상한(OpenAI 300회)에 걸린 횟수를 잴지 — 지금은 화면에 안내가 없어 `assistant_limit kind=daily`가 나가지 않는다 | 필요하면 서버가 「이번 문장은 상한 때문에 규칙만 썼다」를 응답에 실어 주게 고친다(문구 변경 없음) |
-| U5 | 방침 6번 「쿠키를 막으면 방문 통계에 포함되지 않아요」가 사실인지 | 측정 ID를 넣은 뒤 쿠키를 막은 브라우저로 GA4 실시간 보고서 확인 |
+| U5 | 방침 6번 「쿠키를 막으면 방문 통계에 포함되지 않아요」가 사실인지 | **확인함(§2-8 확인 2):** GA4는 맞고, 네이버는 화면 안 이동의 페이지뷰와 `nam.veta.naver.com` 요청이 나간다 → 대표가 문장 또는 동작을 정한다 |
+| U6 | 본인 방문 제외 — `traffic_type=internal`이 우리 이벤트에만 붙고 Google 태그의 `page_view`에는 붙지 않는다 | 제안: `sv_internal` 표시가 있는 브라우저에서는 통계 스크립트를 불러오지 않는다(네이버에도 적용된다). 또는 GA4 관리 화면의 IP 기준 내부 트래픽 규칙 |
+| U7 | 네이버 스크립트가 부르는 `nam.veta.naver.com/nac/2`가 무엇인지 — 방침의 「맞춤형 광고에는 쓰지 않아요」와 맞는지 | 네이버 애널리틱스 고객센터 · 도움말 확인 |
 
 ## 7. 일정 (제안)
 
