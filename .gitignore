@@ -50,3 +50,6 @@ next-env.d.ts
 
 # design compare screenshots
 /docs/compare/
+
+# 콘텐츠 초안(가이드 글 · 블로그용) — 게시 전 원고는 저장소에 넣지 않는다
+/docs/content-drafts/
