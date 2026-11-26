@@ -1,3 +1,5 @@
+import { ASSISTANT_CHAT_HREF } from "@/lib/assistantLink";
+
 // 화면 문구 원본: docs/spec/content.json (Figma 라이트 시안). 문구를 바꿀 때는 사용자 확인 후 두 파일을 함께 고친다.
 // \n은 Figma의 수동 줄바꿈이다. pc/mobile 값이 나뉜 문구는 BreakText로 그린다.
 // 초안(사용자 확인 필요): meta, hero.device.screens[].alt, waitlistDialog.submitting · errors, a11y
@@ -24,8 +26,8 @@ export const homeContent = {
     },
     desc: "하루 한 번 적고 마감하는 작은 습관으로\n나와 가족의 소비를 함께 돌아봐요.",
     cta: "출시 알림 신청",
-    // 보조 버튼: /app 기록 체험판 (00-decisions M10). PC만 표시
-    secondaryCta: { label: "웹에서 체험하기", href: "/app" },
+    // 보조 버튼: /app 기록 체험판 (00-decisions M10). PC만 표시. 대화 패널을 연 채로 들어간다(80 E5)
+    secondaryCta: { label: "웹에서 체험하기", href: ASSISTANT_CHAT_HREF },
     note: "iOS · Android로 출시될 예정이에요",
     device: {
       screens: [
@@ -269,6 +271,55 @@ export const homeContent = {
       },
     ],
     report: { before: "10월 가장 많이 쓴 곳은 ", em: "식비", after: "예요" },
+  },
+  // 05b 대화로 기록하기 (대표 확정 2026-11-26). 대화 그림은 실제 패널을 본뜬 정적 그림이다
+  assistant: {
+    id: "assistant",
+    eyebrow: "자주 듣는 이야기",
+    title: {
+      pc: "“매일 적기 너무 귀찮아요”\n— 그래서 대화로 적게 했어요",
+      mobile: "“매일 적기\n너무 귀찮아요”\n그래서 대화로\n적게 했어요",
+    },
+    desc: {
+      pc: "직접 적어야 쓰는 순간을 돌아보게 되고, 그게 습관이 돼요. 그래서 세이블리는 적는 일을 없애지 않고, AI 기록 도우미와 대화하듯 한 문장으로 적게 했어요.",
+      mobile:
+        "직접 적어야 쓰는 순간을 돌아보게 되고,\n그게 습관이 돼요. 그래서 세이블리는\n적는 일을 없애지 않고, AI 기록 도우미와\n대화하듯 한 문장으로 적게 했어요.",
+    },
+    // 버튼은 PC만 표시(/app은 PC 전용 — M16). 대화 패널을 연 채로 들어간다(80 E5)
+    cta: { label: "웹 체험판에서 AI 기록 도우미 써 보기", href: ASSISTANT_CHAT_HREF },
+    chat: {
+      title: "대화로 기록하기",
+      messages: [
+        { from: "me", text: "매일 적는 거, 너무 귀찮은데 어떻게 해요?" },
+        { from: "assistant", text: "「점심 9천원, 커피 4500원」처럼 한 문장만 적어 주세요. 정리는 제가 할게요." },
+        { from: "me", text: "점심 김치찌개 9천원, 다이소에서 세제 만이천원" },
+        { from: "assistant", text: "2건으로 정리했어요. 맞는지 확인하고 저장해 주세요" },
+      ],
+      drafts: [
+        { icon: "food", title: "점심 김치찌개", sub: "지출 · 식비", amount: "9,000원", ai: false, reasons: true },
+        { icon: "grocery", title: "다이소 세제", sub: "지출 · 마트·생필품", amount: "12,000원", ai: true, reasons: false },
+      ],
+      aiBadge: "AI가 정리",
+      reasons: ["필요해서", "충동적", "가치소비", "필수지출", "기타"],
+      pickedReason: "필요해서",
+    },
+    cards: [
+      {
+        icon: "sparkles",
+        title: "한 문장이면, AI 기록 도우미가 정리해요",
+        desc: "「점심 9천원, 커피 4500원」처럼 적으면 날짜 · 금액 · 카테고리를 알아듣고 기록 카드로 만들어 드려요. 확인하고 저장만 누르면 돼요.",
+      },
+      {
+        icon: "smile",
+        title: "이유와 기분은 내가 골라요",
+        desc: "왜 썼는지, 그때 기분은 어땠는지는 AI가 대신 채우지 않아요. 직접 고르는 그 순간이 소비를 자각하게 해요.",
+      },
+      {
+        icon: "question",
+        title: "물어보면, 내 기록으로 답해요",
+        desc: "「이번 달 카페 얼마」처럼 물어보면 적은 기록에서 센 숫자로 바로 답해요. 대화하며 내 돈의 흐름을 돌아봐요.",
+      },
+    ],
   },
   reward: {
     id: "reward",
