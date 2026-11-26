@@ -2,6 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HomeFunnelProvider } from "@/components/analytics/HomeFunnelProvider";
 import { SiteTopBar } from "@/components/common/SiteTopBar";
 import { GuideBody } from "@/components/guide/GuideBody";
 import { GuideEndBox } from "@/components/guide/GuideEndBox";
@@ -47,33 +48,35 @@ export default async function GuideArticlePage({ params }: PageProps<"/home/guid
   if (!article) notFound();
   const jsonLd = articleJsonLd(article, { origin, name: footer.company, logo: `${origin}/home/icon.png` });
   return (
-    <WaitlistDialogProvider>
-      <SiteTopBar />
-      <main className="flex-1 bg-sv-bg px-5 py-10 lg:py-20">
-        <article className="mx-auto flex max-w-180 flex-col gap-8">
-          <header className="flex flex-col items-start gap-3 break-keep">
-            <Link href={GUIDE_LIST_PATH} className="inline-flex items-center gap-1 sv-text-support-13 text-sv-text-2 hover:text-sv-text">
-              <ChevronLeft aria-hidden className="size-4" />
-              {guide.backToList}
-            </Link>
-            <h1 className="sv-text-hero-34 text-sv-text">{article.title}</h1>
-            <p className="sv-text-support-13 text-sv-text-3">
-              <time dateTime={article.publishedAt}>{formatGuideDate(article.publishedAt)}</time>
-              {article.revised && (
-                <>
-                  {" · "}
-                  <time dateTime={article.updatedAt}>{formatGuideDate(article.updatedAt)}</time> {guide.revised}
-                </>
-              )}
-            </p>
-          </header>
-          <GuideBody blocks={article.blocks} />
-          {/* 안내 상자 문구는 대표 승인 뒤에 보인다(home.content.ts의 guide.approved) */}
-          {guide.approved && <GuideEndBox slug={article.slug} />}
-        </article>
-      </main>
-      <SiteFooter />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText(jsonLd) }} />
-    </WaitlistDialogProvider>
+    <HomeFunnelProvider guideSlug={article.slug}>
+      <WaitlistDialogProvider>
+        <SiteTopBar />
+        <main className="flex-1 bg-sv-bg px-5 py-10 lg:py-20">
+          <article className="mx-auto flex max-w-180 flex-col gap-8">
+            <header className="flex flex-col items-start gap-3 break-keep">
+              <Link href={GUIDE_LIST_PATH} className="inline-flex items-center gap-1 sv-text-support-13 text-sv-text-2 hover:text-sv-text">
+                <ChevronLeft aria-hidden className="size-4" />
+                {guide.backToList}
+              </Link>
+              <h1 className="sv-text-hero-34 text-sv-text">{article.title}</h1>
+              <p className="sv-text-support-13 text-sv-text-3">
+                <time dateTime={article.publishedAt}>{formatGuideDate(article.publishedAt)}</time>
+                {article.revised && (
+                  <>
+                    {" · "}
+                    <time dateTime={article.updatedAt}>{formatGuideDate(article.updatedAt)}</time> {guide.revised}
+                  </>
+                )}
+              </p>
+            </header>
+            <GuideBody blocks={article.blocks} />
+            {/* 안내 상자 문구는 대표 승인 뒤에 보인다(home.content.ts의 guide.approved) */}
+            {guide.approved && <GuideEndBox />}
+          </article>
+        </main>
+        <SiteFooter />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText(jsonLd) }} />
+      </WaitlistDialogProvider>
+    </HomeFunnelProvider>
   );
 }

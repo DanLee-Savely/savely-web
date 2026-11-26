@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { interpretSentence, type InterpretResponse, loadAssistantEntry, registerCard, registerRecurring, removeRecurring, saveDrafts, type SaveResponse, updateRecurring, type WriteError } from "@/app/app/assistant/actions";
+import type { AssistantEntryPoint } from "@/application/analytics/AnalyticsPort";
 import type { AssistantEntry } from "@/application/assistant/GetAssistantEntryService";
 import type { DraftSaveItem } from "@/application/assistant/SaveDraftsService";
 import { assistantContent } from "@/content/assistant.content";
 import type { FrequentItem } from "@/domain/assistant/AssistantInsights";
 import { DRAFT_LIMITS, DraftValidator } from "@/domain/assistant/DraftValidator";
 import { type RecurringDue, type RecurringInput, RecurringItem } from "@/domain/recurring/RecurringItem";
-import { clock } from "@/infrastructure/container";
+import { assistantFunnel, clock } from "@/infrastructure/container";
 import { AssistantSession, type DraftCard, type EntryBlock, type RecurringCard } from "@/interaction/AssistantSession";
 import { assistantPrefs } from "@/lib/assistantPrefs";
 
@@ -48,7 +49,10 @@ export function useAssistant(today: string) {
   /** 저장 · 등록 실패 안내(code). 다음 동작에서 지운다 */
   const [error, setError] = useState<"RATE_LIMITED" | "SAVE_FAILED" | "WRITE_FAILED" | null>(null);
   const change = (fn: (s: AssistantSession) => AssistantSession) => setSession((s) => s && fn(s));
-  const writeFailed = (res: WriteError) => setError(res.error === "RATE_LIMITED" ? "RATE_LIMITED" : "WRITE_FAILED");
+  const writeFailed = (res: WriteError) => {
+    if (res.error === "RATE_LIMITED") assistantFunnel.limited();
+    setError(res.error === "RATE_LIMITED" ? "RATE_LIMITED" : "WRITE_FAILED");
+  };
 
   /** 패널을 열 때 한 번 읽는다 — 칩과 진입 블록은 권유일 뿐이라, 못 읽으면 첫 안내 그대로 둔다 */
   const loadEntry = async (screenDate: string, showBlock: boolean) => {
@@ -59,9 +63,10 @@ export function useAssistant(today: string) {
     if (block) change((s) => s.showEntry(block));
   };
 
-  /** 패널을 연다. 이미 열려 있으면 그대로 둔다(하던 대화를 지우지 않는다) */
-  const open = async (screenDate: string) => {
+  /** 패널을 연다. 이미 열려 있으면 그대로 둔다(하던 대화를 지우지 않는다). [entry]는 어느 길로 열었는지(측정용) */
+  const open = async (screenDate: string, entry: AssistantEntryPoint) => {
     if (session) return;
+    assistantFunnel.opened(entry);
     setSession(AssistantSession.start(screenDate, today));
     setFrequent([]);
     setError(null);
@@ -75,6 +80,8 @@ export function useAssistant(today: string) {
     // 서버에 닿지 못한 경우(오프라인 등)도 「지금은 정리하지 못했어요」로 알린다
     const res = await interpretSentence(text, sent.screenDate, sent.askingRecurring).catch((): InterpretResponse => ({ ok: false, failure: "failed" }));
     change((s) => (res.ok ? s.receiveOutcome(res.outcome, newId) : s.failed(res.failure)));
+    // 측정에는 초안 수와 요청 제한 여부만 넘긴다 — 문장 · 금액은 넘기지 않는다
+    assistantFunnel.sent({ drafts: res.ok && res.outcome.type === "drafts" ? res.outcome.result.drafts.length : 0, rateLimited: !res.ok && res.failure === "rateLimited" });
     // 기록 문장인데 카드가 안 나왔으면 고쳐 쓰기 쉽게 문장을 입력칸에 되돌린다
     // 답하지 않은 질문(알아듣지 못한 낱말 · 미래)도 같다
     const made = res.ok && (res.outcome.type === "query" ? res.outcome.reply.status === "answered" : res.outcome.type !== "drafts" || (res.outcome.result.drafts.length > 0 && sent.pending.length < DRAFT_LIMITS.maxDrafts));
@@ -94,11 +101,12 @@ export function useAssistant(today: string) {
    * 패널 밖(홈 입력칸 · 예시 칩)에서 문장과 함께 연다(80 E2 · E3). 열려 있으면 그 대화에 이어 보낸다. 보냈으면 true.
    * 이때는 진입 블록을 띄우지 않는다 — 방금 보낸 문장의 결과가 먼저 보여야 하고, 한 번만 묻는 질문을 못 본 채 써 버리지 않게
    */
-  const openWith = (screenDate: string, text: string): boolean => {
+  const openWith = (screenDate: string, text: string, entry: AssistantEntryPoint): boolean => {
     const base = session ?? AssistantSession.start(screenDate, today);
     const sent = base.send(text);
     if (sent === base) return false;
     if (!session) {
+      assistantFunnel.opened(entry);
       setFrequent([]);
       void loadEntry(screenDate, false);
     }
@@ -115,9 +123,11 @@ export function useAssistant(today: string) {
     const res = await saveDrafts(saving.pending.map(toItem), saving.screenDate).catch((): SaveResponse => ({ ok: false, error: "SERVER_ERROR" }));
     if (res.ok) {
       change((s) => s.markSaved({ count: res.count, days: res.days, dayExpense: res.dayExpense }));
+      assistantFunnel.saved(res.count);
       router.refresh(); // 뒤 화면(홈 · 목록 · 달력 · 리포트)에 방금 저장한 기록을 반영한다
     } else {
       change((s) => s.saveFailed());
+      if (res.error === "RATE_LIMITED") assistantFunnel.limited();
       setError(res.error === "RATE_LIMITED" ? "RATE_LIMITED" : "SAVE_FAILED");
     }
   };
