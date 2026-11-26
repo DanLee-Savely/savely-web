@@ -5,6 +5,7 @@ import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "re
 import { BreakText } from "@/components/common/BreakText";
 import { StampGrid, floatCard } from "@/components/common/Stamp";
 import { homeContent } from "@/content/home.content";
+import { useStepSequence } from "@/hooks/useStepSequence";
 import { useTimeline } from "@/hooks/useTimeline";
 import { HabitCalendarTimeline } from "@/interaction/HabitCalendarTimeline";
 import { cn } from "@/lib/utils";
@@ -13,10 +14,16 @@ const { habit, stamps } = homeContent;
 const MODES = ["before", "after"] as const;
 const timeline = new HabitCalendarTimeline(stamps.month.days);
 const [countBefore, countAfter] = habit.calendar.count.split("{n}");
+/** 「점검이 빠진 한 달」을 읽을 시간. 이만큼 보인 뒤 「세이블리와 함께한 한 달」로 저절로 넘어간다(D18) */
+const AUTO_DELAYS = [6000];
+/** 스위치와 카드가 이만큼 보여야 센다 — 스위치만 화면 아래에 걸친 채 세면 카드를 읽기도 전에 넘어간다 */
+const AUTO_THRESHOLD = 0.6;
 
 // I7 습관 전후 토글 — 선택 배경이 미끄러지고(0.35초) 카드 문구 · 색이 페이드로 바뀐다. ←/→로 이동
+// 화면에 보이고 6초 뒤 한 번, 누른 것과 똑같이 「세이블리와 함께한 한 달」로 넘어간다. 직접 고르면 고른 쪽에 머문다(자동 전환 끝)
 export function HabitToggle() {
-  const [mode, setMode] = useState<0 | 1>(0);
+  const { ref: autoRef, step, hold } = useStepSequence<HTMLDivElement>(AUTO_DELAYS, { still: 0, threshold: AUTO_THRESHOLD });
+  const mode = step as 0 | 1;
   const [from, setFrom] = useState<0 | 1>(0);
   const { ref, t, reducedMotion } = useTimeline<HTMLDivElement>({ resetKey: mode, until: timeline.duration(mode) });
   const cal = reducedMotion ? timeline.still(mode) : timeline.at(t, mode, from);
@@ -26,7 +33,7 @@ export function HabitToggle() {
   const after = mode === 1;
   const select = (next: 0 | 1) => {
     setFrom(mode);
-    setMode(next);
+    hold(next);
   };
 
   // 칸 폭이 글자에 따라 달라서(PC 147/189) 선택 배경의 위치 · 폭을 실제 칸에 맞춘다
@@ -52,7 +59,7 @@ export function HabitToggle() {
   };
 
   return (
-    <div className="flex flex-col gap-3.5 lg:gap-5">
+    <div ref={autoRef} className="flex flex-col gap-3.5 lg:gap-5">
       <div
         role="tablist"
         onKeyDown={onKeyDown}
