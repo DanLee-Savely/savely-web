@@ -1,12 +1,12 @@
 import { AmountReader } from "../assistant/AmountReader";
 import type { ParsedDraft } from "../assistant/ParsedDraft";
 import { RuleRecordParser } from "../assistant/RuleRecordParser";
+import { RECURRING_LIMITS, recurringNameKey } from "./RecurringRules";
+
+export { RECURRING_LIMITS, recurringNameKey };
 
 // 고정지출 · 고정수입에 대한 말 — 등록 · 삭제 · 보기 (앱 recurring_command_parser.dart에서 옮김, 80-record-assistant C)
 // 여기서는 **무엇을 하려는 말인지 읽기만** 한다. 등록 정보는 건드리지 않는다. 실제 등록 · 삭제는 화면의 버튼을 눌러야 일어난다.
-
-/** 고정지출 · 고정수입의 한도 */
-export const RECURRING_LIMITS = { maxItems: 30, minDay: 1, maxDay: 31 } as const;
 
 /** 등록 카드의 초안. 아직 검증 전이다 */
 export type RecurringDraft = {
@@ -32,8 +32,8 @@ const FIXED_INCOME = new RegExp(String.raw`고정\s?수입${JOSA}`, "g");
 const MONTHLY = /(?:매달|매월)(?:마다)?(?:\s*(?:내는|나가는|들어오는|받는|빠지는))?/g;
 // 지우려는 말. 「빼빼로」처럼 이름 속에 든 글자는 잡지 않는다
 const REMOVE_WORD = /삭제|지워|지우|없애|해지|취소|빼\s?(?:줘|주|자|기|고|요)|빼(?=\s|$)|뺄|뺐/;
-// 보려는 말
-const LIST_WORD = /보여|목록|리스트|확인|조회|알려|뭐/g;
+// 보려는 말. 「고정지출 얼마」도 보기다 — 등록한 항목과 금액을 보여 주는 것이 답이다(앱 2026-11-26)
+const LIST_WORD = /보여|목록|리스트|확인|조회|알려|뭐|얼마/g;
 // 문장 끝에 붙는 부탁 · 꾸밈말 — 이름이 아니다. 낱말 한가운데는 건드리지 않는다(「빼빼로」「추가요금」은 이름이다)
 const FILLER = new RegExp(
   String.raw`(?<![가-힣])(?:삭제|해지|취소|등록|추가|확인|조회)(?:해\s?줘요?|해\s?주세요|할게요?|할래요?|해요?|하기)?(?![가-힣])` +
@@ -51,9 +51,6 @@ const TRAILING_JOSA = /(?:은|는|을|를|이|가|도)$/;
 
 const has = (pattern: RegExp, text: string): boolean => new RegExp(pattern.source).test(text);
 const validDay = (day: number): boolean => day >= RECURRING_LIMITS.minDay && day <= RECURRING_LIMITS.maxDay;
-
-/** 같은 이름인지 견줄 때 쓰는 꼴 — 빈칸을 하나로 줄이고 영문 대소문자를 무시한다 */
-export const recurringNameKey = (title: string): string => title.replace(SPACES, " ").trim().toLowerCase();
 
 export class RecurringCommandParser {
   constructor(private readonly parser: RuleRecordParser) {}

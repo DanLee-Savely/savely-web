@@ -52,11 +52,11 @@ describe("날짜 문장 세트 29건 (오늘 = 2026-11-24)", () => {
   });
 });
 
-describe("고정지출 문장 세트 52건 (오늘 = 2026-11-25)", () => {
+describe("고정지출 문장 세트 54건 (오늘 = 2026-11-25)", () => {
   const cases = load<RecurringCase>("recurring-sentences.json");
   const parser = new RecurringCommandParser(new RuleRecordParser());
-  it("52건이고 네 가지 경우가 모두 들어 있다", () => {
-    expect(cases).toHaveLength(52);
+  it("54건이고 네 가지 경우가 모두 들어 있다", () => {
+    expect(cases).toHaveLength(54);
     expect(new Set(cases.map((c) => c.expect.intent))).toEqual(new Set(["register", "remove", "list", "none"]));
   });
   it.each(cases.map((c) => [c.id, c.text, c] as const))("%s  %s", (_id, _text, c) => {

@@ -14,15 +14,6 @@ const MAX_OUTPUT_TOKENS = 1_500;
 // 재시도해도 풀리지 않는 결제 계열 오류
 const QUOTA_CODES = ["credit_balance_exhausted", "insufficient_quota", "billing_hard_limit_reached", "organization_spend_limit_exceeded", "project_spend_limit_exceeded", "organization_usage_limit_exceeded"];
 
-// 카테고리 이름(모델에게 주는 목록). 화면 문구 파일(content)을 infrastructure에서 가져오지 않으려고 여기 둔다 — 값은 앱 seed와 같다
-const CATEGORY_NAMES: Record<string, string> = {
-  food: "식비", cafe: "카페", grocery: "마트·생필품", convenience: "편의점", transport: "교통", fuel: "주유", parking: "주차·통행료", car: "차량 정비",
-  housing: "주거·관리비", telecom: "통신", shopping: "쇼핑", medical: "병원비", beauty: "미용", health: "건강·운동", culture: "문화·여가", subscription: "구독",
-  education: "교육", travel: "여행", alcohol: "술·유흥", event: "경조사", pet: "반려동물", baby: "육아", insurance: "보험", etc_expense: "기타",
-  salary: "급여", allowance: "용돈", side_income: "부수입", refund: "환급", interest: "이자수익", etc_income: "기타",
-  card_bill: "카드값 상환", loan_payment: "대출 상환", interest_payment: "이자 납입",
-  savings_deposit: "예적금", emergency_fund: "비상금", house_savings: "청약", invest: "ETF·주식", fund: "펀드", pension: "연금", forex: "외화", etc_savings: "기타 저축",
-};
 const KIND_NAMES: Record<string, string> = { expense: "지출", income: "수입", transfer: "상환(카드값 · 대출 갚기)", savings: "저축" };
 
 // 함수로 둔다 — 모듈 맨 위에서 계산하면 「부수 효과」로 보여 브라우저 묶음에 딸려 들어간다(container.ts를 브라우저 코드도 가져오기 때문)
@@ -46,7 +37,7 @@ const instructions = (): string => [
   "- 항목마다 kind에 맞는 category_id를 목록에서 하나 고른다. 확실하지 않으면 null. 결과는 categories에 넣고 item에 그 항목의 번호를 적는다.",
   "",
   "카테고리 목록 (kind → id: 이름)",
-  ...KINDS.map((kind) => `- ${kind}(${KIND_NAMES[kind]}): ${CategoryCatalog.of(kind).map((id) => `${id}: ${CATEGORY_NAMES[id]}`).join(", ")}`),
+  ...KINDS.map((kind) => `- ${kind}(${KIND_NAMES[kind]}): ${CategoryCatalog.of(kind).map((id) => `${id}: ${CategoryCatalog.names[id]}`).join(", ")}`),
 ].join("\n");
 
 const nullable = (values: readonly string[]) => (values.length ? { type: ["string", "null"], enum: [...values, null] } : { type: "null" });

@@ -8,7 +8,8 @@ import { D1RecordRepository } from "@/infrastructure/record/D1RecordRepository";
 import { InMemoryRecordRepository } from "@/infrastructure/record/InMemoryRecordRepository";
 import { InMemoryRecordStatsReader } from "@/infrastructure/record/InMemoryRecordStatsReader";
 import { SqliteD1 } from "@/infrastructure/record/testing/sqliteD1";
-import { InterpretSentenceService } from "./InterpretSentenceService";
+import { InMemoryCardRepository, InMemoryRecurringItemRepository } from "@/infrastructure/assistant/InMemoryAssistantStores";
+import { type InterpretResult, InterpretSentenceService } from "./InterpretSentenceService";
 import { type DraftSaveItem, InvalidDraftsError, SaveDraftsService } from "./SaveDraftsService";
 
 const clock = { now: () => new Date("2026-11-24T03:00:00Z") }; // 한국 2026-11-24
@@ -22,7 +23,7 @@ const setup = () => {
   return { repository, save: new SaveDraftsService(repository, new InMemoryRecordStatsReader(repository), clock) };
 };
 
-type FakeAi = { calls: OrganizeRequest[]; failures: string[]; usage: InMemoryAssistantUsage; service: InterpretSentenceService };
+type FakeAi = { calls: OrganizeRequest[]; failures: string[]; usage: InMemoryAssistantUsage; service: InterpretSentenceService; cards: InMemoryCardRepository; recurring: InMemoryRecurringItemRepository };
 const interpreter = (answer: OrganizeResult | Error | null, over: { allow?: boolean; dailyLimit?: number } = {}): FakeAi => {
   const calls: OrganizeRequest[] = [];
   const failures: string[] = [];
@@ -34,12 +35,19 @@ const interpreter = (answer: OrganizeResult | Error | null, over: { allow?: bool
       return answer;
     },
   };
+  const cards = new InMemoryCardRepository();
+  const recurring = new InMemoryRecurringItemRepository();
   const service = new InterpretSentenceService(clock, {
     organizer, limiter: { allow: async () => over.allow ?? true }, usage, dailyLimit: over.dailyLimit ?? 300, onFailure: (f) => failures.push(f), onUsage: () => {},
-  });
-  return { calls, failures, usage, service };
+  }, cards, recurring);
+  return { calls, failures, usage, service, cards, recurring };
 };
-const ask = (ai: FakeAi, text: string) => ai.service.execute({ text, screenDate: TODAY, ip: "1.2.3.4" });
+/** 기록 문장의 결과(초안). 다른 결과(도움말 · 고정지출 · 카드)가 나오면 테스트가 틀린 것이다 */
+const ask = async (ai: FakeAi, text: string): Promise<InterpretResult> => {
+  const outcome = await ai.service.execute({ text, screenDate: TODAY, ip: "1.2.3.4" });
+  if (outcome.type !== "drafts") throw new Error(`기록 문장이 아니다: ${outcome.type}`);
+  return outcome.result;
+};
 const aiDraft = (over: Partial<ParsedDraft> = {}): ParsedDraft => ({ kind: "expense", amount: 4500, categoryId: "cafe", title: "커피", paymentMethod: null, cardName: null, date: null, ...over });
 
 describe("InterpretSentenceService — 규칙 먼저, 읽지 못한 부분만 OpenAI", () => {

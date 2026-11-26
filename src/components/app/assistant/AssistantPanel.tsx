@@ -6,30 +6,36 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AppButton } from "@/components/common/AppButton";
 import { errorMessage } from "@/content/app.content";
-import { assistantContent, confirmLines, dateHeader, saveButton } from "@/content/assistant.content";
+import { assistantContent, confirmLines, dateHeader, frequentChip, recurringDay, saveButton } from "@/content/assistant.content";
+import type { RecurringItemData } from "@/domain/recurring/RecurringItem";
 import type { Assistant } from "@/hooks/useAssistant";
 import type { AssistantMessage, AssistantSession, DraftCard } from "@/interaction/AssistantSession";
 import { cn } from "@/lib/utils";
+import { bubble, CardDraftView, HelpView, RecurringAskView, RecurringCardsView, RecurringDueView, RecurringListView, RecurringRemoveView, UnfilledView } from "./AssistantBlocks";
 import { AssistantConfirm } from "./AssistantConfirm";
 import { DraftCardView } from "./DraftCardView";
 import { DraftEditSheet } from "./DraftEditSheet";
+import { RecurringEditSheet } from "./RecurringEditSheet";
 
 const c = assistantContent;
-const bubble = "max-w-[85%] rounded-sv-md px-3.5 py-2.5 sv-text-support-14_5 whitespace-pre-line";
 type Leaving = "close" | "manual";
+/** 열려 있는 수정 시트: 기록 초안 카드 · 등록 전의 고정지출 카드 · 등록한 고정지출 */
+type Sheet = { type: "draft"; id: string } | { type: "recurringCard"; id: string } | { type: "recurringItem"; item: RecurringItemData };
 
-// 대화 패널(시안 30~37): 머리줄(제목 · 직접 입력 · 닫기) · 날짜 머리말 · 대화 · 저장 버튼 · 입력칸 · 전송 고지.
-// 오른쪽 440, 뒤 화면을 흐리게 하지 않는다. 저장 확인 · 나가기 확인 창만 화면 전체를 흐린다.
-// 화면은 표시와 입력 전달만 한다 — 상태는 AssistantSession, 해석 · 저장은 Server Action(useAssistant)
+// 대화 패널(시안 30~42): 머리줄(제목 · 직접 입력 · 닫기) · 날짜 머리말 · 대화 · 저장 버튼 · 칩 줄 · 입력칸 · 전송 고지.
+// 오른쪽 440, 뒤 화면을 흐리게 하지 않는다. 저장 확인 · 나가기 확인 · 삭제 확인 창만 화면 전체를 흐린다.
+// 화면은 표시와 입력 전달만 한다 — 상태는 AssistantSession, 해석 · 저장 · 등록은 Server Action(useAssistant)
 export function AssistantPanel({ assistant, session }: { assistant: Assistant; session: AssistantSession }) {
   const router = useRouter();
-  const [editing, setEditing] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<Sheet | null>(null);
   const [confirmSave, setConfirmSave] = useState(false);
   const [leaving, setLeaving] = useState<Leaving | null>(null);
+  const [removing, setRemoving] = useState<RecurringItemData | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const pending = session.pending;
-  const editingCard = pending.find((card) => card.id === editing) ?? null;
+  const draftCard = sheet?.type === "draft" ? (pending.find((card) => card.id === sheet.id) ?? null) : null;
+  const recurringCard = sheet?.type === "recurringCard" ? (session.messages.flatMap((m) => (m.type === "recurringDrafts" ? m.cards : [])).find((x) => x.id === sheet.id && !x.registered) ?? null) : null;
 
   // 새 말풍선이 보이게 맨 아래로 내린다. 중괄호로 감싼다 — 요즘 브라우저의 scrollIntoView는 Promise를 돌려주는데, 효과가 그것을 돌려주면 정리 함수로 오해한다
   useEffect(() => {
@@ -40,8 +46,13 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
     assistant.close();
     if (how === "manual") router.push(`/app/records/new?date=${session.screenDate}`);
   };
-  /** 저장하지 않은 카드가 있으면 먼저 묻는다 */
+  /** 저장하지 않은 카드가 있으면 먼저 묻는다(등록하지 않은 고정지출 · 카드 등록 카드는 묻지 않는다 — 기록 초안이 아니다) */
   const tryLeave = (how: Leaving) => (pending.length ? setLeaving(how) : leave(how));
+  /** 예시 문장을 입력칸에 채운다. 보내지는 않는다 — 고쳐서 보낼 수 있게 */
+  const fillInput = (example: string) => {
+    assistant.setInput(example);
+    inputRef.current?.focus();
+  };
   const lastSaved = session.messages.findLastIndex((m) => m.type === "saved");
 
   return (
@@ -67,14 +78,15 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
         {session.messages.map((m, i) => (
           <Message
             key={i}
+            index={i}
             message={m}
             session={session}
+            assistant={assistant}
             showActions={i === lastSaved}
-            onEdit={setEditing}
+            onSheet={setSheet}
             onManual={() => tryLeave("manual")}
             onMore={() => inputRef.current?.focus()}
-            onCalendar={assistant.close}
-            change={assistant.change}
+            onExample={fillInput}
           />
         ))}
         {session.phase === "parsing" && <p className={cn(bubble, "self-start bg-sv-surface-2 text-sv-text-2")}>{c.parsing}</p>}
@@ -82,10 +94,10 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
       </div>
 
       <footer className="flex shrink-0 flex-col gap-3 border-t border-sv-border-2 px-5 pt-3 pb-5">
-        {assistant.saveError && (
+        {assistant.error && (
           <p role="alert" className="flex items-center gap-1.5 sv-text-support-13 text-sv-danger">
             <CircleAlert aria-hidden className="size-4 shrink-0" />
-            {assistant.saveError === "RATE_LIMITED" ? errorMessage("form", "RATE_LIMITED") : c.saveFailed}
+            {assistant.error === "RATE_LIMITED" ? errorMessage("form", "RATE_LIMITED") : assistant.error === "SAVE_FAILED" ? c.saveFailed : c.recurring.failed}
           </p>
         )}
         {pending.length > 0 && (
@@ -93,6 +105,19 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
             {saveButton(pending.length)}
           </AppButton>
         )}
+        {/* 칩 줄: 「할 수 있는 일」은 늘 보이고, 자주 적는 항목은 있을 때만 그 뒤에 이어진다. 한 줄이고 넘치면 옆으로 민다 */}
+        <div className="-mx-5 flex items-center gap-2 overflow-x-auto px-5">
+          <button type="button" disabled={session.busy} onClick={() => assistant.change((s) => s.showHelp())} className="inline-flex h-8.5 shrink-0 items-center gap-1 rounded-sv-pill border border-sv-accent px-3 sv-text-label-13 text-sv-accent hover:bg-sv-accent-tint disabled:opacity-60">
+            <Sparkles aria-hidden className="size-3.5" />
+            {c.help.chip}
+          </button>
+          {assistant.frequent.length > 0 && <span className="shrink-0 sv-text-support-13 text-sv-text-3">{c.frequentLabel}</span>}
+          {assistant.frequent.map((item) => (
+            <button key={`${item.draft.kind}-${item.draft.categoryId}-${item.draft.title}`} type="button" disabled={session.busy} onClick={() => assistant.addFrequent(item)} className="h-8.5 shrink-0 rounded-sv-pill border border-sv-border-2 bg-sv-surface px-3 sv-text-support-13 text-sv-text-2 hover:bg-sv-surface-2 disabled:opacity-60">
+              {frequentChip(item.draft.title ?? "", item.draft.amount)}
+            </button>
+          ))}
+        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {
@@ -130,19 +155,50 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
         </p>
       </footer>
 
-      {editingCard && (
+      {draftCard && (
         <DraftEditSheet
-          key={editingCard.id}
-          card={editingCard}
+          key={draftCard.id}
+          card={draftCard}
           today={session.today}
-          onClose={() => setEditing(null)}
+          onClose={() => setSheet(null)}
           onApply={(patch) => {
-            assistant.change((s) => s.update(editingCard.id, patch));
-            setEditing(null);
+            assistant.change((s) => s.update(draftCard.id, patch));
+            setSheet(null);
           }}
           onRemove={() => {
-            assistant.change((s) => s.remove(editingCard.id));
-            setEditing(null);
+            assistant.change((s) => s.remove(draftCard.id));
+            setSheet(null);
+          }}
+        />
+      )}
+      {recurringCard && (
+        <RecurringEditSheet
+          key={recurringCard.id}
+          source={recurringCard}
+          onClose={() => setSheet(null)}
+          onApply={(input) => {
+            assistant.change((s) => s.updateRecurringCard(recurringCard.id, { ...input, kind: input.kind as DraftCard["kind"] }));
+            setSheet(null);
+          }}
+          onRemove={() => {
+            assistant.change((s) => s.removeRecurringCard(recurringCard.id));
+            setSheet(null);
+          }}
+        />
+      )}
+      {sheet?.type === "recurringItem" && (
+        <RecurringEditSheet
+          key={sheet.item.id}
+          source={sheet.item}
+          onClose={() => setSheet(null)}
+          onApply={(input) => {
+            void assistant.editRecurring(sheet.item.id, input);
+            setSheet(null);
+          }}
+          onRemove={() => {
+            // 등록한 항목은 한 번 더 확인한다
+            setRemoving(sheet.item);
+            setSheet(null);
           }}
         />
       )}
@@ -166,57 +222,96 @@ export function AssistantPanel({ assistant, session }: { assistant: Assistant; s
         onCancel={() => setLeaving(null)}
         onConfirm={() => leaving && leave(leaving)}
       />
+      <AssistantConfirm
+        open={removing !== null}
+        title={c.recurring.removeAsk}
+        lines={removing ? [`${removing.title} · ${recurringDay(removing.dayOfMonth)}`] : []}
+        labels={{ cancel: c.recurring.keep, confirm: c.recurring.remove }}
+        danger
+        onCancel={() => setRemoving(null)}
+        onConfirm={() => {
+          if (removing) void assistant.deleteRecurring(removing.id);
+          setRemoving(null);
+        }}
+      />
     </aside>
   );
 }
 
 type MessageProps = {
+  index: number;
   message: AssistantMessage;
   session: AssistantSession;
+  assistant: Assistant;
   /** 마지막 저장 요약에만 「더 적기」 · 「달력에서 확인」을 둔다 */
   showActions: boolean;
-  onEdit: (id: string) => void;
+  onSheet: (sheet: Sheet) => void;
   onManual: () => void;
   onMore: () => void;
-  onCalendar: () => void;
-  change: Assistant["change"];
+  onExample: (example: string) => void;
 };
 
-function Message({ message: m, session, showActions, onEdit, onManual, onMore, onCalendar, change }: MessageProps) {
-  if (m.type === "user") return <p className={cn(bubble, "self-end bg-sv-accent text-sv-on-accent")}>{m.text}</p>;
-  if (m.type === "notice") {
-    return (
-      <div className="flex flex-col items-start gap-2">
-        <p className={cn(bubble, "bg-sv-surface-2 text-sv-text")}>{m.text}</p>
-        {m.offerManual && (
-          <AppButton variant="outline" onClick={onManual}>
-            {c.switchToManual}
-          </AppButton>
-        )}
-      </div>
-    );
-  }
-  if (m.type === "saved") {
-    return (
-      <div className="flex flex-col items-start gap-2">
-        <p className={cn(bubble, "bg-sv-surface-2 text-sv-text")}>{m.text}</p>
-        {showActions && (
-          <div className="flex gap-2">
-            <AppButton variant="outline" onClick={onMore}>
-              {c.writeMore}
+function Message({ index, message: m, session, assistant, showActions, onSheet, onManual, onMore, onExample }: MessageProps) {
+  const { change } = assistant;
+  switch (m.type) {
+    case "user":
+      return <p className={cn(bubble, "self-end bg-sv-accent text-sv-on-accent")}>{m.text}</p>;
+    case "notice":
+      return (
+        <div className="flex flex-col items-start gap-2">
+          <p className={cn(bubble, "bg-sv-surface-2 text-sv-text")}>{m.text}</p>
+          {m.offerManual && (
+            <AppButton variant="outline" onClick={onManual}>
+              {c.switchToManual}
             </AppButton>
-            <AppButton asChild variant="outline">
-              <Link href={`/app/calendar?month=${m.date.slice(0, 7)}&date=${m.date}`} onClick={onCalendar}>
-                <CalendarDays aria-hidden className="size-4" />
-                {c.openCalendar}
-              </Link>
-            </AppButton>
-          </div>
-        )}
-      </div>
-    );
+          )}
+        </div>
+      );
+    case "saved":
+      return (
+        <div className="flex flex-col items-start gap-2">
+          <p className={cn(bubble, "bg-sv-surface-2 text-sv-text")}>{m.text}</p>
+          {showActions && (
+            <div className="flex gap-2">
+              <AppButton variant="outline" onClick={onMore}>
+                {c.writeMore}
+              </AppButton>
+              <AppButton asChild variant="outline">
+                <Link href={`/app/calendar?month=${m.date.slice(0, 7)}&date=${m.date}`} onClick={assistant.close}>
+                  <CalendarDays aria-hidden className="size-4" />
+                  {c.openCalendar}
+                </Link>
+              </AppButton>
+            </div>
+          )}
+        </div>
+      );
+    case "drafts":
+      return <Drafts cards={m.cards} notes={m.notes} session={session} onEdit={(id) => onSheet({ type: "draft", id })} change={change} />;
+    case "help":
+      return <HelpView today={session.today} onExample={onExample} />;
+    case "unfilled":
+      return <UnfilledView unfilled={m.unfilled} onOpen={assistant.close} onLater={assistant.dismissUnfilled} />;
+    case "recurringAsk":
+      return <RecurringAskView candidates={m.candidates} onPick={assistant.pickCandidate} onLater={assistant.closeRecurringAsk} />;
+    case "recurringDue": {
+      const due = m.queue[0];
+      const edit = () => {
+        // 「금액이 달라요」 — 카드를 만들고 바로 수정 시트를 연다. 등록해 둔 금액은 바꾸지 않는다
+        const id = assistant.recordDue(due);
+        if (id) onSheet({ type: "draft", id });
+      };
+      return <RecurringDueView due={due} onYes={() => void assistant.recordDue(due)} onEdit={edit} onSkip={() => assistant.skipDue(due)} />;
+    }
+    case "recurringDrafts":
+      return <RecurringCardsView cards={m.cards} notes={m.notes} onEdit={(id) => onSheet({ type: "recurringCard", id })} onRegister={(card) => void assistant.submitRecurring(card)} />;
+    case "recurringList":
+      return <RecurringListView items={m.items} onEdit={(item) => onSheet({ type: "recurringItem", item })} />;
+    case "recurringRemove":
+      return <RecurringRemoveView candidates={m.candidates} removedIds={m.removedIds} kept={m.kept} onRemove={(id) => void assistant.deleteRecurring(id)} onKeep={() => change((s) => s.keepRecurring(index))} />;
+    case "cardDraft":
+      return <CardDraftView name={m.name} method={m.method} registered={m.registered} onMethod={(method) => change((s) => s.setCardMethod(m.id, method))} onRegister={() => void assistant.submitCard(m.id, m.name, m.method)} />;
   }
-  return <Drafts cards={m.cards} notes={m.notes} session={session} onEdit={onEdit} change={change} />;
 }
 
 function Drafts({ cards, notes, session, onEdit, change }: { cards: DraftCard[]; notes: string[]; session: AssistantSession; onEdit: (id: string) => void; change: Assistant["change"] }) {

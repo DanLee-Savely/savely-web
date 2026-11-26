@@ -1,4 +1,7 @@
+import { GetAssistantEntryService } from "@/application/assistant/GetAssistantEntryService";
 import { InterpretSentenceService } from "@/application/assistant/InterpretSentenceService";
+import { ListRecurringItemsService, RegisterRecurringItemService, RemoveRecurringItemService, UpdateRecurringItemService } from "@/application/assistant/RecurringItemServices";
+import { RegisterCardService } from "@/application/assistant/RegisterCardService";
 import { SaveDraftsService } from "@/application/assistant/SaveDraftsService";
 import { CreateRecordService } from "@/application/record/CreateRecordService";
 import { DeleteRecordService } from "@/application/record/DeleteRecordService";
@@ -11,6 +14,8 @@ import { UpdateRecordService } from "@/application/record/UpdateRecordService";
 import { RegisterWaitlistService } from "@/application/waitlist/RegisterWaitlistService";
 import type { ImageStorage } from "@/domain/record/ImageStorage";
 import { D1AssistantUsage } from "./assistant/D1AssistantUsage";
+import { D1CardRepository } from "./assistant/D1CardRepository";
+import { D1RecurringItemRepository } from "./assistant/D1RecurringItemRepository";
 import { OpenAiDraftOrganizer } from "./assistant/OpenAiDraftOrganizer";
 import { D1RecordRepository } from "./record/D1RecordRepository";
 import { D1RecordStatsReader } from "./record/D1RecordStatsReader";
@@ -94,9 +99,13 @@ const ASSISTANT_DAILY_LIMIT = 300;
 export type AssistantServer = {
   interpret: InterpretSentenceService;
   save: SaveDraftsService;
+  /** 패널을 열 때 읽는 것: 자주 적는 항목 · 채우지 않은 기록 · 고정지출 질문의 재료 */
+  entry: GetAssistantEntryService;
+  registerCard: RegisterCardService;
+  recurring: { list: ListRecurringItemsService; register: RegisterRecurringItemService; update: UpdateRecurringItemService; remove: RemoveRecurringItemService };
   /** 문장 보내기 제한(같은 IP 1분 20회, K17) */
   sendLimiter: WriteRateLimiter;
-  /** 저장은 기록 쓰기 제한을 함께 쓴다 — 저장 확인 한 번 = 요청 1회 */
+  /** 저장 · 카드 등록 · 고정지출 등록 · 수정 · 삭제는 기록 쓰기 제한을 함께 쓴다 — 저장 확인 한 번 = 요청 1회 */
   limiter: WriteRateLimiter;
 };
 
@@ -114,9 +123,20 @@ export async function createAssistantServer(): Promise<AssistantServer> {
     onFailure: (failure: string) => console.error("[assistant] ORGANIZE_FAILED", failure),
     onUsage: (input: number, output: number) => console.log("[assistant] OPENAI_USAGE", input, output),
   };
+  const stats = new D1RecordStatsReader(env.RECORDS_DB);
+  const cards = new D1CardRepository(env.RECORDS_DB);
+  const recurring = new D1RecurringItemRepository(env.RECORDS_DB);
   return {
-    interpret: new InterpretSentenceService(clock, ai),
-    save: new SaveDraftsService(new D1RecordRepository(env.RECORDS_DB), new D1RecordStatsReader(env.RECORDS_DB), clock),
+    interpret: new InterpretSentenceService(clock, ai, cards, recurring),
+    save: new SaveDraftsService(new D1RecordRepository(env.RECORDS_DB), stats, clock),
+    entry: new GetAssistantEntryService(stats, recurring, clock),
+    registerCard: new RegisterCardService(cards, clock),
+    recurring: {
+      list: new ListRecurringItemsService(recurring),
+      register: new RegisterRecurringItemService(recurring, clock),
+      update: new UpdateRecurringItemService(recurring, clock),
+      remove: new RemoveRecurringItemService(recurring),
+    },
     sendLimiter: new WriteRateLimiter(env.ASSISTANT_SEND_RATE_LIMITER),
     limiter: new WriteRateLimiter(env.RECORDS_RATE_LIMITER),
   };

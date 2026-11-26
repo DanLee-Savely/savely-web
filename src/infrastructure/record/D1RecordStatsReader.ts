@@ -15,6 +15,7 @@ GROUP BY k ORDER BY sum DESC, k`,
   impulse: `SELECT COUNT(*) AS n FROM records WHERE kind = 'expense' AND reason = 'impulse'
 AND feeling IN ('unsatisfied', 'regret') AND ${RANGE}`,
   day: "SELECT * FROM records WHERE record_date = ?1 ORDER BY created_at DESC",
+  between: `SELECT * FROM records WHERE ${RANGE} ORDER BY record_date DESC, created_at DESC LIMIT ?3`,
 };
 type Agg = { k: string; sum: number; n: number };
 
@@ -52,5 +53,9 @@ export class D1RecordStatsReader implements RecordStatsReader {
 
   async recordsOn(date: string): Promise<RecordEntry[]> {
     return (await this.db.prepare(SQL.day).bind(date).all<RecordRow>()).results.map(toEntry);
+  }
+
+  async recordsBetween(from: string, to: string, limit: number): Promise<RecordEntry[]> {
+    return (await this.db.prepare(SQL.between).bind(from, to, limit).all<RecordRow>()).results.map(toEntry);
   }
 }

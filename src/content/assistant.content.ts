@@ -1,5 +1,7 @@
 import { DRAFT_LIMITS } from "@/domain/assistant/DraftValidator";
 import { RecordDateReader } from "@/domain/assistant/RecordDateReader";
+import { CARD_LIMITS } from "@/domain/card/OwnedCard";
+import { RECURRING_LIMITS } from "@/domain/recurring/RecurringRules";
 import { formatAmount } from "@/lib/recordFormat";
 
 // 「대화로 기록하기」 패널 문구 (docs/spec/80-record-assistant.md §10).
@@ -60,6 +62,60 @@ export const assistantContent = {
     needAmount: "금액을 입력해 주세요",
   },
 
+  // ── 「할 수 있는 일」(F) · 자주 적는 항목(A) · 채우지 않은 기록(B) ──
+  help: { chip: "할 수 있는 일", title: "이런 것들을 적을 수 있어요. 예시를 누르면 입력칸에 채워져요" },
+  frequentLabel: "자주 적는 항목",
+  unfilledLater: "나중에 할게요",
+
+  // ── 카드 등록(E) ──
+  cardDraft: {
+    ask: "이 카드를 등록할까요?",
+    register: "등록하기",
+    registered: "등록됨",
+    duplicate: "이미 등록된 카드예요",
+    limit: `카드는 ${CARD_LIMITS.maxCards}장까지 등록할 수 있어요`,
+    needName: "「삼성카드 등록」처럼 카드 이름을 함께 적어 주세요",
+    nameTooLong: `카드 이름은 ${CARD_LIMITS.maxNameLength}자까지 등록할 수 있어요`,
+  },
+
+  // ── 고정지출 · 고정수입(C). 통틀어 「고정지출」로 부르고, 수입 항목의 줄에만 「고정수입」으로 적는다 ──
+  recurring: {
+    ask: "고정지출로 등록할까요?",
+    register: "등록하기",
+    registered: "등록됨",
+    duplicate: "이미 등록돼 있어요",
+    limit: `고정지출은 ${RECURRING_LIMITS.maxItems}개까지 등록할 수 있어요`,
+    needAmount: "「넷플릭스 17000원 매달 15일 고정지출」처럼 이름과 금액을 함께 적어 주세요",
+    needName: "이름을 적어 주세요",
+    needDay: "나가는 날을 골라 주세요",
+    list: "등록한 고정지출이에요. 눌러서 고치거나 지울 수 있어요",
+    empty: "등록한 고정지출이 없어요",
+    notFound: "그런 이름의 고정지출을 찾지 못했어요",
+    removeAsk: "이 고정지출을 지울까요?",
+    removeWhich: "어느 것을 지울까요?",
+    remove: "삭제하기",
+    keep: "그대로 둘게요",
+    removed: "지웠어요. 이제 묻지 않을게요",
+    income: "고정수입",
+    firstAsk: "매달 나가거나 들어오는 돈이 있나요? 「월세 50만원 25일」처럼 적어 주시면 그날 잊지 않게 물어볼게요",
+    candidates: "지난 두 달 모두 적은 항목이에요. 눌러서 등록할 수 있어요",
+    askLater: "필요할 때 「고정지출 보여줘」라고 적어 주세요",
+    later: "나중에 할게요",
+    dueYes: "기록할게요",
+    dueEdit: "금액이 달라요",
+    dueSkip: "이번 달은 아니에요",
+    failed: "저장하지 못했어요. 잠시 후 다시 시도해 주세요", // 웹 — 등록 · 수정 · 삭제가 서버에서 실패했을 때(기록 폼의 E10과 같은 문구)
+    sheet: {
+      title: "고정지출 수정",
+      labels: { kind: "종류", title: "이름", amount: "금액", day: "매달 나가는 날 (1~31)", categoryId: "카테고리", paymentMethod: "결제수단" },
+      titlePlaceholder: "예: 통신비",
+      dayUnit: "일",
+      lastDay: "말일",
+      lastDayHint: "31일은 달마다 말일로 계산해요",
+      incomplete: "이름·금액·날을 채워 주세요",
+    },
+  },
+
   confirmSave: { title: "이 내용으로 저장할까요?", cancel: "취소", confirm: "확인" },
   confirmExit: {
     title: "작성 중인 기록을 지울까요?",
@@ -105,3 +161,38 @@ export const savedSummary = (count: number, days: readonly { date: string; count
   }
   return `${count}건을 저장했어요.\n${days.map((d) => `${monthDay(d.date)} ${d.count}건`).join(" · ")}`;
 };
+
+/** 날짜 예시에 쓰는 날 — 오늘에서 이만큼 전. 글자를 고정해 두면 한 달 뒤에는 30일보다 오래된 날짜가 되어 예시가 동작하지 않는다 */
+export const HELP_PAST_DAYS = 5;
+
+/** 할 수 있는 일과 예시 문장(F). 예시는 **실제로 그대로 동작하는 문장**이어야 한다 — 테스트가 예시마다 의도한 결과가 나오는지 본다 */
+export const helpItems = (today: string): { label: string; examples: string[] }[] => [
+  { label: "쓴 돈·들어온 돈 기록하기", examples: ["점심 9천원, 커피 4500원"] },
+  // 낱말로도, 날짜로도 적을 수 있다는 것을 둘 다 보여 준다
+  { label: "지난 날의 기록 적기", examples: ["어제 커피 만원", `${monthDay(RecordDateReader.addDays(today, -HELP_PAST_DAYS))} 커피 만원`] },
+  { label: "금액만 먼저 적고 나중에 채우기", examples: ["4500"] },
+  { label: "매달 나가는 돈 등록하기", examples: ["넷플릭스 17000원 매달 15일 고정지출"] },
+  { label: "등록한 고정지출 보기·지우기", examples: ["고정지출 보여줘"] },
+  { label: "카드 등록하기", examples: ["삼성카드 등록해줘"] },
+];
+
+/** 자주 적는 항목 칩 — 금액을 늘 함께 적는다. 긴 내용은 12자로 줄인다(카드에는 전체가 들어간다) */
+export const frequentChip = (title: string, amount: number): string => {
+  const chars = [...title];
+  return `${chars.length > 12 ? `${chars.slice(0, 11).join("")}…` : title} ${formatAmount(amount)}원`;
+};
+
+/** 채우지 않은 기록 알림. 권유일 뿐이다 — 재촉하는 말을 넣지 않는다 */
+export const unfilledNotice = (count: number): string => `아직 채우지 않은 기록이 ${count}건 있어요. 눌러서 채워 주세요`;
+export const unfilledMore = (count: number): string => `외 ${count}건`;
+export const cardRegistered = (name: string): string => `등록했어요. 이제 「${name}」라고 적으면 알아볼게요`;
+
+/** `매달 15일` — 31일은 달마다 말일이므로 「말일」이라고 적는다 */
+export const recurringDay = (day: number): string => (day >= RECURRING_LIMITS.maxDay ? "매달 말일" : `매달 ${day}일`);
+export const recurringRegistered = (day: number): string => `등록했어요. ${recurringDay(day)}에 물어볼게요`;
+type Due = { title: string; amount: number; dayOfMonth: number; kind: string };
+/** 그날 확인 질문. 자동으로 기록하지 않는다 — 묻기만 한다 */
+export const recurringDueAsk = (item: Due): string =>
+  `${item.title} ${formatAmount(item.amount)}원 — ${recurringDay(item.dayOfMonth)}에 ${item.kind === "income" ? "들어오는" : "나가는"} 돈이에요. 기록할까요?`;
+/** 나가는 날이 지난 항목 — 「기록할게요」를 누르면 그 날짜의 카드가 된다 */
+export const recurringOverdue = (item: Due, dueDate: string): string => `지난 ${md(dueDate).D}일의 ${item.title} ${formatAmount(item.amount)}원을 아직 기록하지 않았어요. 기록할까요?`;

@@ -1,22 +1,15 @@
 // /app 기록 체험판 화면 문구. 원본: docs/spec/70-mvp-records.md §9(확정 M13) · §6-3(값 표시 이름) · 80-record-assistant §4(구분 · 카테고리)
 // §9에 없는 것(항목 이름 · 안내 · 자리표시)은 시안 docs/design/app/ 의 문구다. {n} 등은 코드에서 채운다
+import { CategoryCatalog } from "@/domain/record/CategoryCatalog";
+
 export const appContent = {
   meta: { title: "세이블리 웹 체험판" },
   notice: "공개 체험판이에요. 누구나 볼 수 있으니 실제 소비 내역이나 개인정보는 적지 마세요.", // N1
   nav: { home: "홈", records: "기록", calendar: "달력", report: "리포트", footer: "세이블리 웹 체험판" }, // N2
 
   kinds: { expense: "지출", income: "수입", transfer: "상환", savings: "저축" },
-  // 이름은 앱 seed.dart와 같다(41종)
-  categories: {
-    food: "식비", cafe: "카페", grocery: "마트·생필품", convenience: "편의점", transport: "교통", fuel: "주유", parking: "주차·통행료",
-    car: "차량 정비", housing: "주거·관리비", telecom: "통신", shopping: "쇼핑", medical: "병원비", beauty: "미용",
-    health: "건강·운동", culture: "문화·여가", subscription: "구독", education: "교육", travel: "여행", alcohol: "술·유흥",
-    event: "경조사", pet: "반려동물", baby: "육아", insurance: "보험", etc_expense: "기타",
-    salary: "급여", allowance: "용돈", side_income: "부수입", refund: "환급", interest: "이자수익", etc_income: "기타",
-    card_bill: "카드값 상환", loan_payment: "대출 상환", interest_payment: "이자 납입",
-    savings_deposit: "예적금", emergency_fund: "비상금", house_savings: "청약", invest: "ETF·주식", fund: "펀드", pension: "연금",
-    forex: "외화", etc_savings: "기타 저축",
-  } as Record<string, string>,
+  // 이름은 앱 seed.dart와 같다(41종) — 원본은 도메인(CategoryCatalog.names)에 있다
+  categories: CategoryCatalog.names as Record<string, string>,
   paymentMethods: { cash: "현금", check_card: "체크카드", credit_card: "신용카드", bank_transfer: "계좌이체", other: "기타" } as Record<string, string>,
   reasons: { need: "필요해서", impulse: "충동적", value: "가치소비", fixed: "필수지출", other: "기타" } as Record<string, string>,
   feelings: { proud: "뿌듯", satisfied: "만족", meh: "그냥", unsatisfied: "아쉬움", regret: "후회" } as Record<string, string>,

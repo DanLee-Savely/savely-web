@@ -18,4 +18,6 @@ export interface RecordStatsReader {
   impulseRegretCount(from: string, to: string): Promise<number>;
   /** 그날 기록, 최근 만든 순 */
   recordsOn(date: string): Promise<RecordEntry[]>;
+  /** 기간의 기록(날짜 최신순 · 같은 날은 만든 순서 역순), 최대 [limit]건 — 대화로 기록하기의 자주 적는 항목 · 채우지 않은 기록 · 고정지출 계산용 */
+  recordsBetween(from: string, to: string, limit: number): Promise<RecordEntry[]>;
 }

@@ -2,7 +2,7 @@
   "version": 1,
   "source": "recurring_sentences.json",
   "about": [
-    "고정지출 · 고정수입 문장 세트 52건. 문장은 전부 지어낸 것이다.",
+    "고정지출 · 고정수입 문장 세트 54건. 문장은 전부 지어낸 것이다.",
     "intent: register(등록) · remove(삭제) · list(보기) · none(고정지출 이야기가 아님 — 기록으로 정리).",
     "assume: true는 최초 질문이 떠 있는 동안이다 — 낱말이 없어도 금액과 나가는 날이 함께 있으면 등록으로 읽는다.",
     "items는 검증 전의 초안이다. 순서도 맞아야 한다. day는 매달 나가는 날(1~31)."
@@ -54,6 +54,8 @@
     {"id": "list-04", "text": "고정수입 뭐 있어", "expect": {"intent": "list"}},
     {"id": "list-05", "text": "고정지출 확인", "expect": {"intent": "list"}},
     {"id": "list-06", "text": "내 고정지출 알려줘", "expect": {"intent": "list"}},
+    {"id": "list-07", "text": "고정지출 얼마", "expect": {"intent": "list"}},
+    {"id": "list-08", "text": "이번 달 고정지출 얼마", "expect": {"intent": "list"}},
     {"id": "none-01", "text": "점심 9천원, 커피 4500원", "expect": {"intent": "none"}},
     {"id": "none-02", "text": "월급 300만원", "expect": {"intent": "none"}},
     {"id": "none-03", "text": "넷플릭스 17000원", "expect": {"intent": "none"}},

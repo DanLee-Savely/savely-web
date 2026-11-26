@@ -21,7 +21,7 @@ export function AssistantRoot({ today }: { today: string }) {
   return (
     <button
       type="button"
-      onClick={() => assistant.open(picked ? date : today)}
+      onClick={() => void assistant.open(picked ? date : today)}
       className="fixed right-10 bottom-10 z-40 inline-flex h-13 items-center gap-2 rounded-sv-pill bg-sv-text px-5 sv-text-label-15 text-sv-surface shadow-sv-floating-cta hover:opacity-90"
     >
       <MessageCircle aria-hidden className="size-5" />

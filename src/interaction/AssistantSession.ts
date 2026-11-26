@@ -1,7 +1,10 @@
-import type { InterpretResult } from "@/application/assistant/InterpretSentenceService";
-import { assistantContent, draftsReady, greeting, savedSummary, unparsedNote } from "@/content/assistant.content";
+import type { CardReply, InterpretOutcome, InterpretResult, RecurringReply } from "@/application/assistant/InterpretSentenceService";
+import { assistantContent, cardRegistered, draftsReady, greeting, recurringRegistered, savedSummary, unparsedNote } from "@/content/assistant.content";
+import type { UnfilledRecords } from "@/domain/assistant/AssistantInsights";
 import { DRAFT_LIMITS } from "@/domain/assistant/DraftValidator";
 import type { ParsedDraft, ParseFailure } from "@/domain/assistant/ParsedDraft";
+import type { RecurringDraft } from "@/domain/recurring/RecurringCommandParser";
+import type { RecurringDue, RecurringItemData } from "@/domain/recurring/RecurringItem";
 
 /**
  * 초안 카드 한 장 — 파서가 만든 초안에 사용자가 고친 값이 얹힌다.
@@ -19,6 +22,22 @@ export type DraftCard = ParsedDraft & {
   saved: boolean;
 };
 
+/**
+ * 고정지출 등록 카드 한 장 — 문장에서 읽은 값에 사용자가 고친 값이 얹힌다.
+ * 기록 초안이 아니다. 저장 대상(pending)에 들어가지 않고, 「등록하기」를 눌러야 등록된다
+ */
+export type RecurringCard = {
+  id: string;
+  kind: ParsedDraft["kind"];
+  amount: number;
+  dayOfMonth: number | null;
+  title: string | null;
+  categoryId: string | null;
+  paymentMethod: string | null;
+  cardName: string | null;
+  registered: boolean;
+};
+
 export type AssistantMessage =
   /** 도우미의 정형 안내. offerManual이면 「직접 입력으로 전환」 버튼을 함께 보여 준다(못 알아들음 2회 연속) */
   | { type: "notice"; text: string; offerManual: boolean }
@@ -27,7 +46,26 @@ export type AssistantMessage =
   /** 도우미가 정리한 초안 카드 묶음. notes는 카드 아래에 덧붙이는 안내(알아듣지 못한 부분, 뺀 항목 등) */
   | { type: "drafts"; cards: DraftCard[]; notes: string[] }
   /** 저장 완료 요약. date는 「달력에서 확인」이 갈 날짜 */
-  | { type: "saved"; text: string; date: string };
+  | { type: "saved"; text: string; date: string }
+  /** 「할 수 있는 일」 안내 — 목록과 예시 문장(F) */
+  | { type: "help" }
+  /** 채우지 않은 기록 알림 — 첫 안내 자리에 대신 선다(B). 여기 실린 것은 이미 저장된 기록이다 */
+  | { type: "unfilled"; unfilled: UnfilledRecords }
+  /** 고정지출 최초 질문 — 첫 안내 자리에 대신 선다(C). candidates는 지난 두 달 모두 적은 항목이다 */
+  | { type: "recurringAsk"; candidates: RecurringDraft[] }
+  /** 나가는 날이 된 고정지출을 묻는 블록 — 첫 안내 자리에 대신 선다(C). 한 번에 하나씩, queue의 맨 앞이 지금 묻는 항목이다 */
+  | { type: "recurringDue"; queue: RecurringDue[] }
+  /** 고정지출 등록 카드 묶음 */
+  | { type: "recurringDrafts"; cards: RecurringCard[]; notes: string[] }
+  /** 등록한 고정지출 목록. 줄을 눌러 고치거나 지운다 */
+  | { type: "recurringList"; items: RecurringItemData[] }
+  /** 지울 고정지출을 확인하는 묶음. 「삭제하기」를 눌러야 지워진다 */
+  | { type: "recurringRemove"; candidates: RecurringItemData[]; removedIds: string[]; kept: boolean }
+  /** 등록할 카드 한 장 — 이름과 종류(신용 · 체크). 「등록하기」를 눌러야 등록된다 */
+  | { type: "cardDraft"; id: string; name: string; method: string; registered: boolean };
+
+/** 들어왔을 때 먼저 말을 거는 블록. 하나만 보여 준다 — 우선순위: 채우지 않은 기록 → 나가는 날이 된 고정지출 → 최초 질문 → 첫 안내 */
+export type EntryBlock = Extract<AssistantMessage, { type: "unfilled" | "recurringAsk" | "recurringDue" }>;
 
 export type AssistantPhase = "idle" | "parsing" | "draftsReady" | "saving" | "saved" | "parseFailed";
 export type SaveGroup = { date: string; cards: DraftCard[] };
@@ -68,6 +106,15 @@ export class AssistantSession {
     return this.with([...this.messages, { type: "user", text: text.trim() }], "parsing");
   }
 
+  /** 문장 한 번의 결과를 받는다 — 도움말 · 고정지출 · 카드 등록 · 기록 초안 가운데 하나 */
+  receiveOutcome(outcome: InterpretOutcome, newId: () => string): AssistantSession {
+    if (this.phase !== "parsing") return this;
+    if (outcome.type === "drafts") return this.receive(outcome.result, newId);
+    const reply = outcome.type === "help" ? [{ type: "help" } as const] : outcome.type === "card" ? cardMessages(outcome.reply, newId) : recurringMessages(outcome.reply, newId);
+    // 기록 초안을 만들지 않으므로 저장 대상과 「못 알아들음」 횟수는 그대로다
+    return this.with([...this.messages, ...reply], this.pending.length ? "draftsReady" : "idle");
+  }
+
   /** 정리 결과를 받는다. 검증을 통과한 초안만 카드가 된다. [newId]는 카드 번호(UUID)를 만든다 */
   receive(result: InterpretResult, newId: () => string): AssistantSession {
     if (this.phase !== "parsing") return this;
@@ -106,6 +153,120 @@ export class AssistantSession {
     const streak = this.failStreak + (countsAsMiss ? 1 : 0);
     const phase = this.pending.length ? "draftsReady" : "parseFailed";
     return new AssistantSession(this.screenDate, this.today, [...this.messages, notice(text, streak >= 2)], phase, streak);
+  }
+
+  // ── 진입 블록 · 칩 (A · B · C · F) ─────────────────────────────
+
+  /** 먼저 말을 거는 블록을 첫 안내 자리에 세운다. 이미 대화를 시작했으면(첫 줄이 첫 안내가 아니면) 그대로 둔다 */
+  showEntry(block: EntryBlock): AssistantSession {
+    if (this.messages[0]?.type !== "notice") return this;
+    return this.with([block, ...this.messages.slice(1)], this.phase);
+  }
+
+  /** 진입 블록을 치우고 첫 안내로 돌아간다(「나중에 할게요」 · 다 물었을 때). [after]는 덧붙일 안내 */
+  closeEntry(after?: string): AssistantSession {
+    if (this.messages[0]?.type === "notice") return this;
+    return this.with([notice(greeting(this.screenDate, this.today)), ...this.messages.slice(1), ...(after ? [notice(after)] : [])], this.phase);
+  }
+
+  /** 고정지출 최초 질문이 떠 있는가. 떠 있는 동안에는 「월세 50만원 25일」처럼 낱말 없이 적은 문장도 등록으로 읽는다 */
+  get askingRecurring(): boolean {
+    return this.messages[0]?.type === "recurringAsk";
+  }
+
+  /** 등록 후보를 등록 카드로 옮긴다. 아직 등록된 것이 아니다 — 「등록하기」를 눌러야 한다 */
+  pickCandidate(index: number, newId: () => string): AssistantSession {
+    const first = this.messages[0];
+    const picked = first?.type === "recurringAsk" ? first.candidates[index] : undefined;
+    if (first?.type !== "recurringAsk" || !picked) return this;
+    const card: RecurringCard = { ...picked.draft, id: newId(), dayOfMonth: picked.dayOfMonth, registered: false };
+    const head: AssistantMessage = { ...first, candidates: first.candidates.filter((_, i) => i !== index) };
+    const last = this.messages.at(-1);
+    const rest = this.messages.slice(1);
+    const next = last?.type === "recurringDrafts" && rest.length ? [...rest.slice(0, -1), { ...last, cards: [...last.cards, card] }] : [...rest, { type: "recurringDrafts" as const, cards: [card], notes: [] }];
+    return this.with([head, ...next], this.phase);
+  }
+
+  /** 지금 묻는 고정지출에 답했다 — 다음 항목으로 넘어간다. 다 물었으면 첫 안내로 돌아간다 */
+  answerDue(): AssistantSession {
+    const first = this.messages[0];
+    if (first?.type !== "recurringDue") return this;
+    return first.queue.length > 1 ? this.with([{ ...first, queue: first.queue.slice(1) }, ...this.messages.slice(1)], this.phase) : this.closeEntry();
+  }
+
+  /** 「할 수 있는 일」 칩 — 안내를 붙인다. 바로 앞이 같은 안내면 또 붙이지 않는다(칩을 거듭 눌러도 쌓이지 않게) */
+  showHelp(): AssistantSession {
+    return this.busy || this.messages.at(-1)?.type === "help" ? this : this.with([...this.messages, { type: "help" }], this.phase);
+  }
+
+  /** 정형 안내 한 줄을 붙인다 */
+  note(text: string): AssistantSession {
+    return this.with([...this.messages, notice(text)], this.phase);
+  }
+
+  /**
+   * 문장 없이 초안 하나를 카드로 더한다 — 「자주 적는 항목」 칩과 고정지출의 「기록할게요」가 쓴다. 검증을 마친 초안만 넘긴다.
+   * 사용자 말풍선은 만들지 않는다. 바로 앞이 아직 저장하지 않은 카드 묶음이면 거기에 이어 붙인다. 20건이 찼으면 안내만 한 번 붙인다
+   */
+  addDraft(draft: ParsedDraft, newId: () => string): AssistantSession {
+    if (this.busy) return this;
+    const last = this.messages.at(-1);
+    if (this.pending.length >= DRAFT_LIMITS.maxDrafts) {
+      const told = last?.type === "notice" && last.text === c.tooMany;
+      return this.with(told ? this.messages : [...this.messages, notice(c.tooMany)], "draftsReady");
+    }
+    const card: DraftCard = { ...draft, id: newId(), reason: null, feeling: null, memo: null, ai: false, saved: false };
+    const open = last?.type === "drafts" && last.cards.every((x) => !x.saved);
+    const messages = open ? [...this.messages.slice(0, -1), { ...last, cards: [...last.cards, card] }] : [...this.messages, { type: "drafts" as const, cards: [card], notes: [] }];
+    return this.with(messages, "draftsReady");
+  }
+
+  // ── 고정지출 · 카드 등록 카드 (C · E) ────────────────────────────
+
+  /** 등록 전의 고정지출 카드를 고친다 */
+  updateRecurringCard(id: string, patch: Partial<RecurringCard>): AssistantSession {
+    return this.mapMessages((m) => (m.type === "recurringDrafts" ? { ...m, cards: m.cards.map((x) => (x.id === id && !x.registered ? { ...x, ...patch, id } : x)) } : m));
+  }
+
+  /** 등록 전의 고정지출 카드를 지운다(수정 시트의 「삭제」) */
+  removeRecurringCard(id: string): AssistantSession {
+    return this.mapMessages((m) => (m.type === "recurringDrafts" ? { ...m, cards: m.cards.filter((x) => x.id !== id || x.registered) } : m));
+  }
+
+  /** 고정지출을 등록했다 — 카드를 잠그고 「등록했어요. 매달 ○일에 물어볼게요」 */
+  recurringRegistered(id: string, day: number): AssistantSession {
+    return this.mapMessages((m) => (m.type === "recurringDrafts" ? { ...m, cards: m.cards.map((x) => (x.id === id ? { ...x, registered: true } : x)) } : m)).note(recurringRegistered(day));
+  }
+
+  /** 등록한 고정지출이 바뀌었다 — 떠 있는 목록을 새로 읽은 값으로 바꾼다 */
+  refreshRecurring(items: RecurringItemData[]): AssistantSession {
+    return this.mapMessages((m) => (m.type === "recurringList" ? { ...m, items } : m));
+  }
+
+  /** 고정지출 하나를 지웠다 — 삭제 확인 묶음에 표시하고 「지웠어요. 이제 묻지 않을게요」 */
+  recurringRemoved(itemId: string): AssistantSession {
+    return this.mapMessages((m) => (m.type === "recurringRemove" && !m.removedIds.includes(itemId) ? { ...m, removedIds: [...m.removedIds, itemId] } : m)).note(c.recurring.removed);
+  }
+
+  /** 「그대로 둘게요」 — 삭제 버튼을 치운다 */
+  keepRecurring(index: number): AssistantSession {
+    return this.with(this.messages.map((m, i) => (i === index && m.type === "recurringRemove" ? { ...m, kept: true } : m)), this.phase);
+  }
+
+  /** 등록 전의 카드 종류(신용 · 체크)를 바꾼다 */
+  setCardMethod(id: string, method: string): AssistantSession {
+    return this.mapMessages((m) => (m.type === "cardDraft" && m.id === id && !m.registered ? { ...m, method } : m));
+  }
+
+  /** 카드를 등록했다 — 카드를 잠그고 「등록했어요. 이제 「○○」라고 적으면 알아볼게요」 */
+  cardRegistered(id: string): AssistantSession {
+    const card = this.messages.find((m) => m.type === "cardDraft" && m.id === id);
+    if (card?.type !== "cardDraft") return this;
+    return this.mapMessages((m) => (m.type === "cardDraft" && m.id === id ? { ...m, registered: true } : m)).note(cardRegistered(card.name));
+  }
+
+  private mapMessages(fn: (m: AssistantMessage) => AssistantMessage): AssistantSession {
+    return this.with(this.messages.map(fn), this.phase);
   }
 
   /** 카드를 지운다 */
@@ -166,3 +327,25 @@ export class AssistantSession {
     return new AssistantSession(this.screenDate, this.today, messages, phase, this.failStreak);
   }
 }
+
+/** 카드를 등록하려는 말의 답: 이름이 없으면 안내, 20자를 넘으면 안내, 아니면 등록 카드 */
+const cardMessages = (reply: CardReply, newId: () => string): AssistantMessage[] => {
+  if (reply.tooLong) return [notice(c.cardDraft.nameTooLong)];
+  if (reply.name === null) return [notice(c.cardDraft.needName)];
+  return [notice(c.cardDraft.ask), { type: "cardDraft", id: newId(), name: reply.name, method: reply.method, registered: false }];
+};
+
+/** 고정지출에 대한 말의 답: 등록 카드 · 목록 · 삭제 확인 */
+const recurringMessages = (reply: RecurringReply, newId: () => string): AssistantMessage[] => {
+  if (reply.intent === "list") return reply.items.length ? [notice(c.recurring.list), { type: "recurringList", items: reply.items }] : [notice(c.recurring.empty)];
+  if (reply.intent === "remove") {
+    if (reply.found.length) return [notice(reply.found.length > 1 ? c.recurring.removeWhich : c.recurring.removeAsk), { type: "recurringRemove", candidates: reply.found, removedIds: [], kept: false }];
+    // 못 찾았으면 목록을 보여 주고 거기서 고르게 한다
+    if (!reply.all.length) return [notice(c.recurring.empty)];
+    return [...(reply.query ? [notice(c.recurring.notFound)] : []), notice(c.recurring.list), { type: "recurringList", items: reply.all }];
+  }
+  if (!reply.cards.length) return [notice(reply.invalid > 0 ? c.invalidAmount : c.recurring.needAmount)];
+  const cards = reply.cards.map((x): RecurringCard => ({ ...x.draft, id: newId(), dayOfMonth: x.dayOfMonth, registered: false }));
+  const notes = [...(reply.unparsed.length ? [unparsedNote(reply.unparsed)] : []), ...(reply.invalid > 0 ? [c.invalidAmount] : [])];
+  return [notice(c.recurring.ask), { type: "recurringDrafts", cards, notes }];
+};

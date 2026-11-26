@@ -49,6 +49,13 @@ export class InMemoryRecordStatsReader implements RecordStatsReader {
     return this.range(from, to, "expense").filter((r) => r.reason === "impulse" && (r.feeling === "unsatisfied" || r.feeling === "regret")).length;
   }
 
+  async recordsBetween(from: string, to: string, limit: number): Promise<RecordEntry[]> {
+    return this.range(from, to)
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
+      .slice(0, limit)
+      .map(RecordEntry.restore);
+  }
+
   async recordsOn(date: string): Promise<RecordEntry[]> {
     return this.range(date, date)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
