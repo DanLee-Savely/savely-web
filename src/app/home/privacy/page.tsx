@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/home/privacy" },
 };
 
-// /home/privacy — 출시 알림 신청의 실제 처리 방식과 일치해야 한다 (30-waitlist §6, 00-decisions C6 초안)
+// /home/privacy — 출시 알림 신청과 기록 체험판(대화로 기록하기의 OpenAI 전송 포함)의 실제 처리 방식과 일치해야 한다
+// (30-waitlist §6, 80-record-assistant §8, 00-decisions C6 초안)
 export default function PrivacyPage() {
   return (
     <>
