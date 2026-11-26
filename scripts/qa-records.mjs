@@ -1,4 +1,4 @@
-// 미션 6 기록 체험판 QA 자동 점검 (docs/spec/70-mvp-records.md §10 Q1~Q22 → 결과 docs/spec/71-mvp-qa.md)
+// 기록 체험판 QA 자동 점검 (docs/spec/70-mvp-records.md §10 Q1~Q22 → 결과 docs/spec/71-mvp-qa.md)
 // 준비: npm run preview(로컬 D1 · R2, 기록 0건), <폴더>/img에 gps.jpg(GPS EXIF) · second.png · a.gif · fake.pdf · big.jpg(5MB 초과)
 // 실행: node scripts/qa-records.mjs <폴더> — 로컬 D1 표 이름을 잠시 바꾸는 등 로컬 데이터를 고치므로 실서비스에는 쓰지 않는다
 import { chromium } from "playwright";
@@ -142,7 +142,7 @@ log("Q11", q11.every((s) => s.endsWith("404")) && nf === 1, `${q11.join(" · ")}
 await newForm(); const q13 = [];
 for (const f of ["a.gif", "fake.pdf", "big.jpg"]) { await page.setInputFiles("#field-image", `${I}/${f}`); await page.locator("#field-image-error").waitFor(); q13.push(`${f} → ${await text("#field-image-error")}`); }
 const prev13 = await page.getByAltText("고른 사진 미리보기").count();
-log("Q13", q13[0].includes("JPG, PNG, WEBP") && q13[1].includes("JPG, PNG, WEBP") && q13[2].includes("5MB 이하") && prev13 === 0, `${q13.join(" / ")} · 미리보기 ${prev13}개(올라가지 않음, big.jpg 7.9MB)`);
+log("Q13", q13[0].includes("JPG, PNG, WEBP") && q13[1].includes("JPG, PNG, WEBP") && q13[2].includes("5MB 이하") && prev13 === 0, `${q13.join(" / ")} · 미리보기 ${prev13}개(올라가지 않음, big.jpg ${(fs.statSync(`${I}/big.jpg`).size / 1e6).toFixed(1)}MB)`);
 
 // Q14 오프라인 저장
 await newForm(); await page.fill("#field-amount", "7000"); await chip("식비"); await page.fill("#field-title", "오프라인 기록");
