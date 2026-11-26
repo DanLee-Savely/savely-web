@@ -31,6 +31,11 @@ export class CategoryCatalog {
     return BY_KIND[kind] ?? [];
   }
 
+  /** 카테고리가 속한 구분. 없는 카테고리면 null */
+  static kindOf(id: string): string | null {
+    return Object.keys(BY_KIND).find((kind) => BY_KIND[kind].includes(id as CategoryId)) ?? null;
+  }
+
   /** 카테고리는 선택 사항이다(빈칸 허용, 80-record-assistant K7). 골랐다면 구분과 맞아야 한다 */
   static assert(kind: string, id: string): void {
     if (id && !CategoryCatalog.of(kind).includes(id as CategoryId)) throw new InvalidCategoryError();

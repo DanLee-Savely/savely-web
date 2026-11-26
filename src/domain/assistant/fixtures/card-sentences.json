@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "source": "card_sentences.json",
+  "about": [
+    "대화로 카드 등록 문장 세트 17건. 문장은 전부 지어낸 것이다.",
+    "intent: register(카드 등록) · none(카드 등록 이야기가 아님 — 기록으로 정리).",
+    "name이 빈 문자열이면 이름을 찾지 못한 것이다."
+  ],
+  "cases": [
+    {"id": "card-01", "text": "삼성카드 등록해줘", "expect": {"intent": "register", "name": "삼성카드", "method": "credit_card"}},
+    {"id": "card-02", "text": "신한 체크카드 추가", "expect": {"intent": "register", "name": "신한 체크카드", "method": "check_card"}},
+    {"id": "card-03", "text": "카드 등록 현대카드", "expect": {"intent": "register", "name": "현대카드", "method": "credit_card"}},
+    {"id": "card-04", "text": "삼성카드를 등록해줘", "expect": {"intent": "register", "name": "삼성카드", "method": "credit_card"}},
+    {"id": "card-05", "text": "삼성카드 taptap 추가해주세요", "expect": {"intent": "register", "name": "삼성카드 taptap", "method": "credit_card"}},
+    {"id": "card-06", "text": "새 카드 국민 357카드 등록", "expect": {"intent": "register", "name": "국민 357카드", "method": "credit_card"}},
+    {"id": "card-07", "text": "체크카드 추가", "expect": {"intent": "register", "name": "체크카드", "method": "check_card"}},
+    {"id": "card-08", "text": "카카오뱅크 체크카드도 추가해줘", "expect": {"intent": "register", "name": "카카오뱅크 체크카드", "method": "check_card"}},
+    {"id": "card-09", "text": "롯데카드 등록할게", "expect": {"intent": "register", "name": "롯데카드", "method": "credit_card"}},
+    {"id": "card-10", "text": "카드 등록", "expect": {"intent": "register", "name": "", "method": "credit_card"}},
+    {"id": "none-01", "text": "커피 4500원 삼성카드", "expect": {"intent": "none"}},
+    {"id": "none-02", "text": "삼성카드", "expect": {"intent": "none"}},
+    {"id": "none-03", "text": "카드값 80만원 추가", "expect": {"intent": "none"}},
+    {"id": "none-04", "text": "삼성카드 4500원 커피 추가", "expect": {"intent": "none"}},
+    {"id": "none-05", "text": "교통카드 충전 추가", "expect": {"intent": "none"}},
+    {"id": "none-06", "text": "토스 추가", "expect": {"intent": "none"}},
+    {"id": "none-07", "text": "삼성카드 추가요금", "expect": {"intent": "none"}}
+  ]
+}

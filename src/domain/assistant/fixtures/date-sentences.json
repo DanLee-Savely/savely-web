@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "record_chat_sentences_dates.json",
+  "about": [
+    "대화로 기록하기 문장 세트 — 날짜가 든 문장 29건. 문장은 전부 지어낸 것이다.",
+    "이 세트의 「오늘」은 2026-11-24다. 테스트가 시계를 그 날로 고정한다.",
+    "date는 그 항목의 기록 날짜(YYYY-MM-DD). 생략하면 날짜가 비어 있어야 한다 — 화면 날짜로 저장한다.",
+    "미래 날짜 · 30일보다 오래된 날짜의 항목은 검증기가 버린다."
+  ],
+  "cases": [
+    {"id": "day-01", "text": "어제 커피 만원", "expect": [{"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-23"}]},
+    {"id": "day-02", "text": "그저께 커피 만원", "expect": [{"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-22"}]},
+    {"id": "day-03", "text": "11월 20일 커피 만원", "expect": [{"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-20"}]},
+    {"id": "day-04", "text": "어제 커피 만원, 그저께 커피 만원, 11월 20일 커피 만원", "expect": [{"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-23"}, {"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-22"}, {"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-20"}]},
+    {"id": "day-05", "text": "어제 점심 9천원, 커피 4500원", "expect": [{"kind": "expense", "amount": 9000, "categoryId": "food", "title": "점심", "date": "2026-11-23"}, {"kind": "expense", "amount": 4500, "categoryId": "cafe", "title": "커피", "date": "2026-11-23"}]},
+    {"id": "day-06", "text": "어제 점심 9천원, 오늘 커피 4500원", "expect": [{"kind": "expense", "amount": 9000, "categoryId": "food", "title": "점심", "date": "2026-11-23"}, {"kind": "expense", "amount": 4500, "categoryId": "cafe", "title": "커피", "date": "2026-11-24"}]},
+    {"id": "day-07", "text": "점심 9천원, 어제 택시 12000", "expect": [{"kind": "expense", "amount": 9000, "categoryId": "food", "title": "점심"}, {"kind": "expense", "amount": 12000, "categoryId": "transport", "title": "택시", "date": "2026-11-23"}]},
+    {"id": "day-08", "text": "3일 전 택시 12000원", "expect": [{"kind": "expense", "amount": 12000, "categoryId": "transport", "title": "택시", "date": "2026-11-21"}]},
+    {"id": "day-09", "text": "11/20 마트 3만2천원", "expect": [{"kind": "expense", "amount": 32000, "categoryId": "grocery", "title": "마트", "date": "2026-11-20"}]},
+    {"id": "day-10", "text": "20일 월세 50만원", "expect": [{"kind": "expense", "amount": 500000, "categoryId": "housing", "title": "월세", "date": "2026-11-20"}]},
+    {"id": "day-11", "text": "28일 월세 50만원", "expect": [{"kind": "expense", "amount": 500000, "categoryId": "housing", "title": "월세", "date": "2026-10-28"}]},
+    {"id": "day-12", "text": "이번 달 15일 월세 50만원", "expect": [{"kind": "expense", "amount": 500000, "categoryId": "housing", "title": "월세", "date": "2026-11-15"}]},
+    {"id": "day-13", "text": "지난달 28일 보험료 12만원", "expect": [{"kind": "expense", "amount": 120000, "categoryId": "insurance", "title": "보험료", "date": "2026-10-28"}]},
+    {"id": "day-14", "text": "엊그제 저녁 2만원", "expect": [{"kind": "expense", "amount": 20000, "categoryId": "food", "title": "저녁", "date": "2026-11-22"}]},
+    {"id": "day-15", "text": "어제저녁 치킨 2만원", "expect": [{"kind": "expense", "amount": 20000, "categoryId": "food", "title": "저녁 치킨", "date": "2026-11-23"}]},
+    {"id": "day-16", "text": "어제, 커피 만원", "expect": [{"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-23"}]},
+    {"id": "day-17", "text": "어제 커피 만원 그저께 커피 만원", "expect": [{"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-23"}, {"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-22"}]},
+    {"id": "day-18", "text": "커피 만원 어제", "expect": [{"kind": "expense", "amount": 10000, "categoryId": "cafe", "title": "커피", "date": "2026-11-23"}]},
+    {"id": "day-19", "text": "어제\n점심 9천원\n커피 4500", "expect": [{"kind": "expense", "amount": 9000, "categoryId": "food", "title": "점심", "date": "2026-11-23"}, {"kind": "expense", "amount": 4500, "categoryId": "cafe", "title": "커피", "date": "2026-11-23"}]},
+    {"id": "day-20", "text": "31일 관리비 15만원", "expect": [{"kind": "expense", "amount": 150000, "categoryId": "housing", "title": "관리비", "date": "2026-10-31"}]},
+    {"id": "out-01", "text": "내일 영화 15000원", "expect": []},
+    {"id": "out-02", "text": "9월 1일 병원 3만원", "expect": []},
+    {"id": "out-03", "text": "12월 25일 선물 5만원", "expect": []},
+    {"id": "out-04", "text": "어제", "expect": [], "unparsed": []},
+    {"id": "not-01", "text": "2일치 식비 3만원", "expect": [{"kind": "expense", "amount": 30000, "title": "2일치 식비"}]},
+    {"id": "not-02", "text": "2월 30일 커피 4500원", "expect": [{"kind": "expense", "amount": 4500, "categoryId": "cafe", "title": "2월 30일 커피"}]},
+    {"id": "not-03", "text": "11.20 커피 4500", "expect": [{"kind": "expense", "amount": 4500, "categoryId": "cafe", "title": "11.20 커피"}]},
+    {"id": "not-04", "text": "오늘 좀 많이 썼다", "expect": [], "unparsed": ["오늘 좀 많이 썼다"]},
+    {"id": "amb-01", "text": "3일 여행 30만원", "expect": [{"kind": "expense", "amount": 300000, "categoryId": "travel", "title": "여행", "date": "2026-11-03"}]}
+  ]
+}
