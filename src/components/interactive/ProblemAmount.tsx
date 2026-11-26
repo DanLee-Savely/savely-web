@@ -1,9 +1,8 @@
 "use client";
 
 import { ArrowRightIcon } from "lucide-react";
-import { Fragment } from "react";
+import { Fragment, type Ref } from "react";
 import { homeContent } from "@/content/home.content";
-import { useTimeline } from "@/hooks/useTimeline";
 import { ProblemTimeline } from "@/interaction/ProblemTimeline";
 import { cn } from "@/lib/utils";
 
@@ -12,12 +11,11 @@ const total = example.items[example.items.length - 1];
 const TOTAL = Number(total.value.replace(/\D/g, ""));
 const timeline = new ProblemTimeline();
 
-// 03 금액 블록 + I12 금액 카운트 — 이 블록이 30% 보이면 「하루 → 한 달 → 1년」 강조 후 0 → 1,825,000원
+// 03 금액 블록 + I12 금액 카운트 — 「하루 → 한 달 → 1년」 강조 후 0 → 1,825,000원
+// 시계(t)는 ProblemStory가 흘려보낸다: PC에서는 흐름이 돌아오는 선까지 보여 준 뒤에 시작한다.
+// 차례가 오기 전(t = 0)에는 PC에서 아직 강조되지 않은 흐름 단계처럼 흐리게 둔다
 // 스크린리더는 처음부터 최종값만 읽는다(sr-only), 움직이는 숫자는 aria-hidden
-export function ProblemAmount() {
-  const { ref, t, reducedMotion } = useTimeline<HTMLDivElement>({
-    until: timeline.countEnd,
-  });
+export function ProblemAmount({ ref, t, reducedMotion }: { ref: Ref<HTMLDivElement>; t: number; reducedMotion: boolean }) {
   const f = reducedMotion
     ? timeline.stillAmount(TOTAL)
     : timeline.amount(t, TOTAL);
@@ -44,7 +42,13 @@ export function ProblemAmount() {
   ));
 
   return (
-    <div ref={ref} className="flex flex-col items-center gap-2 lg:gap-2.5">
+    <div
+      ref={ref}
+      className={cn(
+        "flex flex-col items-center gap-2 transition-opacity duration-500 motion-reduce:transition-none lg:gap-2.5",
+        !reducedMotion && t === 0 && "lg:opacity-25",
+      )}
+    >
       <p className="sv-text-label-15 text-sv-text-2">{example.label}</p>
       <p className="text-sv-text-3">
         <span className="flex items-center gap-1.5 sv-text-body-15 lg:hidden">

@@ -10,6 +10,8 @@ const LIT = [
   [0.45, 0.95],
   [0.7, 2.6],
 ];
+// 금액 장면은 흐름이 「반복」(돌아오는 선 · 알약 강조)에 들어가고 이만큼 뒤에 시작한다 — 선 강조 전환(0.5초)이 끝난 직후
+const AMOUNT_AFTER_REPEAT = 0.6;
 const COUNT_FROM = 1.0;
 const COUNT_TO = 2.6;
 
@@ -21,11 +23,14 @@ export type AmountFrame = {
   scale: number;
 };
 
-// I3 · I12 문제 — 흐름 시계(t)와 금액 시계(t, 금액 영역이 보이는 순간부터)를 각각 받는다
+// I3 · I12 문제 — 흐름 시계(t)와 금액 시계(t)를 각각 받는다.
+// 금액 시계는 흐름 시계가 amountStart에 닿은 뒤에 흐르기 시작한다(쓰고 → 잊고 → 놀라고 → 반복하고 → 돌아오는 선 → 금액, 2026-11-26)
 export class ProblemTimeline {
   /** 흐름 시계가 멈춰도 되는 시각 */
   readonly flowEnd = STEPS[STEPS.length - 1] * PACE;
   readonly countEnd = COUNT_TO + 0.35;
+  /** 금액 장면을 시작해도 되는 흐름 시각(초) — 「반복」 단계가 시작되고 0.6초 뒤 */
+  readonly amountStart = STEPS[3] * PACE + AMOUNT_AFTER_REPEAT;
 
   flowStep(t: number): number {
     return STEPS.filter((s) => t >= s * PACE).length;

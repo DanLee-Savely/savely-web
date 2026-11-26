@@ -8,7 +8,8 @@ export class StepSequencer {
     readonly delays: readonly number[],
     readonly loop = false,
     readonly step = 0,
-    readonly stopped = false,
+    /** 사용자가 단계를 골랐는가 — 자동 진행이 꺼진 화면(동작 줄이기)도 고른 단계는 보여 준다 */
+    readonly picked = false,
   ) {
     if (delays.length === 0) throw new RangeError("delays가 비어 있어요");
     if (!Number.isInteger(step) || step < 0 || step >= this.stepCount) throw new RangeError("step이 범위를 벗어났어요");
@@ -23,9 +24,9 @@ export class StepSequencer {
     return this.done ? null : this.delays[this.step];
   }
 
-  /** 마지막 단계에 닿았거나(한 번 재생) 사용자가 단계를 골라 멈췄으면 true */
+  /** 한 번 재생이 마지막 단계에 닿았으면 true. 반복 재생은 끝나지 않는다 */
   get done(): boolean {
-    return this.stopped || (!this.loop && this.step === this.stepCount - 1);
+    return !this.loop && this.step === this.stepCount - 1;
   }
 
   advance(): StepSequencer {
@@ -38,7 +39,10 @@ export class StepSequencer {
     return this.at(this.stepCount - 1);
   }
 
-  /** 사용자가 고른 단계로 이동하고 자동 진행을 멈춘다 (I5) */
+  /**
+   * 사용자가 고른 단계로 이동한다 (I5). 자동 진행은 멈추지 않는다 — 새 객체라 훅이 그 단계의 대기를 처음부터 다시 센다
+   * (2026-11-26: 고르면 영영 멈추던 것을 바꿨다. 한 번 누른 뒤에는 눌러야만 넘어가는 것처럼 보였다)
+   */
   select(step: number): StepSequencer {
     return new StepSequencer(this.delays, this.loop, step, true);
   }

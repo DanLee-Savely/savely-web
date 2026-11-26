@@ -7,7 +7,8 @@ import { useMediaQuery } from "./useMediaQuery";
 // - 요소가 30% 이상 보이는 동안만 requestAnimationFrame으로 t(초)를 흘린다. 화면 밖 · 탭 숨김이면 멈춘다
 // - resetKey가 바뀌면 0초부터 다시 센다. until초에 닿으면 멈춘다
 // - reducedMotion이면 시간이 흐르지 않는다 → 화면은 타임라인의 still()을 그린다
-export function useTimeline<T extends Element>({ resetKey, until = Infinity }: { resetKey?: unknown; until?: number } = {}) {
+// - ready가 false면 0초에서 기다린다(앞 장면이 끝나기를 기다릴 때). 한번 흐르기 시작하면 ready와 상관없이 끝까지 간다
+export function useTimeline<T extends Element>({ resetKey, until = Infinity, ready = true }: { resetKey?: unknown; until?: number; ready?: boolean } = {}) {
   const ref = useRef<T>(null);
   const [t, setT] = useState(0);
   const [key, setKey] = useState(resetKey);
@@ -27,7 +28,7 @@ export function useTimeline<T extends Element>({ resetKey, until = Infinity }: {
     return () => observer.disconnect();
   }, []);
 
-  const running = inView && !reducedMotion && t < until;
+  const running = inView && !reducedMotion && t < until && (ready || t > 0);
   useEffect(() => {
     if (!running) return;
     let last = performance.now();
@@ -40,5 +41,5 @@ export function useTimeline<T extends Element>({ resetKey, until = Infinity }: {
     return () => cancelAnimationFrame(raf);
   }, [running, until, key]);
 
-  return { ref, t, reducedMotion, active: inView && !reducedMotion };
+  return { ref, t, reducedMotion, inView, active: inView && !reducedMotion };
 }
