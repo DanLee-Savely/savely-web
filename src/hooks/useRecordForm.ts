@@ -69,8 +69,18 @@ export function useRecordForm(initial: RecordDraft, action: (data: FormData) => 
     focus(failed.firstErrorField);
   };
 
+  /** 적던 값과 고른 사진을 버린다 — 「대화로 적기」로 넘어갈 때(80 E4) */
+  const discard = () => {
+    setFlow((f) => f.discard(initial));
+    setPhoto(null);
+    setKeepExisting(!!existingImage);
+  };
+
   return {
     flow,
+    /** 적던 값이나 새로 고른 사진이 있는가 */
+    dirty: flow.differsFrom(initial) || photo !== null,
+    discard,
     preview: photo?.url ?? (keepExisting ? existingImage : null),
     set: (field: keyof RecordDraft, value: string) => setFlow((f) => f.set(field, value)),
     setKind: (kind: string) => setFlow((f) => f.setKind(kind)),

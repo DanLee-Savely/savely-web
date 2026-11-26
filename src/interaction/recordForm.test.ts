@@ -69,4 +69,30 @@ describe("RecordFormFlow", () => {
     expect(f.submit(clock).status).toBe("submitting");
     expect(f.pickImage(null).errors.image).toBeUndefined();
   });
+
+  describe("적던 값이 있는가 · 버리기 (80 E4 — 「대화로 적기」)", () => {
+    const initial = emptyDraft("2026-11-10");
+
+    it("처음 그대로면 달라진 것이 없다. 날짜만 바꾼 것도 세지 않는다", () => {
+      expect(start().differsFrom(initial)).toBe(false);
+      expect(start().set("date", "2026-11-08").differsFrom(initial)).toBe(false);
+    });
+
+    it("금액 · 내용 · 구분 · 칩 가운데 하나라도 바뀌면 달라진 것이다. 되돌리면 다시 같다", () => {
+      expect(start().set("amount", "9,000").differsFrom(initial)).toBe(true);
+      expect(start().set("title", "점심").differsFrom(initial)).toBe(true);
+      expect(start().setKind("income").differsFrom(initial)).toBe(true);
+      expect(start().set("reason", "need").differsFrom(initial)).toBe(true);
+      expect(start().set("amount", "9,000").set("amount", "").differsFrom(initial)).toBe(false);
+    });
+
+    it("버리면 처음 값으로 돌아가고, 고른 날짜와 오류 표시는 남기지 않는다 — 날짜만 남는다", () => {
+      const filled = start().set("amount", "9,000").set("title", "점심").set("date", "2026-11-08");
+      const cleared = filled.discard(initial);
+      expect(cleared.draft).toEqual({ ...initial, date: "2026-11-08" });
+      expect(cleared.differsFrom(initial)).toBe(false);
+      expect(cleared.errors).toEqual({});
+      expect(cleared.status).toBe("idle");
+    });
+  });
 });
