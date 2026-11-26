@@ -1,4 +1,4 @@
-// 기록 종류 4가지 · 대화로 기록하기 QA 자동 점검 (docs/spec/80-record-assistant.md §11 → 결과 docs/spec/71-mvp-qa.md Q31~Q44)
+// 기록 종류 4가지 · 대화로 기록하기 QA 자동 점검 (docs/spec/80-record-assistant.md §11 → 결과 docs/spec/71-mvp-qa.md Q31~Q51)
 // 준비: npm run preview(로컬 D1). 실행: node scripts/qa-assistant.mjs <결과 폴더> [preview 로그 파일]
 // 로컬 D1의 records · cards · recurring_items를 지우고 시작하므로 실서비스에는 쓰지 않는다.
 // Q39는 로컬에 OPENAI_API_KEY(.dev.vars)가 있으면 OpenAI를 실제로 한 번 부른다(없으면 규칙 결과만 확인한다)
@@ -313,6 +313,179 @@ log(
   "Q43",
   leaks.size === 0 && inLog !== true,
   `응답 ${urls.size}개(HTML · JS · RSC) 검색 → ${leaks.size ? JSON.stringify([...leaks]) : "OpenAI 주소 · 키 이름 · 모델 이름 · 프롬프트 조각 없음"} · 서버 로그 ${inLog === null ? "(로그 파일을 주지 않아 건너뜀)" : inLog ? "에 문장이 남음" : "에 보낸 문장 · 금액 없음"}`,
+);
+
+// ── 패널 밖의 입구 · 소개 사이트 새 구역 (80 E1~E5 · 10-sections 05b) ─────────────────────
+
+const usage = () => d1(`SELECT COALESCE(SUM(calls),0) AS n FROM assistant_usage WHERE usage_date='${today}'`)[0].n;
+const monthDay = (date) => `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일`;
+/** 처음 온 방문자(브라우저 저장소가 비어 있다)의 새 창. 평소처럼 열면 진입 블록이 뜨는 상태다 */
+const visitor = async () => {
+  const c = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "ko-KR" });
+  const p = await c.newPage();
+  p.on("pageerror", (e) => errs.push(e.message));
+  return { c, p, panel: p.locator("aside[aria-label='대화로 기록하기']") };
+};
+const settled = async (v) => {
+  await v.panel.getByText("정리하고 있어요…").waitFor({ state: "hidden", timeout: 30000 }).catch(() => {});
+  await v.p.waitForTimeout(400);
+};
+const leave = async (v) => {
+  await v.panel.getByRole("button", { name: "닫기" }).first().click();
+  const b = v.p.getByRole("button", { name: "나가기" });
+  if (await b.count()) await b.click();
+  await v.panel.waitFor({ state: "detached" });
+};
+
+// Q45 홈 주 버튼(E1): 홈에는 「대화로 기록하기」가 하나뿐이고, 다른 화면에는 떠 있는 버튼 · 목록의 「+ 기록하기」가 그대로 있다
+await page.goto(`${B}/app`, { waitUntil: "networkidle" });
+const main45 = await page.locator("main").getByRole("button", { name: "대화로 기록하기" }).count();
+const all45 = await page.getByRole("button", { name: "대화로 기록하기" }).count();
+const create45 = await page.locator("main header").getByRole("link", { name: "기록하기" }).count();
+await page.locator("main").getByRole("button", { name: "대화로 기록하기" }).click();
+await panel.waitFor();
+const date45 = (await panel.locator("div.overflow-y-auto > p").first().innerText()).trim();
+await close();
+await page.goto(`${B}/app/records`, { waitUntil: "networkidle" });
+const list45 = { launcher: await page.getByRole("button", { name: "대화로 기록하기" }).count(), create: await page.getByRole("link", { name: "기록하기" }).count() };
+log("Q45", main45 === 1 && all45 === 1 && create45 === 0 && date45 === monthDay(today) && list45.launcher === 1 && list45.create >= 1, `홈: 머리말 버튼 ${main45}개(화면 전체 ${all45}개) · 머리말 「+ 기록하기」 ${create45}개 → 누르면 패널 날짜 「${date45}」 / 기록 목록: 떠 있는 버튼 ${list45.launcher}개 · 「+ 기록하기」 ${list45.create}개`);
+
+// Q46 홈 입력칸(E2): 보내면 패널이 열리고 패널에서 보낸 것과 같은 카드가 나온다. 진입 블록은 띄우지 않고, 한 번만 묻는 질문도 쓰지 않는다
+const v46 = await visitor();
+await v46.p.goto(`${B}/app`, { waitUntil: "networkidle" });
+const box46 = v46.p.locator("[data-home-assistant]");
+const notice46 = (await box46.innerText()).includes("알아듣지 못한 부분은 정리를 위해 OpenAI로 보내요");
+const sendOff46 = await box46.getByRole("button", { name: "보내기" }).isDisabled();
+const c46 = count();
+await budget("send");
+await box46.locator("input").fill("점심 9천원");
+await box46.locator("input").press("Enter");
+await v46.panel.waitFor();
+await settled(v46);
+const text46 = (await v46.panel.innerText()).replace(/\s+/g, " ");
+const cards46 = await v46.panel.locator("ul > li").count();
+const cleared46 = (await box46.locator("input").inputValue()) === "";
+const asked46 = await v46.p.evaluate(() => localStorage.getItem("savely.assistant.recurringAsked"));
+await v46.p.screenshot({ path: `${OUT}/qa-q46-home-input.png` });
+await leave(v46);
+// 같은 방문자가 평소처럼 열면 그제야 진입 블록이 뜬다
+await v46.p.locator("main").getByRole("button", { name: "대화로 기록하기" }).click();
+await v46.panel.waitFor();
+await v46.p.waitForTimeout(1200);
+const entry46 = (await v46.panel.innerText()).replace(/\s+/g, " ");
+const hasEntry = (t) => t.includes("아직 채우지 않은 기록") || t.includes("매달 나가거나 들어오는 돈이 있나요");
+await v46.c.close();
+log(
+  "Q46",
+  notice46 && sendOff46 && text46.includes("점심 9천원") && cards46 === 1 && text46.includes("1건 저장하기") && cleared46 && !hasEntry(text46) && asked46 === null && hasEntry(entry46) && count() === c46,
+  `입력칸 아래 전송 고지 ${notice46 ? "있음" : "없음"} · 빈 입력칸의 보내기 ${sendOff46 ? "잠김" : "열림"} · 「점심 9천원」 + Enter → 패널 카드 ${cards46}장 · 홈 입력칸 ${cleared46 ? "비워짐" : "그대로"} · 진입 블록 ${hasEntry(text46) ? "뜸" : "안 뜸"}(한 번만 묻기 표시 ${asked46 ?? "없음"}) → 닫고 버튼으로 열면 진입 블록 ${hasEntry(entry46) ? "뜸" : "안 뜸"} · 기록 ${c46}→${count()}건(저장 전)`,
+);
+
+// Q47 홈 예시 칩(E3): 누르면 바로 보낸다. 세 문장 모두 OpenAI를 부르지 않고, 저장은 사용자가 눌러야 한다
+const v47 = await visitor();
+await v47.p.goto(`${B}/app`, { waitUntil: "networkidle" });
+const chips47 = await v47.p.locator("[data-home-assistant] ul button").allInnerTexts();
+const c47 = count();
+const u47 = usage();
+const got47 = [];
+for (const name of chips47) {
+  await budget("send");
+  // 패널이 열리면 오른쪽 칩이 가려질 수 있어 화면 좌표가 아니라 버튼에 바로 누른다
+  await v47.p.locator("[data-home-assistant] ul button", { hasText: name }).dispatchEvent("click");
+  await v47.panel.waitFor();
+  await settled(v47);
+  got47.push((await v47.panel.locator("div.overflow-y-auto > *").evaluateAll((els) => els.filter((e) => e.innerText?.trim()).at(-1)?.innerText ?? "")).replace(/\s+/g, " "));
+}
+const pending47 = (await v47.panel.innerText()).match(/(\d+)건 저장하기/)?.[1];
+const input47 = await v47.panel.locator("textarea").inputValue();
+await v47.p.screenshot({ path: `${OUT}/qa-q47-home-chips.png` });
+await leave(v47);
+await v47.c.close();
+log(
+  "Q47",
+  chips47.join("|") === "점심 9천원, 커피 4500원|어제 커피 만원|이번 달 얼마 썼지" && got47[0].includes("9,000원") && got47[0].includes("4,500원") && got47[1].includes("10,000원") && got47[1].includes("어제") && got47[2].startsWith("이번 달 지출:") && pending47 === "3" && input47 === "" && count() === c47 && usage() === u47,
+  `칩 ${chips47.map((t) => `「${t}」`).join(" ")} → 차례로 누르면 카드 2장 · 「${got47[1].slice(0, 30)}…」 · 「${got47[2].replace(" 자세히 보기", "")}」 · 저장 대기 ${pending47}건 · 패널 입력칸 「${input47}」 · 기록 ${c47}→${count()}건 · OpenAI 호출 ${u47}→${usage()}회`,
+);
+
+// Q48 기록하기 폼 「대화로 적기」(E4) — 빈 폼: 묻지 않고 폼의 날짜로 연다
+const yesterday = addDays(today, -1);
+await page.goto(`${B}/app/records/new?date=${yesterday}`, { waitUntil: "networkidle" });
+await page.locator("main").getByRole("button", { name: "대화로 적기" }).click();
+await panel.waitFor();
+const asked48 = await page.getByText("작성 중인 기록을 지울까요?").count();
+const head48 = (await panel.locator("div.overflow-y-auto > p").first().innerText()).replace(/\s+/g, " ");
+await close();
+const edit48 = d1("SELECT id FROM records LIMIT 1")[0].id;
+await page.goto(`${B}/app/records/${edit48}/edit`, { waitUntil: "networkidle" });
+const onEdit48 = await page.locator("main").getByRole("button", { name: "대화로 적기" }).count();
+log("Q48", asked48 === 0 && head48.includes(monthDay(yesterday)) && head48.includes("지난 날 기록") && onEdit48 === 0, `빈 폼(?date=${yesterday}) → 확인 창 ${asked48}개 · 패널 머리말 「${head48}」 · 수정 화면의 「대화로 적기」 ${onEdit48}개`);
+
+// Q49 「대화로 적기」 — 적던 값이 있으면 먼저 묻는다. 「계속 작성」은 그대로, 「나가기」는 폼을 비우고(날짜는 남김) 패널을 연다
+await page.goto(`${B}/app/records/new?date=${yesterday}`, { waitUntil: "networkidle" });
+const c49 = count();
+await page.fill("#field-amount", "32000");
+await page.fill("#field-title", "장보기");
+await chip("신용카드");
+await page.locator("main").getByRole("button", { name: "대화로 적기" }).click();
+const dialog49 = (await page.getByRole("dialog").innerText()).replace(/\s+/g, " ");
+await shot("qa-q49-discard");
+await page.getByRole("button", { name: "계속 작성" }).click();
+await page.getByRole("dialog").waitFor({ state: "detached" });
+const kept49 = { amount: await page.inputValue("#field-amount"), title: await page.inputValue("#field-title"), panel: await panel.count() };
+await page.locator("main").getByRole("button", { name: "대화로 적기" }).click();
+await page.getByRole("button", { name: "나가기" }).click();
+await panel.waitFor();
+const after49 = { amount: await page.inputValue("#field-amount"), title: await page.inputValue("#field-title"), date: await page.inputValue("#field-date"), card: await page.locator("#field-cardName").count(), url: page.url().replace(B, "") };
+const head49 = (await panel.locator("div.overflow-y-auto > p").first().innerText()).replace(/\s+/g, " ");
+await close();
+log(
+  "Q49",
+  dialog49.includes("작성 중인 기록을 지울까요?") && dialog49.includes("저장하지 않고 나가면 지금 입력한 내용이 사라져요.") && kept49.amount === "32,000" && kept49.title === "장보기" && kept49.panel === 0 &&
+    after49.amount === "" && after49.title === "" && after49.date === yesterday && after49.card === 0 && after49.url.startsWith("/app/records/new") && head49.includes(monthDay(yesterday)) && count() === c49,
+  `확인 창 「${dialog49.slice(0, 46)}…」 → 「계속 작성」: 금액 ${kept49.amount} · 내용 ${kept49.title} 그대로, 패널 ${kept49.panel}개 → 「나가기」: 금액 「${after49.amount}」 · 내용 「${after49.title}」 · 날짜 ${after49.date} · 화면 ${after49.url} · 패널 머리말 「${head49}」 · 기록 ${c49}→${count()}건`,
+);
+
+// Q50 패널을 연 채로 들어오는 주소(E5): /app?chat=1 → 홈 + 패널, 주소에서 chat이 지워져 새로고침하면 다시 열리지 않는다
+await page.goto(`${B}/app?chat=1`, { waitUntil: "networkidle" });
+await panel.waitFor();
+await page.waitForURL(`${B}/app`);
+const url50 = page.url().replace(B, "");
+await page.reload({ waitUntil: "networkidle" });
+await page.waitForTimeout(600);
+const reopened50 = await panel.count();
+await page.goto(`${B}/app/records?chat=1`, { waitUntil: "networkidle" });
+await page.waitForTimeout(600);
+const other50 = await panel.count();
+log("Q50", url50 === "/app" && reopened50 === 0 && other50 === 0, `/app?chat=1 → 패널 열림 · 주소 ${url50} → 새로고침 뒤 패널 ${reopened50}개 · 홈이 아닌 화면(/app/records?chat=1)에서는 패널 ${other50}개`);
+
+// Q51 소개 사이트 05b 구역: S05와 S06 사이 · 버튼은 PC에서만 보이고 /app?chat=1로 간다 · 가로 넘침 없음 · 금지 표현 없음
+const FORBIDDEN = /가상자산|토큰|코인|블록체인|출금|현금처럼|정액 보장|수익|투자|SVX|무료회원/;
+await page.goto(`${B}/home`, { waitUntil: "networkidle" });
+const order51 = (await page.locator("main [data-section]").evaluateAll((els) => els.map((e) => e.getAttribute("data-section")))).join(" ");
+const sec51 = page.locator("[data-section='05b-assistant']");
+const text51 = (await sec51.innerText()).replace(/\s+/g, " ");
+const cta51 = sec51.getByRole("link", { name: "웹 체험판에서 AI 기록 도우미 써 보기" });
+const hero51 = await page.locator("[data-section='01-hero']").getByRole("link", { name: "웹에서 체험하기" }).getAttribute("href");
+const pc51 = { visible: await cta51.isVisible(), href: await cta51.getAttribute("href") };
+await sec51.screenshot({ path: `${OUT}/qa-q51-section-pc.png` });
+const overflow51 = [];
+for (const width of [390, 768, 1024, 1280]) {
+  await page.setViewportSize({ width, height: 900 });
+  await page.waitForTimeout(200);
+  const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  if (o > 0) overflow51.push(`${width}:${o}`);
+}
+await page.setViewportSize({ width: 390, height: 844 });
+const mobile51 = await cta51.isVisible();
+await page.setViewportSize({ width: 1440, height: 900 });
+await cta51.click();
+await panel.waitFor();
+const landed51 = page.url().replace(B, "").replace(/\?.*$/, "");
+await close();
+log(
+  "Q51",
+  order51.includes("05-solution 05b-assistant 06-reward") && pc51.visible && pc51.href === "/app?chat=1" && hero51 === "/app?chat=1" && !mobile51 && overflow51.length === 0 && !FORBIDDEN.test(text51) && text51.includes("자주 듣는 이야기") && landed51 === "/app",
+  `구역 순서 「…${order51.match(/05-solution.*06-reward/)?.[0] ?? "?"}…」 · PC 버튼 ${pc51.visible ? "보임" : "숨김"}(${pc51.href}) · 히어로 「웹에서 체험하기」 ${hero51} · 모바일(390) 버튼 ${mobile51 ? "보임" : "숨김"} · 가로 넘침 ${overflow51.length ? overflow51.join(", ") : "없음"}(390 · 768 · 1024 · 1280) · 금지 표현 ${FORBIDDEN.test(text51) ? "있음" : "없음"} · 버튼을 누르면 ${landed51} + 패널`,
 );
 
 // Q44 문장 보내기 요청 제한: 1분 안에 21번째에서 안내. 다음 분이 시작된 직후에 시작한다
