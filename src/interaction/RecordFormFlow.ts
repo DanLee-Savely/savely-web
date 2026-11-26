@@ -31,6 +31,19 @@ export class RecordFormFlow {
     return FIELD_ORDER.find((f) => this.errors[f]) ?? null;
   }
 
+  /**
+   * 처음 값에서 달라진 칸이 있는가 — 「대화로 적기」로 넘어가기 전에 버릴지 묻는 기준(80 E4).
+   * 날짜는 세지 않는다: 날짜만 바꾼 폼에는 잃을 내용이 없고, 그 날짜는 대화 패널이 이어받는다
+   */
+  differsFrom(initial: RecordDraft): boolean {
+    return (Object.keys(initial) as (keyof RecordDraft)[]).some((field) => field !== "date" && this.draft[field] !== initial[field]);
+  }
+
+  /** 적던 값을 버리고 처음 값으로 돌아간다. 고른 날짜는 남긴다(80 E4) */
+  discard(initial: RecordDraft): RecordFormFlow {
+    return this.locked ? this : new RecordFormFlow({ ...initial, date: this.draft.date });
+  }
+
   /** 한 칸 수정: 그 칸의 오류만 지운다 */
   set(field: keyof RecordDraft, value: string): RecordFormFlow {
     if (this.locked) return this;

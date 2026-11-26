@@ -135,6 +135,19 @@ export const assistantContent = {
     confirm: "나가기",
     cancel: "계속 작성",
   },
+
+  // ── 패널 밖의 입구(80 E1~E4, 2026-11-26) ──
+  /** 홈 예시 칩 — 누르면 패널을 열고 바로 보낸다. 세 문장 모두 규칙만으로 처리된다(OpenAI 호출 없음 — src/application/assistant/query.test.ts가 확인한다) */
+  homeChips: ["점심 9천원, 커피 4500원", "어제 커피 만원", "이번 달 얼마 썼지"],
+  /** 기록하기 폼 오른쪽 위 버튼(앱 직접 입력 화면과 같은 문구) */
+  formLink: "대화로 적기",
+  /** 폼에 적던 값이 있을 때 「대화로 적기」를 누르면 먼저 묻는다(앱 직접 입력 화면의 확인 창과 같은 문구) */
+  confirmDiscard: {
+    title: "작성 중인 기록을 지울까요?",
+    desc: "저장하지 않고 나가면 지금 입력한 내용이 사라져요.",
+    confirm: "나가기",
+    cancel: "계속 작성",
+  },
 };
 
 const c = assistantContent;

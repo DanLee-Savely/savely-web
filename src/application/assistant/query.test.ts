@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { queryAnswer } from "@/content/assistant.content";
+import { assistantContent, queryAnswer } from "@/content/assistant.content";
 import { CategoryCatalog } from "@/domain/record/CategoryCatalog";
 import { type RecordData, RecordEntry } from "@/domain/record/RecordEntry";
 import { InMemoryAssistantUsage } from "@/infrastructure/assistant/InMemoryAssistantUsage";
@@ -199,5 +199,19 @@ describe("질문의 답", () => {
     const before = JSON.stringify(s.records.all());
     for (const text of ["이번 달 얼마 썼지", "어제 뭐 썼지", "이번 달 카페 얼마", "이번 달 수입"]) await s.say(text);
     expect(JSON.stringify(s.records.all())).toBe(before);
+  });
+});
+
+describe("홈 예시 칩 (80 E3)", () => {
+  it("세 문장 모두 규칙만으로 처리된다 — 누를 때마다 OpenAI를 부르지 않는다", async () => {
+    const s = await setup();
+    const got: Record<string, string> = {};
+    for (const text of assistantContent.homeChips) {
+      const outcome = await s.say(text);
+      // 기록 문장은 카드마다 카테고리까지 읽혀야 한다(하나라도 비면 OpenAI로 간다)
+      got[text] = outcome.type !== "drafts" ? outcome.type : outcome.result.drafts.map((d) => d.categoryId ?? "?").join(" ");
+    }
+    expect(got).toEqual({ "점심 9천원, 커피 4500원": "food cafe", "어제 커피 만원": "cafe", "이번 달 얼마 썼지": "query" });
+    expect(s.calls).toEqual([]);
   });
 });

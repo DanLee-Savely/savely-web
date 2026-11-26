@@ -50,25 +50,27 @@ export function useAssistant(today: string) {
   const change = (fn: (s: AssistantSession) => AssistantSession) => setSession((s) => s && fn(s));
   const writeFailed = (res: WriteError) => setError(res.error === "RATE_LIMITED" ? "RATE_LIMITED" : "WRITE_FAILED");
 
-  const open = async (screenDate: string) => {
-    setSession(AssistantSession.start(screenDate, today));
-    setFrequent([]);
-    setError(null);
-    // 칩과 진입 블록은 권유일 뿐이다 — 못 읽으면 첫 안내 그대로 연다
+  /** 패널을 열 때 한 번 읽는다 — 칩과 진입 블록은 권유일 뿐이라, 못 읽으면 첫 안내 그대로 둔다 */
+  const loadEntry = async (screenDate: string, showBlock: boolean) => {
     const entry = await loadAssistantEntry(screenDate).catch(() => null);
     if (!entry) return;
     setFrequent(entry.frequent);
-    const block = pickEntry(entry);
+    const block = showBlock ? pickEntry(entry) : null;
     if (block) change((s) => s.showEntry(block));
   };
 
-  const send = async () => {
-    if (!session) return;
-    const sent = session.send(input);
-    if (sent === session) return;
-    const text = input.trim();
+  /** 패널을 연다. 이미 열려 있으면 그대로 둔다(하던 대화를 지우지 않는다) */
+  const open = async (screenDate: string) => {
+    if (session) return;
+    setSession(AssistantSession.start(screenDate, today));
+    setFrequent([]);
+    setError(null);
+    await loadEntry(screenDate, true);
+  };
+
+  /** 보낸 문장을 서버에서 정리해 결과를 받는다 — 패널 입력칸과 홈 입력칸 · 예시 칩이 같은 길을 탄다(한도 · 요청 제한 · 하루 상한 동일) */
+  const dispatch = async (sent: AssistantSession, text: string) => {
     setSession(sent);
-    setInput("");
     setError(null);
     // 서버에 닿지 못한 경우(오프라인 등)도 「지금은 정리하지 못했어요」로 알린다
     const res = await interpretSentence(text, sent.screenDate, sent.askingRecurring).catch((): InterpretResponse => ({ ok: false, failure: "failed" }));
@@ -77,6 +79,31 @@ export function useAssistant(today: string) {
     // 답하지 않은 질문(알아듣지 못한 낱말 · 미래)도 같다
     const made = res.ok && (res.outcome.type === "query" ? res.outcome.reply.status === "answered" : res.outcome.type !== "drafts" || (res.outcome.result.drafts.length > 0 && sent.pending.length < DRAFT_LIMITS.maxDrafts));
     if (!made) setInput((now) => now || text);
+  };
+
+  const send = async () => {
+    if (!session) return;
+    const sent = session.send(input);
+    if (sent === session) return;
+    const text = input.trim();
+    setInput("");
+    await dispatch(sent, text);
+  };
+
+  /**
+   * 패널 밖(홈 입력칸 · 예시 칩)에서 문장과 함께 연다(80 E2 · E3). 열려 있으면 그 대화에 이어 보낸다. 보냈으면 true.
+   * 이때는 진입 블록을 띄우지 않는다 — 방금 보낸 문장의 결과가 먼저 보여야 하고, 한 번만 묻는 질문을 못 본 채 써 버리지 않게
+   */
+  const openWith = (screenDate: string, text: string): boolean => {
+    const base = session ?? AssistantSession.start(screenDate, today);
+    const sent = base.send(text);
+    if (sent === base) return false;
+    if (!session) {
+      setFrequent([]);
+      void loadEntry(screenDate, false);
+    }
+    void dispatch(sent, text.trim());
+    return true;
   };
 
   const save = async () => {
@@ -151,6 +178,7 @@ export function useAssistant(today: string) {
     frequent,
     error,
     open,
+    openWith,
     close: () => {
       setSession(null);
       setInput("");

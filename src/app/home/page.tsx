@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { WaitlistButton } from "@/components/interactive/WaitlistButton";
 import { WaitlistDialogProvider } from "@/components/interactive/WaitlistDialogProvider";
+import { AssistantSection } from "@/components/sections/AssistantSection";
 import { EmpathySection } from "@/components/sections/EmpathySection";
 import { HabitSection } from "@/components/sections/HabitSection";
 import { HeroSection } from "@/components/sections/HeroSection";
@@ -25,6 +26,7 @@ export default function Home() {
         <ProblemSection />
         <LiteracySection />
         <SolutionSection />
+        <AssistantSection />
         <RewardSection />
         <HabitSection />
         <WaitlistSection />

@@ -1,4 +1,4 @@
-import { CreateRecordButton } from "@/components/app/CreateRecordButton";
+import { AssistantOpenButton, HomeAssistantEntry } from "@/components/app/assistant/HomeAssistantEntry";
 import { Last7Card, MonthCard, TodayCard, TopCategoriesCard } from "@/components/app/HomeCards";
 import { PageHeader } from "@/components/app/PageHeader";
 import { appContent, countWord, fill } from "@/content/app.content";
@@ -8,6 +8,7 @@ import { formatDay } from "@/lib/recordFormat";
 const { home } = appContent;
 
 // 홈 /app (§4-8, M2): 기록만 읽어 오늘 · 이번 달 · 최근 7일 · 많이 쓴 곳. 「오늘」은 한국 날짜
+// 오른쪽 위 버튼과 제목 아래 입력칸은 「대화로 기록하기」로 들어가는 길이다(시안 57, 80 E1~E3)
 // 경로 묶음 (home)에 두는 이유: app/loading.tsx를 바로 두면 기록 상세까지 감싸 404가 200이 된다
 export default async function HomePage() {
   const s = await (await createRecordsServer()).home.execute();
@@ -16,8 +17,9 @@ export default async function HomePage() {
       <PageHeader
         eyebrow={formatDay(s.today)}
         title={s.todayCount ? fill(home.titleCount, { n: countWord(s.todayCount) }) : home.titleZero}
-        actions={<CreateRecordButton />}
+        actions={<AssistantOpenButton />}
       />
+      <HomeAssistantEntry />
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <TodayCard s={s} />
         <MonthCard s={s} />
