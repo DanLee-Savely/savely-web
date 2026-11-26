@@ -1,5 +1,6 @@
+import type { InterpretResult } from "@/application/assistant/InterpretSentenceService";
 import { assistantContent, draftsReady, greeting, savedSummary, unparsedNote } from "@/content/assistant.content";
-import { type CheckedParseResult, DRAFT_LIMITS } from "@/domain/assistant/DraftValidator";
+import { DRAFT_LIMITS } from "@/domain/assistant/DraftValidator";
 import type { ParsedDraft, ParseFailure } from "@/domain/assistant/ParsedDraft";
 
 /**
@@ -68,7 +69,7 @@ export class AssistantSession {
   }
 
   /** 정리 결과를 받는다. 검증을 통과한 초안만 카드가 된다. [newId]는 카드 번호(UUID)를 만든다 */
-  receive(result: CheckedParseResult, newId: () => string): AssistantSession {
+  receive(result: InterpretResult, newId: () => string): AssistantSession {
     if (this.phase !== "parsing") return this;
     if (!result.drafts.length) {
       // 날짜 탓에 뺀 것은 못 알아들은 것이 아니다
@@ -85,13 +86,14 @@ export class AssistantSession {
       ...(result.invalidDateCount > 0 ? [c.invalidDate] : []),
       ...(cut > 0 ? [c.tooMany] : []),
     ];
-    const cards = taken.map((d): DraftCard => ({ ...d, id: newId(), reason: null, feeling: null, memo: null, ai: false, saved: false }));
+    const cards = taken.map((d): DraftCard => ({ ...d, id: newId(), reason: null, feeling: null, memo: null, saved: false }));
     return new AssistantSession(this.screenDate, this.today, [...this.messages, notice(draftsReady(cards.length)), { type: "drafts", cards, notes }], "draftsReady", 0);
   }
 
-  /** 정리하지 못했다(길이 초과 · 서버 오류). 길이 초과는 「못 알아들음」 횟수에 세지 않는다 */
+  /** 정리하지 못했다(길이 초과 · 요청 제한 · 서버 오류). 길이 초과 · 요청 제한은 「못 알아들음」 횟수에 세지 않는다 */
   failed(failure: ParseFailure): AssistantSession {
     if (this.phase !== "parsing") return this;
+    if (failure === "rateLimited") return this.fail(c.rateLimited, false);
     return failure === "inputTooLong" ? this.fail(c.tooLong, false) : this.fail(c.parserFailed, true);
   }
 

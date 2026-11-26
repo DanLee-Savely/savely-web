@@ -31,7 +31,7 @@ export function useAssistant(today: string) {
     setInput("");
     setSaveError(null);
     // 서버에 닿지 못한 경우(오프라인 등)도 「지금은 정리하지 못했어요」로 알린다
-    const res = await interpretSentence(text).catch((): InterpretResponse => ({ ok: false, failure: "failed" }));
+    const res = await interpretSentence(text, sent.screenDate).catch((): InterpretResponse => ({ ok: false, failure: "failed" }));
     change((s) => (res.ok ? s.receive(res.result, () => crypto.randomUUID()) : s.failed(res.failure)));
     // 카드가 안 나왔으면 고쳐 쓰기 쉽게 문장을 입력칸에 되돌린다
     const made = res.ok && res.result.drafts.length > 0 && sent.pending.length < DRAFT_LIMITS.maxDrafts;

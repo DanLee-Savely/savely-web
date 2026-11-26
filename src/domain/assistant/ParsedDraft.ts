@@ -29,7 +29,7 @@ export type ParseResult = {
 };
 
 /** 문장 해석이 실패한 이유. 화면은 이 값으로 문구를 고른다. 오류에 입력 문장을 싣지 않는다 */
-export type ParseFailure = "inputTooLong" | "failed";
+export type ParseFailure = "inputTooLong" | "failed" | "rateLimited";
 
 /** 파서가 아는 등록 카드. 이름이 문장에 그대로 있을 때만 카드 이름을 채운다 */
 export type KnownCard = { name: string; method: string };

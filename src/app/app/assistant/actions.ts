@@ -1,8 +1,9 @@
 "use server";
 
 import { headers } from "next/headers";
+import type { InterpretResult } from "@/application/assistant/InterpretSentenceService";
 import type { DraftSaveItem, SaveDraftsResult } from "@/application/assistant/SaveDraftsService";
-import { type CheckedParseResult, ParseFailedError } from "@/domain/assistant/DraftValidator";
+import { ParseFailedError } from "@/domain/assistant/DraftValidator";
 import type { ParseFailure } from "@/domain/assistant/ParsedDraft";
 import { DomainError } from "@/domain/DomainError";
 import { createAssistantServer } from "@/infrastructure/container";
@@ -10,7 +11,7 @@ import { createAssistantServer } from "@/infrastructure/container";
 // 대화로 기록하기 Server Actions (80-record-assistant §2 · §7). 문장 → 초안, 초안 카드 묶음 → 저장.
 // 문장 · 초안 값은 로그에 남기지 않는다(오류 종류만, §5-4). 저장하지 않으면 서버에 아무것도 남지 않는다
 
-export type InterpretResponse = { ok: true; result: CheckedParseResult } | { ok: false; failure: ParseFailure };
+export type InterpretResponse = { ok: true; result: InterpretResult } | { ok: false; failure: ParseFailure };
 export type SaveResponse = ({ ok: true } & SaveDraftsResult) | { ok: false; error: "RATE_LIMITED" | "INVALID" | "SERVER_ERROR" };
 
 const text = (v: unknown): string | null => (typeof v === "string" ? v : null);
@@ -30,11 +31,16 @@ const readItems = (raw: unknown): DraftSaveItem[] | null => {
   return items.every((i) => i !== null) ? (items as DraftSaveItem[]) : null;
 };
 
-/** 문장 한 번을 초안으로 정리한다. 서버에 저장하는 것은 없다 */
-export async function interpretSentence(sentence: string): Promise<InterpretResponse> {
+const clientIp = async (): Promise<string> => (await headers()).get("cf-connecting-ip") ?? "local";
+
+/** 문장 한 번을 초안으로 정리한다. 서버에 저장하는 것은 없다(문장 · OpenAI 응답 모두) */
+export async function interpretSentence(sentence: string, screenDate: string): Promise<InterpretResponse> {
   try {
-    if (typeof sentence !== "string") return { ok: false, failure: "failed" };
-    return { ok: true, result: await (await createAssistantServer()).interpret.execute(sentence) };
+    if (typeof sentence !== "string" || typeof screenDate !== "string") return { ok: false, failure: "failed" };
+    const server = await createAssistantServer();
+    const ip = await clientIp();
+    if (!(await server.sendLimiter.allow(ip))) return { ok: false, failure: "rateLimited" };
+    return { ok: true, result: await server.interpret.execute({ text: sentence, screenDate, ip }) };
   } catch (e) {
     if (e instanceof ParseFailedError) return { ok: false, failure: e.failure };
     console.error("[assistant] INTERPRET_FAILED", e instanceof Error ? e.name : typeof e);
@@ -46,7 +52,7 @@ export async function interpretSentence(sentence: string): Promise<InterpretResp
 export async function saveDrafts(rawItems: unknown, screenDate: string): Promise<SaveResponse> {
   try {
     const server = await createAssistantServer();
-    if (!(await server.limiter.allow((await headers()).get("cf-connecting-ip") ?? "local"))) return { ok: false, error: "RATE_LIMITED" };
+    if (!(await server.limiter.allow(await clientIp()))) return { ok: false, error: "RATE_LIMITED" };
     const items = readItems(rawItems);
     if (!items || typeof screenDate !== "string") return { ok: false, error: "INVALID" };
     return { ok: true, ...(await server.save.execute({ items, screenDate })) };

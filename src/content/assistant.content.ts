@@ -32,6 +32,7 @@ export const assistantContent = {
   tooMany: `한 번에 ${DRAFT_LIMITS.maxDrafts}건까지 정리할 수 있어요. 나머지는 저장한 뒤 다시 적어 주세요`,
   tooLong: `한 번에 ${DRAFT_LIMITS.maxInputLength}자까지 적을 수 있어요. 나눠서 적어 주세요`,
   parserFailed: "지금은 정리하지 못했어요. 다시 보내 주세요",
+  rateLimited: "요청이 너무 많아요. 잠시 후 다시 시도해 주세요", // 웹 — 기록 폼의 E12와 같은 문구(문장 보내기 제한, K17)
   switchToManual: "직접 입력으로 전환",
   saveFailed: "저장하지 못했어요. 정리한 내용은 그대로 있으니 다시 눌러주세요",
   writeMore: "더 적기",

@@ -53,6 +53,7 @@
 - **실서비스:** Cloudflare Workers(OpenNext) — 라우트 `www.savelyglobal.com/home*` · `/app*` · `/_next/*` · `/robots.txt` · `/sitemap.xml`(새 경로가 생기면 그 경로만 추가). 출시 알림 저장은 D1(바인딩 `DB`)
 - **기록 체험판 /app (70-mvp-records §6 · §8):** 같은 Worker의 `/app*` 라우트(정확 일치 `/app`은 쿼리가 붙으면 받지 못함, 00-decisions M12)
   - 바인딩: D1 `RECORDS_DB`(`savely-records`, 마이그레이션 `migrations-records/`) · R2 `RECORD_IMAGES`(`savely-record-images`, 공개 주소 없음) · 요청 제한 `RECORDS_RATE_LIMITER`(IP당 1분 쓰기 10회)
+  - 대화로 기록하기(80-record-assistant): 요청 제한 `ASSISTANT_SEND_RATE_LIMITER`(문장 보내기 1분 20회) · `ASSISTANT_RATE_LIMITER`(OpenAI 호출 1분 6회), 변수 `OPENAI_MODEL`, 비밀 값 `OPENAI_API_KEY`(`wrangler.jsonc`의 `secrets.required`에 이름만 — 값은 `wrangler secret put` · 로컬 `.dev.vars`, 본보기 `.dev.vars.example`). OpenAI 호출은 서버(`OpenAiDraftOrganizer`)에서만 하고, 문장 · 응답은 저장 · 로깅하지 않는다
   - 출시 알림 DB와 **별도 데이터베이스**다(누구나 쓰고 지우는 데이터를 개인정보와 섞지 않음)
   - 테이블 `records`: id(UUID, 서버 생성 — 대화 저장만 초안 카드마다 브라우저가 만든다, 80 K16) · kind(지출 · 수입 · 상환 · 저축) · amount(1 ~ 999,999,999,999) · record_date(`'YYYY-MM-DD'`) · category_id(41종, 비어 있을 수 있음) · title(60자) · payment_method · card_name(20자, 카드 결제일 때만) · reason · feeling · memo(200자) · image_key · created_at · updated_at. 지출이 아니면 지출 전용 칸(결제수단 · 카드 이름 · 왜 썼나요 · 기분)이 비어 있어야 한다
   - 새 테이블(마이그레이션 `0002`, 80 §5): `cards`(등록 카드 30장) · `recurring_items`(고정지출 · 고정수입 30개) · `assistant_usage`(날짜별 OpenAI 호출 수). 마이그레이션과 D1 쿼리는 `src/infrastructure/record/d1.test.ts`가 Node 내장 SQLite로 확인한다

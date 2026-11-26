@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { CheckedParseResult } from "@/domain/assistant/DraftValidator";
-import type { ParsedDraft } from "@/domain/assistant/ParsedDraft";
+import type { InterpretedDraft, InterpretResult } from "@/application/assistant/InterpretSentenceService";
 import { AssistantSession } from "./AssistantSession";
 
 const TODAY = "2026-11-24";
-const draft = (over: Partial<ParsedDraft> = {}): ParsedDraft => ({ kind: "expense", amount: 4500, categoryId: "cafe", title: "커피", paymentMethod: null, cardName: null, date: null, ...over });
-const result = (drafts: ParsedDraft[], over: Partial<CheckedParseResult> = {}): CheckedParseResult => ({ drafts, unparsed: [], invalidCount: 0, invalidDateCount: 0, overflowCount: 0, ...over });
+const draft = (over: Partial<InterpretedDraft> = {}): InterpretedDraft => ({ kind: "expense", amount: 4500, categoryId: "cafe", title: "커피", paymentMethod: null, cardName: null, date: null, ai: false, ...over });
+const result = (drafts: InterpretedDraft[], over: Partial<InterpretResult> = {}): InterpretResult => ({ drafts, unparsed: [], invalidCount: 0, invalidDateCount: 0, overflowCount: 0, ...over });
 let n = 0;
 const newId = () => `id-${++n}`;
 const start = (screenDate = TODAY) => AssistantSession.start(screenDate, TODAY);
@@ -44,6 +43,13 @@ describe("AssistantSession", () => {
     // 카드가 나오면 다시 0부터 센다
     s = s.send("커피 4500원").receive(result([draft()]), newId).send("음").failed("failed");
     expect([lastNotice(s)?.text, lastNotice(s)?.offerManual, s.phase]).toEqual(["지금은 정리하지 못했어요. 다시 보내 주세요", false, "draftsReady"]);
+  });
+
+  it("요청 제한에 걸리면 알리고, 「못 알아들음」으로 세지 않는다. OpenAI가 정리한 카드는 표시가 붙는다", () => {
+    let s = start().send("커피").receive(result([]), newId).send("커피 4500원").failed("rateLimited");
+    expect([lastNotice(s)?.text, lastNotice(s)?.offerManual]).toEqual(["요청이 너무 많아요. 잠시 후 다시 시도해 주세요", false]);
+    s = s.send("커피 사천오백").receive(result([draft({ ai: true }), draft()]), newId);
+    expect(s.pending.map((x) => x.ai)).toEqual([true, false]);
   });
 
   it("카드 아래 안내: 못 읽은 조각 · 뺀 항목", () => {

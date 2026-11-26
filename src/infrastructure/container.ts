@@ -10,6 +10,8 @@ import { ListRecordsService } from "@/application/record/ListRecordsService";
 import { UpdateRecordService } from "@/application/record/UpdateRecordService";
 import { RegisterWaitlistService } from "@/application/waitlist/RegisterWaitlistService";
 import type { ImageStorage } from "@/domain/record/ImageStorage";
+import { D1AssistantUsage } from "./assistant/D1AssistantUsage";
+import { OpenAiDraftOrganizer } from "./assistant/OpenAiDraftOrganizer";
 import { D1RecordRepository } from "./record/D1RecordRepository";
 import { D1RecordStatsReader } from "./record/D1RecordStatsReader";
 import { R2ImageStorage } from "./record/R2ImageStorage";
@@ -85,10 +87,15 @@ export async function createRecordsServer(): Promise<RecordsServer> {
   };
 }
 
-// 대화로 기록하기 (80-record-assistant). 문장 해석은 서버에서만 한다 — 키워드 사전 · (다음 단계의) OpenAI 호출이 브라우저로 나가지 않는다
+// 대화로 기록하기 (80-record-assistant). 문장 해석은 서버에서만 한다 — 키워드 사전 · OpenAI 키와 주소가 브라우저로 나가지 않는다
+/** 하루 전체 OpenAI 호출 상한(Asia/Seoul 날짜, §7 제안값). 넘으면 그날은 규칙만으로 정리한다 */
+const ASSISTANT_DAILY_LIMIT = 300;
+
 export type AssistantServer = {
   interpret: InterpretSentenceService;
   save: SaveDraftsService;
+  /** 문장 보내기 제한(같은 IP 1분 20회, K17) */
+  sendLimiter: WriteRateLimiter;
   /** 저장은 기록 쓰기 제한을 함께 쓴다 — 저장 확인 한 번 = 요청 1회 */
   limiter: WriteRateLimiter;
 };
@@ -97,9 +104,20 @@ export async function createAssistantServer(): Promise<AssistantServer> {
   const { getCloudflareContext } = await import("@opennextjs/cloudflare");
   const { env } = await getCloudflareContext({ async: true });
   if (!env.RECORDS_DB) throw new Error("RECORDS_DB 바인딩이 없어요");
+  const ai = {
+    // 키가 없으면(로컬에 .dev.vars가 없는 경우) 규칙만으로 정리한다
+    organizer: env.OPENAI_API_KEY ? new OpenAiDraftOrganizer(env.OPENAI_API_KEY, env.OPENAI_MODEL) : null,
+    limiter: new WriteRateLimiter(env.ASSISTANT_RATE_LIMITER),
+    usage: new D1AssistantUsage(env.RECORDS_DB),
+    dailyLimit: ASSISTANT_DAILY_LIMIT,
+    // 로그에는 실패 종류만 남긴다(문장 · 응답 금지, §5-4)
+    onFailure: (failure: string) => console.error("[assistant] ORGANIZE_FAILED", failure),
+    onUsage: (input: number, output: number) => console.log("[assistant] OPENAI_USAGE", input, output),
+  };
   return {
-    interpret: new InterpretSentenceService(clock),
+    interpret: new InterpretSentenceService(clock, ai),
     save: new SaveDraftsService(new D1RecordRepository(env.RECORDS_DB), new D1RecordStatsReader(env.RECORDS_DB), clock),
+    sendLimiter: new WriteRateLimiter(env.ASSISTANT_SEND_RATE_LIMITER),
     limiter: new WriteRateLimiter(env.RECORDS_RATE_LIMITER),
   };
 }
