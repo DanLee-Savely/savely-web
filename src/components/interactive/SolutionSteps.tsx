@@ -6,16 +6,17 @@ import { appScreens, screenAlt } from "@/assets";
 import { homeContent } from "@/content/home.content";
 import { usePointerTilt } from "@/hooks/usePointerTilt";
 import { useStepSequence } from "@/hooks/useStepSequence";
+import { SOLUTION_STEP_SECONDS } from "@/interaction/SolutionCardTimeline";
 import { cn } from "@/lib/utils";
 import { SolutionCard } from "./SolutionCard";
 
 const { steps } = homeContent.solution;
-const DELAYS = steps.map(() => 3500); // 3.5초마다 다음 단계, 3 → 1 순환
+const DELAYS = steps.map(() => SOLUTION_STEP_SECONDS * 1000); // 6초마다 다음 단계, 3 → 1 순환
 
-// I5 해결 스텝 (PC) — 자동 전환, 단계를 클릭하면 그 단계로 가서 자동 전환을 멈춘다
+// I5 해결 스텝 (PC) — 자동 전환. 단계를 클릭하면 그 단계로 가고, 거기서 6초 뒤 다시 저절로 넘어간다
 // I13 단계 카드 · 휴대폰 마우스 기울기(최대 4° · 3°) · 위아래 3px 떠 있음
 export function SolutionSteps() {
-  const { ref, step, stopped, active, select } =
+  const { ref, step, active, select } =
     useStepSequence<HTMLDivElement>(DELAYS, { loop: true, still: 0 });
   const phone = useRef<HTMLDivElement>(null);
   const id = useId();
@@ -34,7 +35,7 @@ export function SolutionSteps() {
               id={`${id}-tab-${i}`}
               aria-selected={on}
               aria-controls={`${id}-panel`}
-              onClick={() => select(i)}
+              onClick={() => !on && select(i)}
               className={cn(
                 "flex items-baseline gap-4 rounded-sv-lg border px-6 py-[22px] text-left transition-colors duration-400 outline-none focus-visible:ring-2 focus-visible:ring-sv-accent",
                 on ? "border-sv-accent bg-sv-accent-tint" : "border-sv-border",
@@ -69,7 +70,7 @@ export function SolutionSteps() {
             </button>
           );
         })}
-        <SolutionCard step={step} auto={!stopped} />
+        <SolutionCard step={step} />
       </div>
       <div ref={phone} className="shrink-0 perspective-[1400px]">
         <div

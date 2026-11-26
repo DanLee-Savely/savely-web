@@ -11,7 +11,7 @@ import {
 } from "@/components/common/Stamp";
 import { homeContent } from "@/content/home.content";
 import { useTimeline } from "@/hooks/useTimeline";
-import { SolutionCardTimeline } from "@/interaction/SolutionCardTimeline";
+import { SOLUTION_STEP_SECONDS, SolutionCardTimeline } from "@/interaction/SolutionCardTimeline";
 import { cn } from "@/lib/utils";
 
 const { stamps, solution } = homeContent;
@@ -27,12 +27,12 @@ const parallax =
 
 // I13 해결 단계 카드 (PC) — 단계 목록 아래 빈 곳, 오른쪽 끝 = 휴대폰 왼쪽 + 32 · 세로 중심 = (목록 아래 + 휴대폰 아래) / 2 + 6
 // 단계 목록(relative) 기준: top-full부터 (598 - 목록 높이) / 2 높이의 칸 가운데, 목록 오른쪽 + 간격 56 + 32
-export function SolutionCard({ step, auto }: { step: number; auto: boolean }) {
+export function SolutionCard({ step }: { step: number }) {
   const { ref, t, reducedMotion } = useTimeline<HTMLDivElement>({
     resetKey: step,
-    until: 3.5,
+    until: SOLUTION_STEP_SECONDS,
   });
-  const f = reducedMotion ? timeline.still() : timeline.at(t, auto);
+  const f = reducedMotion ? timeline.still() : timeline.at(t, true);
 
   return (
     <div

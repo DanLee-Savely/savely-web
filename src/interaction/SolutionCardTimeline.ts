@@ -1,6 +1,8 @@
 import { clamp, popScale, type DayMark } from "./motion";
 
-const STEP = 3.5; // I5 자동 전환 간격
+/** I5 자동 전환 간격(초). 3.5초는 설명을 읽기에 짧아 6초로 늘렸다(2026-11-26) */
+export const SOLUTION_STEP_SECONDS = 6;
+const STEP = SOLUTION_STEP_SECONDS;
 const WEEK = [20, 21, 22, 23, 24, 25, 26]; // 26일이 오늘
 
 export type SolutionCardFrame = {

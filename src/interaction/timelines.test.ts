@@ -3,7 +3,7 @@ import { HabitCalendarTimeline } from "./HabitCalendarTimeline";
 import { HeroStampTimeline } from "./HeroStampTimeline";
 import { ProblemTimeline } from "./ProblemTimeline";
 import { RewardTimeline } from "./RewardTimeline";
-import { SolutionCardTimeline } from "./SolutionCardTimeline";
+import { SOLUTION_STEP_SECONDS, SolutionCardTimeline } from "./SolutionCardTimeline";
 
 const stamped = (days: { look: string }[]) => days.filter((d) => d.look === "on").length;
 
@@ -78,6 +78,13 @@ describe("ProblemTimeline (I3 · I12)", () => {
     expect(tl.forget(4.5, 3).every((c) => c.opacity === 0 && c.blur === 6)).toBe(true);
   });
 
+  it("금액 장면은 돌아오는 선이 강조된 뒤(6.0초)에 시작하고, 흐름이 최종 상태로 가기 전에 끝난다", () => {
+    expect(tl.amountStart).toBeCloseTo(6.0);
+    expect(tl.flowStep(tl.amountStart)).toBe(4);
+    expect(tl.flowStep(tl.amountStart - 0.61)).toBe(3);
+    expect(tl.amountStart + tl.countEnd).toBeLessThanOrEqual(tl.flowEnd);
+  });
+
   it("금액은 1.0~2.6초 동안 천 원 단위로 올라 최종값에서 멈춘다", () => {
     expect(tl.amount(0.5, 1825000)).toMatchObject({ value: 0, opacity: 0, lit: [true, true, false] });
     expect(tl.amount(1.8, 1825000).value % 1000).toBe(0);
@@ -103,10 +110,11 @@ describe("SolutionCardTimeline (I13)", () => {
     expect(tl.at(1.0, true).streak).toBe(26);
   });
 
-  it("자동 전환 중에는 다음 단계 0.3초 전부터 사라지고, 고른 단계에서는 남는다", () => {
-    expect(tl.at(3.0, true).opacity).toBe(1);
-    expect(tl.at(3.45, true).opacity).toBe(0);
-    expect(tl.at(3.45, false).opacity).toBe(1);
+  it("다음 단계(6초) 0.3초 전부터 사라진다. 동작 줄이기에서는 남는다", () => {
+    expect(SOLUTION_STEP_SECONDS).toBe(6);
+    expect(tl.at(5.5, true).opacity).toBe(1);
+    expect(tl.at(5.95, true).opacity).toBe(0);
+    expect(tl.at(5.95, false).opacity).toBe(1);
     expect(tl.still()).toMatchObject({ typed: "4,800", check: 1, streak: 26, opacity: 1 });
   });
 });

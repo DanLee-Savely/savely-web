@@ -7,10 +7,10 @@ import {
   ChevronUpIcon,
   RotateCwIcon,
 } from "lucide-react";
+import type { Ref } from "react";
 import { BreakText } from "@/components/common/BreakText";
 import { RecordChip } from "@/components/common/Stamp";
 import { homeContent } from "@/content/home.content";
-import { useTimeline } from "@/hooks/useTimeline";
 import { ProblemTimeline } from "@/interaction/ProblemTimeline";
 import { cn } from "@/lib/utils";
 
@@ -25,10 +25,8 @@ const tint = "transition-all duration-500 motion-reduce:transition-none";
 
 // I3 문제 흐름(C안, D12) — PC 4열 + 돌아오는 선 + 알약, 모바일은 세로 + 오른쪽 선(정적)
 // I12 「잊고」 아래에서 사라지는 기록 카드(PC만, 흐름과 같은 시계)
-export function ProblemFlow() {
-  const { ref, t, reducedMotion } = useTimeline<HTMLDivElement>({
-    until: timeline.flowEnd,
-  });
+// 시계(t)는 ProblemStory가 흘려보낸다 — 금액 장면이 이 흐름을 기다려야 해서 한곳에서 묶는다
+export function ProblemFlow({ ref, t, reducedMotion }: { ref: Ref<HTMLDivElement>; t: number; reducedMotion: boolean }) {
   const step = reducedMotion ? FINAL : timeline.flowStep(t);
   const looping = step === REPEAT;
   const lit = (on: boolean) =>
