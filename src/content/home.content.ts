@@ -468,6 +468,26 @@ export const homeContent = {
     copyright: "© SAVELY. All rights reserved.",
   },
   floatingCta: "출시 알림 받기",
+  // 가이드 /home/guide (91-content §4). 이 블록의 문구는 대표 승인(2026-11-26)을 받았다.
+  // approved가 false면 글 끝 안내 상자와 푸터의 가이드 링크를 화면에 넣지 않는다 — 문구를 바꿔 다시 승인받는 동안 끌 때 쓴다.
+  // 게시한 글(status: published)이 있는데 approved가 false면 테스트가 실패한다(src/content/guide/guides.test.ts)
+  guide: {
+    approved: true as boolean,
+    path: "/home/guide",
+    title: "가계부 가이드",
+    description: "가계부를 꾸준히 쓰는 방법과 소비를 돌아보는 법을 정리했어요.",
+    /** 글 화면 위의 목록 링크 */
+    backToList: "가이드 목록",
+    /** 게시한 뒤 고친 글의 날짜 뒤에 붙인다 — 「2026년 12월 8일 수정」 */
+    revised: "수정",
+    /** 글 끝 안내 상자. 버튼은 「출시 알림 신청」(신청 위치 guide) · PC만 「웹에서 체험하기」 */
+    endBox: {
+      title: "직접 적으며 소비를 돌아보는 가계부, 세이블리",
+      desc: "하루 한 번 적고 마감하는 작은 습관으로 소비를 돌아봐요. iOS · Android로 출시될 예정이에요.",
+      cta: "출시 알림 신청",
+      demo: { label: "웹에서 체험하기", href: ASSISTANT_CHAT_HREF },
+    },
+  },
   privacy: {
     meta: {
       title: "개인정보처리방침 | 세이블리",

@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
       },
+      // 가이드 원고(src/content/guide/*.md)를 글자 그대로 코드에 묶는다 — 실행 중에 파일을 읽지 않는다 (91-content §4-3)
+      "*.md": { type: "text" },
     },
   },
 };

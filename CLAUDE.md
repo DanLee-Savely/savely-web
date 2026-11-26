@@ -24,6 +24,7 @@
 | 출시 알림 · API · 개인정보 | `docs/spec/30-waitlist.md` |
 | /app 기록 체험판 | `docs/spec/70-mvp-records.md` (화면 · 테이블 · 데이터 처리 · 문구 · QA) + 시안 이미지 `docs/design/app/` (Figma MCP 대신 먼저 사용) |
 | 대화로 기록하기 · 기록 종류 4가지 | `docs/spec/80-record-assistant.md` (v2.1 — 70과 다르면 80이 우선) |
+| 가이드 글 `/home/guide` · 원고 규칙 | `docs/spec/91-content.md` (원고는 `src/content/guide/<slug>.md`, 묻지 않고 내용을 바꾸지 않는다) |
 | 프로젝트 생성 · 배포 | `docs/spec/40-deploy.md` |
 | 검수 | `docs/spec/50-acceptance.md` |
 | 상세 수치 원본 | `docs/figma/*.txt`, `docs/figma/tokens.json` (Figma에서 추출한 구조 덤프) |

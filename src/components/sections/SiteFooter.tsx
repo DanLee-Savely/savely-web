@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { logoWordmark } from "@/assets";
+import { guideCatalog } from "@/content/guide";
 import { homeContent } from "@/content/home.content";
 
-const { footer, a11y } = homeContent;
+const { footer, a11y, guide } = homeContent;
+// 가이드 링크는 문구가 승인되고(guide.approved) 게시한 글이 1편 이상일 때만 보인다 — 0편이면 목록 주소가 404다 (91-content §4-9)
+const showGuide = guide.approved && guideCatalog.published.length > 0;
 
 // 99 Footer — PC: 로고 → info(2줄) → 테두리 + © (gap 32) / 모바일: 로고 → 구분선 → info(3줄) → © (gap 20)
 // 「개인정보처리방침」 링크는 시안에 없어 info 아래에 추가 (00-decisions C4)
@@ -26,6 +29,11 @@ export function SiteFooter() {
             </span>
             <span>{footer.site}</span>
           </p>
+          {showGuide && (
+            <Link href={guide.path} className="text-sv-text-2 hover:underline">
+              {guide.title}
+            </Link>
+          )}
           <Link href={footer.privacyLink.href} className="text-sv-text-2 hover:underline">
             {footer.privacyLink.label}
           </Link>

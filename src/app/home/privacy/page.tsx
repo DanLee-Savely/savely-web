@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Logo } from "@/components/common/Logo";
+import { SiteTopBar } from "@/components/common/SiteTopBar";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { homeContent } from "@/content/home.content";
 
@@ -16,13 +15,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <header className="border-b border-sv-border bg-sv-bg px-5 py-3 lg:border-sv-border-2 lg:py-4">
-        <div className="mx-auto max-w-(--sv-content-max)">
-          <Link href="/home" className="inline-block">
-            <Logo className="h-7 lg:h-9" />
-          </Link>
-        </div>
-      </header>
+      <SiteTopBar />
       <main className="flex-1 bg-sv-bg px-5 py-14 lg:py-24">
         <article className="mx-auto flex max-w-180 flex-col gap-10">
           <div className="flex flex-col items-start gap-3">

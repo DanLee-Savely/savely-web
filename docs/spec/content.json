@@ -226,6 +226,21 @@
     "copyright": "© SAVELY. All rights reserved."
   },
   "floatingCta": "출시 알림 받기",
+  "guide": {
+    "_note": "가이드 /home/guide (91-content §4). 대표 승인 2026-11-26. approved가 false면 글 끝 안내 상자와 푸터의 가이드 링크를 화면에 넣지 않는다",
+    "approved": true,
+    "path": "/home/guide",
+    "title": "가계부 가이드",
+    "description": "가계부를 꾸준히 쓰는 방법과 소비를 돌아보는 법을 정리했어요.",
+    "backToList": "가이드 목록",
+    "revised": "수정",
+    "endBox": {
+      "title": "직접 적으며 소비를 돌아보는 가계부, 세이블리",
+      "desc": "하루 한 번 적고 마감하는 작은 습관으로 소비를 돌아봐요. iOS · Android로 출시될 예정이에요.",
+      "cta": "출시 알림 신청",
+      "demo": { "label": "웹에서 체험하기", "href": "/app?chat=1" }
+    }
+  },
   "privacy": {
     "_note": "00-decisions C6 — 초안 표시로 배포. 보호책임자(G1) · 국외 이전 기재(G6)는 제안안, 전문가 확인 후 초안 표시를 뗀다. 2026-11-26 기록 체험판 · 대화로 기록하기(OpenAI 전송) 반영(80-record-assistant §8 · K19)",
     "meta": {
