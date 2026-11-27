@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { homeContent } from "@/content/home.content";
-import { ANALYTICS_HOSTNAME, GA4_MEASUREMENT_ID, GOOGLE_TAG_ID, NAVER_ANALYTICS_ID } from "./config";
+import { AMPLITUDE_API_KEY, ANALYTICS_HOSTNAME, GA4_MEASUREMENT_ID, GOOGLE_TAG_ID, NAVER_ANALYTICS_ID } from "./config";
 
 // 측정 ID와 개인정보처리방침은 같이 움직인다 (90-measurement-search §2-6)
 describe("방문 통계 설정", () => {
@@ -8,6 +8,7 @@ describe("방문 통계 설정", () => {
     expect(GOOGLE_TAG_ID === "" || /^(GTM|G|GT|AW)-[A-Z0-9]+$/.test(GOOGLE_TAG_ID)).toBe(true);
     expect(GA4_MEASUREMENT_ID === "" || /^G-[A-Z0-9]+$/.test(GA4_MEASUREMENT_ID)).toBe(true);
     expect(NAVER_ANALYTICS_ID === "" || /^[A-Za-z0-9_]+$/.test(NAVER_ANALYTICS_ID)).toBe(true);
+    expect(AMPLITUDE_API_KEY === "" || /^[0-9a-f]{32}$/.test(AMPLITUDE_API_KEY)).toBe(true);
   });
 
   it("실서비스 주소는 사이트 주소와 같다", () => {
@@ -33,6 +34,18 @@ describe("방문 통계 설정", () => {
     const policy = homeContent.privacy.sections.flatMap((s) => s.items).join("\n");
     const on = NAVER_ANALYTICS_ID !== "";
     expect(policy.includes("네이버 애널리틱스")).toBe(on);
-    expect(policy.includes("받는 곳 ④: 네이버 주식회사 (대한민국)")).toBe(on);
+    expect(policy.includes("받는 곳 ⑤: 네이버 주식회사 (대한민국)")).toBe(on);
+  });
+
+  it("Amplitude 키와 방침의 Amplitude 문장은 함께 있거나 함께 없다 (§2-11 — 키를 넣는 배포에 방침 변경이 함께 있어야 한다)", () => {
+    const sections = homeContent.privacy.sections;
+    const text = (n: number) => sections.find((s) => s.title.startsWith(`${n}. `))?.items.join("\n") ?? "";
+    const on = AMPLITUDE_API_KEY !== "";
+    expect(text(2).includes("Google 애널리틱스 · Amplitude의 쿠키로")).toBe(on);
+    expect(text(2).includes("Amplitude에는 접속 IP 주소도 기록돼요.")).toBe(on);
+    expect(text(5).includes("받는 곳 ④: Amplitude, Inc. (미국)")).toBe(on);
+    expect(text(6).includes("Google 애널리틱스 · Amplitude가 브라우저에 쿠키를 저장해")).toBe(on);
+    // 세션 리플레이를 끄고 /app에서 누른 요소를 수집하지 않는 동안에만 사실인 문장 — 설정을 바꾸면 이 문장도 함께 고친다
+    expect(text(2)).toContain("이메일 · 대화로 적은 문장 · 기록 내용은 보내지 않아요.");
   });
 });

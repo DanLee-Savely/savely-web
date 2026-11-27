@@ -17,9 +17,18 @@ export const GA4_MEASUREMENT_ID: string = "G-2ZNQ5RB05K";
  *    다시 켤 때는 명세 §2-9 「네이버 애널리틱스를 다시 켤 때」의 값과 방침 문장을 **함께** 되돌린다(config.test.ts가 둘이 어긋나면 실패한다)
  */
 export const NAVER_ANALYTICS_ID: string = "";
+/**
+ * Amplitude 프로젝트 API 키(프로젝트 default · 미국 리전). 공개 값이다 — 수집 전용이고 브라우저 번들에 그대로 실린다.
+ * 비우면 Amplitude SDK를 불러오지 않고 아무것도 보내지 않는다.
+ * ⚠️ 자동 수집을 켠다 — 세션 리플레이는 끄고 /app에서는 누른 요소를 수집하지 않는다(대표 결정 2026-11-27, 명세 §2-11).
+ *    값과 방침의 Amplitude 문장은 **함께** 있어야 한다(config.test.ts)
+ */
+export const AMPLITUDE_API_KEY: string = "50d6b2bcc565669568956341d8cbf1b1";
 /** 이 주소에서만 스크립트를 넣는다. localhost · 미리보기 주소에서는 보내지 않는다 */
 export const ANALYTICS_HOSTNAME = "www.savelyglobal.com";
 /** 개발 서버에서 GA4 DebugView로 확인할 때만 주소에 붙인다 — `?sv_ga_debug=1`(개발 빌드에서만 듣는다) */
 export const GA_DEBUG_PARAM = "sv_ga_debug";
+/** 개발 서버에서 Amplitude로 들어가는지 확인할 때만 주소에 붙인다 — `?sv_amp_debug=1`(개발 빌드에서만 듣는다) */
+export const AMPLITUDE_DEBUG_PARAM = "sv_amp_debug";
 /** 대표 본인 방문 표시 — `/home?sv_internal=1`로 한 번 들어오면 브라우저에 남기고, 이후 그 브라우저에서는 통계 스크립트를 불러오지 않는다 */
 export const INTERNAL_PARAM = "sv_internal";

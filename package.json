@@ -15,6 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@amplitude/unified": "^1.2.9",
     "@opennextjs/cloudflare": "^1.20.13",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",

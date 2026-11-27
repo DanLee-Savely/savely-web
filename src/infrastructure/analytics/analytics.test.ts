@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { AMPLITUDE_DEMO_APP_URL, AMPLITUDE_INIT_OPTIONS, AmplitudeAnalytics, type AmplitudeSdk } from "./AmplitudeAnalytics";
 import { AnalyticsLoader, NO_SCRIPTS } from "./AnalyticsLoader";
 import { GtagAnalytics, type GtagWindow } from "./GtagAnalytics";
 import { InternalTraffic } from "./InternalTraffic";
@@ -245,6 +246,91 @@ describe("AnalyticsLoader — 스크립트를 넣을지", () => {
       expect(plan).toEqual(NO_SCRIPTS);
       gtag?.track({ name: "generate_lead", source: "hero" });
       expect(win).toEqual({});
+    }
+  });
+});
+
+describe("AmplitudeAnalytics — 화면 진입(page_view)", () => {
+  /** 가짜 SDK — 부른 순서를 적어 둔다 */
+  const amplitudeOf = (over: { enabled?: () => boolean; load?: () => Promise<AmplitudeSdk>; initAll?: AmplitudeSdk["initAll"] } = {}) => {
+    const calls: unknown[][] = [];
+    const sdk: AmplitudeSdk = {
+      initAll: over.initAll ?? (async (...args) => void calls.push(["initAll", ...args])),
+      track: (name) => void calls.push(["track", name]),
+    };
+    const load = vi.fn(over.load ?? (async () => sdk));
+    const amplitude = new AmplitudeAnalytics({ apiKey: "test-key", enabled: over.enabled ?? (() => true), load });
+    /** 불러오기 · 켜기가 끝나기를 기다린다 */
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+    return { amplitude, calls, load, settle };
+  };
+
+  it("처음 한 번 SDK를 불러와 켜고 — 키는 첫 번째 인자 — 화면 진입마다 page_view를 보낸다", async () => {
+    const { amplitude, calls, load, settle } = amplitudeOf();
+    amplitude.pageView();
+    amplitude.pageView();
+    await settle();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(calls).toEqual([["initAll", "test-key", AMPLITUDE_INIT_OPTIONS], ["track", "page_view"], ["track", "page_view"]]);
+  });
+
+  it("설정: 미국 리전, 자동 수집은 전부 켜고, 세션 리플레이는 끄고, /app에서는 누른 요소 · 답답한 클릭을 수집하지 않는다 (방침 2번)", () => {
+    const off = { pageUrlExcludelist: [AMPLITUDE_DEMO_APP_URL] };
+    expect(AMPLITUDE_INIT_OPTIONS).toEqual({
+      serverZone: "US",
+      analytics: {
+        autocapture: { attribution: true, fileDownloads: true, formInteractions: true, pageViews: true, sessions: true, networkTracking: true, webVitals: true, elementInteractions: off, frustrationInteractions: off },
+      },
+      sessionReplay: { sampleRate: 0 },
+    });
+  });
+
+  it("/app 주소 판별 — 체험판의 모든 화면이 걸리고, 소개 사이트는 걸리지 않는다", () => {
+    const origin = "https://www.savelyglobal.com";
+    for (const path of ["/app", "/app?chat=1", "/app/records", "/app/records/3f2a/edit", "/app/calendar?month=2026-11", "/app#top"]) {
+      expect(AMPLITUDE_DEMO_APP_URL.test(origin + path), path).toBe(true);
+    }
+    for (const path of ["/home", "/home/privacy", "/home/guide/app", "/application", "/home?next=/app"]) {
+      expect(AMPLITUDE_DEMO_APP_URL.test(origin + path), path).toBe(false);
+    }
+    expect(AMPLITUDE_DEMO_APP_URL.test("http://localhost:3000/app/report")).toBe(true);
+  });
+
+  it("보내면 안 되는 방문이면 SDK를 불러오지도 않는다 — 방문마다 한 번만 정한다", async () => {
+    let allowed = false;
+    const { amplitude, calls, load, settle } = amplitudeOf({ enabled: () => allowed });
+    amplitude.pageView();
+    allowed = true;
+    amplitude.pageView();
+    await settle();
+    expect(load).not.toHaveBeenCalled();
+    expect(calls).toEqual([]);
+  });
+
+  it("VisitGate가 닫힌 방문(쿠키를 못 쓰는 브라우저 · 본인 방문)에서는 실서비스 주소여도 불러오지 않는다", async () => {
+    const store = memory();
+    const closed: { search: string; storage: () => ReturnType<typeof memory> }[] = [
+      { search: "", storage: blocked },
+      { search: "?sv_internal=1", storage: () => store },
+    ];
+    for (const { search, storage } of closed) {
+      const gate = new VisitGate(new InternalTraffic("sv_internal", storage), { search: () => search, cookieEnabled: () => true, storage });
+      const { amplitude, load, settle } = amplitudeOf({ enabled: () => gate.open });
+      amplitude.pageView();
+      await settle();
+      expect(load).not.toHaveBeenCalled();
+    }
+  });
+
+  it("SDK를 불러오지 못하거나 켜지 못해도 오류를 밖으로 내지 않고, 그 방문에서는 보내지 않는다", async () => {
+    const failures = [
+      amplitudeOf({ load: async () => Promise.reject(new Error("chunk load failed")) }),
+      amplitudeOf({ initAll: async () => Promise.reject(new Error("init failed")) }),
+    ];
+    for (const { amplitude, calls, settle } of failures) {
+      amplitude.pageView();
+      await settle();
+      expect(calls).toEqual([]);
     }
   });
 });

@@ -17,7 +17,8 @@ import { ListRecordsService } from "@/application/record/ListRecordsService";
 import { UpdateRecordService } from "@/application/record/UpdateRecordService";
 import { RegisterWaitlistService } from "@/application/waitlist/RegisterWaitlistService";
 import type { ImageStorage } from "@/domain/record/ImageStorage";
-import { ANALYTICS_HOSTNAME, GA_DEBUG_PARAM, GOOGLE_TAG_ID, INTERNAL_PARAM, NAVER_ANALYTICS_ID } from "@/lib/analytics/config";
+import { AMPLITUDE_API_KEY, AMPLITUDE_DEBUG_PARAM, ANALYTICS_HOSTNAME, GA_DEBUG_PARAM, GOOGLE_TAG_ID, INTERNAL_PARAM, NAVER_ANALYTICS_ID } from "@/lib/analytics/config";
+import { AmplitudeAnalytics } from "./analytics/AmplitudeAnalytics";
 import { AnalyticsLoader } from "./analytics/AnalyticsLoader";
 import { GtagAnalytics, type GtagWindow } from "./analytics/GtagAnalytics";
 import { InternalTraffic } from "./analytics/InternalTraffic";
@@ -47,6 +48,7 @@ const browser = (): (Window & GtagWindow & NaverWindow) | null => (typeof window
 const search = (): string => browser()?.location.search ?? "";
 const onProduction = (): boolean => browser()?.location.hostname === ANALYTICS_HOSTNAME;
 const gaDebug = (): boolean => process.env.NODE_ENV === "development" && new URLSearchParams(search()).get(GA_DEBUG_PARAM) === "1";
+const ampDebug = (): boolean => process.env.NODE_ENV === "development" && new URLSearchParams(search()).get(AMPLITUDE_DEBUG_PARAM) === "1";
 const internalTraffic = new InternalTraffic(INTERNAL_PARAM, () => window.localStorage);
 const visitGate = new VisitGate(internalTraffic, { search, cookieEnabled: () => browser()?.navigator.cookieEnabled === true, storage: () => window.localStorage });
 const gtagAnalytics = GOOGLE_TAG_ID
@@ -62,6 +64,17 @@ const naverAnalytics = NAVER_ANALYTICS_ID ? new NaverAnalyticsScript(NAVER_ANALY
 export const analytics: AnalyticsPort = gtagAnalytics ?? new NoopAnalytics();
 /** 루트 레이아웃의 스크립트 로더가 쓴다 */
 export const analyticsLoader = new AnalyticsLoader(gtagAnalytics, naverAnalytics, visitGate, { onProduction });
+/**
+ * Amplitude (§2-11) — 루트 레이아웃이 화면 진입을 보낸다. 키가 비어 있으면 null.
+ * GA4와 같은 조건이다: 실서비스 주소(개발 서버에서는 `?sv_amp_debug=1`을 붙였을 때만) + VisitGate. SDK는 보내도 되는 방문에서만 불러온다
+ */
+export const amplitudeAnalytics = AMPLITUDE_API_KEY
+  ? new AmplitudeAnalytics({
+      apiKey: AMPLITUDE_API_KEY,
+      enabled: () => (onProduction() || ampDebug()) && visitGate.open,
+      load: () => import("@amplitude/unified"),
+    })
+  : null;
 /** 소개 사이트 한 페이지의 흐름. 페이지를 열 때마다 새로 만든다. [guideSlug]는 가이드 글 화면일 때만 */
 export const createHomeFunnel = (guideSlug: string | null = null): HomeFunnel => new HomeFunnel(analytics, guideSlug);
 /** 체험판 대화 패널의 흐름 */
