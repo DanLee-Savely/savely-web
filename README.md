@@ -30,9 +30,26 @@ npm test       # 단위 테스트
 ```
 
 ### 미션 7 — OpenAI API 활용: 대화로 기록하기
-체험판에서 「점심 9천원, 커피 4500원」처럼 한 문장으로 적으면 기록 초안 카드를 만들어 준다. 규칙 기반 파서가 먼저 읽고, 읽지 못한 부분만 서버에서 OpenAI Responses API로 보낸다. 초안은 사용자가 확인해야 저장된다.
-- 열기: https://www.savelyglobal.com/app?chat=1 (2026-11-26 배포)
-- 상세 [docs/overview/record-assistant.md](docs/overview/record-assistant.md) · 명세 [80-record-assistant.md](docs/spec/80-record-assistant.md) · QA Q31~Q51 [71-mvp-qa.md](docs/spec/71-mvp-qa.md)
+고도화 기능 요건(유저 기능 · 결제 기능 · OpenAI API 활용 중 1개) 가운데 OpenAI API 활용을 골랐다. 기록 폼의 여러 칸 대신 한 문장으로 적으면 기록 초안 카드를 만들어 주고, 사용자는 확인하고 저장만 한다.
+
+| 하는 일 | 예시 | 처리 |
+|---|---|---|
+| 기록 초안 만들기 | 「점심 9천원, 커피 4500원」 · 「어제 택시 12000원」 | 규칙 기반 파서가 먼저 읽고, 읽지 못한 부분만 OpenAI로 보낸다(카드에 「AI가 정리」 표시) |
+| 초안 확인 · 저장 | 카드를 눌러 고치기 → 「n건 저장하기」 → 확인 창 | 사용자가 눌러야 저장된다. 저장할 때 서버가 도메인 클래스로 다시 검사 |
+| 대화로 물어보기 | 「이번 달 카페 얼마」 · 「어제 뭐 썼지」 | 규칙만. 저장된 기록에서 센 숫자로 답한다 |
+| 고정지출 · 카드 등록 | 「넷플릭스 17000원 매달 15일 고정지출」 · 「삼성카드 등록해줘」 | 규칙만. 버튼을 눌러야 등록된다 |
+
+- **여는 곳:** 모든 `/app` 화면의 「대화로 기록하기」(오른쪽 패널) · 패널을 연 채로 들어오는 주소 [`/app?chat=1`](https://www.savelyglobal.com/app?chat=1) — 2026-11-26 배포
+- **OpenAI 활용:** Responses API · 구조화 출력(`json_schema`, strict) · `store: false` · 시간 제한 10초. 서버에서만 부르고(`DraftOrganizer` → `OpenAiDraftOrganizer`), 응답은 규칙 초안과 같은 검증기(`DraftValidator`)를 거친다. OpenAI가 실패해도 규칙 결과만으로 계속된다
+- **키 · 한도 · 개인정보:** 키는 Workers 비밀 값 `OPENAI_API_KEY`, 모델은 변수 `OPENAI_MODEL`. 문장 보내기 1분 20회 · OpenAI 호출 1분 6회 · 하루 300회. 문장과 응답은 저장 · 로깅하지 않는다
+- **테이블:** 새 테이블 `cards` · `recurring_items` · `assistant_usage`(날짜별 호출 수만), `records`에 구분 4가지 · `card_name` 열(`migrations-records/0002_kinds_cards_recurring.sql`)
+- **QA 결과:** [docs/spec/71-mvp-qa.md](docs/spec/71-mvp-qa.md) — Q31~Q51 통과(2026-11-26), 모바일 앱과 같은 문장 세트 245건 통과. 명세 [80-record-assistant.md](docs/spec/80-record-assistant.md) · 상세 [docs/overview/record-assistant.md](docs/overview/record-assistant.md)
+- **실행 방법**(미션 6 명령에 더해):
+
+```bash
+cp .dev.vars.example .dev.vars   # OPENAI_API_KEY를 넣는다(없으면 규칙만으로 정리한다)
+npm run dev                      # http://localhost:3000/app?chat=1
+```
 
 ## 미션 안내 스택과의 대응
 
