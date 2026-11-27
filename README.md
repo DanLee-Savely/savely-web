@@ -58,7 +58,6 @@ npm run dev                      # http://localhost:3000/app?chat=1
 | Supabase 테이블 (Postgres) | Cloudflare D1 (SQLite) | `RecordRepository` → `D1RecordRepository` (집계는 `RecordStatsReader` → `D1RecordStatsReader`) | M14: 안내는 Supabase를 명시하지만, 핵심 요건(CRUD를 DB와 안정적으로 연결)을 기준으로 판단. 출시 알림과는 별도 데이터베이스 |
 | Supabase Storage | Cloudflare R2 | `ImageStorage` → `R2ImageStorage` | M14(D1과 같은 결정) · M8: 서버에서 바인딩으로만 접근하고, 공개 주소 없이 사진을 서버 경로로 전달 |
 | Vercel 배포 | Cloudflare Workers (OpenNext) | `wrangler.jsonc` | F3: 보유한 도메인에서 Cloudflare를 쓰기로 함 · F8: 같은 프로젝트에 `/app*`를 이어 붙임 · F4 · B6 · M12: Vercel 사본을 만들지 않고 주소를 하나로 모음 |
-| Supabase Auth (로그인) | 사용 안 함 — 로그인 없는 공개 체험판 | — | M8: 사용자별 권한은 로그인 이후 · M12 · M15: 공개 쓰기라 안내 띠 · 쓰기 요청 제한(IP당 1분 10회) · 검색 제외를 함께 둠 |
 
 `RecordRepository` · `ImageStorage`는 `src/domain/record/`의 인터페이스다. 같은 인터페이스를 쓰는 테스트용 `InMemoryRecordRepository` · `InMemoryImageStorage`가 있어, 저장소를 바꿀 때 바뀌는 곳은 `src/infrastructure/`의 구현체와 조립(`src/infrastructure/container.ts`)뿐이다.
 
