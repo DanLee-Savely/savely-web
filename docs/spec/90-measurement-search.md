@@ -191,7 +191,7 @@ npx wrangler d1 execute savely-waitlist --remote --command "SELECT source, COUNT
 1. ~~대표: GA4 측정 ID · 네이버 발급 ID 전달 → `config.ts`에 넣고 설치 코드와 대조~~ 완료(§2-8)
 2. ~~Claude Code: 쿠키를 막은 브라우저에서 GA4 · 네이버로 요청이 나가는지 확인 → 보고~~ 완료(§2-8 확인 2)
 3. ~~대표: 방침 6번 문장(또는 쿠키를 막은 브라우저에서의 동작) 확정 → 반영~~ 완료(2026-11-27, §2-9) — 문장은 그대로 두고 동작을 바꿨다. 본인 방문(U6)도 같은 방식으로 정했다. U7은 남아 있어 네이버 애널리틱스를 꺼 두었다
-4. Claude Code: 방침 개정일을 배포하는 날로 고친다(`home.content.ts` · `content.json`의 `privacy.effective`, `src/lib/guideSeo.ts`의 `/home/privacy` 수정일) → 대표 요청 시 배포
+4. ~~Claude Code: 방침 개정일을 배포하는 날로 고친다(`home.content.ts` · `content.json`의 `privacy.effective`, `src/lib/guideSeo.ts`의 `/home/privacy` 수정일) → 대표 요청 시 배포~~ 완료 — 개정일 2026-11-27, 사이트맵의 `/home` · `/home/privacy` 수정일도 같은 날로(대표 요청 2026-11-27)
 5. 배포 뒤: §5의 미확인 항목(DebugView · 요청 본문 · 네이버 실시간 분석 · 구조화 데이터 검사기) 확인
 
 **확인하며 알게 된 것**
@@ -250,7 +250,7 @@ Chromium의 「모든 쿠키 차단」 프로필 설정으로 확인했다(쿠�
 1. 쿠키나 사이트 저장소를 쓸 수 없는 브라우저에서는 GA4 · 네이버 스크립트를 **아예 불러오지 않는다.** 방침 6번 문장은 그대로 둔다.
 2. `sv_internal` 표시가 있는 브라우저에서도 두 스크립트를 불러오지 않는다.
 3. **네이버 애널리틱스는 `nam.veta.naver.com` 요청의 정체(§6 U7)를 확인할 때까지 끈다.** `config.ts`의 `wa`를 비우고(코드는 유지), 방침에서 네이버 애널리틱스 관련 문장을 뺀다.
-4. 방침 개정일은 배포하는 날로 맞춘다(§2-7 배포 전 할 일 4번 — 배포 날짜가 정해지면 고친다).
+4. 방침 개정일은 배포하는 날로 맞춘다 → 2026-11-27로 고쳤다(§2-7 배포 전 할 일 4번).
 
 **구현**
 - `src/infrastructure/analytics/VisitGate.ts` — 이 방문을 통계에 넣어도 되는지 방문마다 한 번 정한다. ① `navigator.cookieEnabled`가 거짓이거나 사이트 저장소(`localStorage`)에 닿을 수 없거나 ② 본인 방문 표시가 있으면 닫힌다. 닫히면 스크립트 태그를 넣지 않고, `dataLayer` · `gtag`도 만들지 않고, 이벤트를 보내려 해도 아무 일도 없다.

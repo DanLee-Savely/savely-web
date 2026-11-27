@@ -59,8 +59,8 @@ export type SitemapEntry = { path: string; lastModified: string };
  * ⚠️ 그 페이지의 문구 · 구성을 고쳐 배포할 때 날짜도 함께 고친다(검색엔진이 다시 읽을지 정하는 데 쓴다)
  */
 const STATIC_PAGES: SitemapEntry[] = [
-  { path: "/home", lastModified: "2026-11-26" },
-  { path: "/home/privacy", lastModified: "2026-11-26" },
+  { path: "/home", lastModified: "2026-11-27" },
+  { path: "/home/privacy", lastModified: "2026-11-27" },
 ];
 
 /**

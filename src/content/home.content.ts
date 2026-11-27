@@ -601,7 +601,7 @@ export const homeContent = {
         items: ["내용이 바뀌면 이 페이지에서 알려 드려요."],
       },
     ],
-    effective: "시행일: 2026년 10월 29일 · 개정일: 2026년 11월 26일 (초안)",
+    effective: "시행일: 2026년 10월 29일 · 개정일: 2026년 11월 27일 (초안)",
   },
   stamps: {
     records: [
