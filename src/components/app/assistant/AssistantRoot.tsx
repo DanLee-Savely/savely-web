@@ -34,7 +34,7 @@ export function AssistantRoot() {
     }
     if (opened.current) return;
     opened.current = true;
-    void open(today);
+    void open(today, "deeplink");
     router.replace("/app", { scroll: false });
   }, [asked, open, today, router]);
 
@@ -43,7 +43,7 @@ export function AssistantRoot() {
   return (
     <button
       type="button"
-      onClick={() => void assistant.open(picked ? date : today)}
+      onClick={() => void assistant.open(picked ? date : today, "floating_button")}
       className="fixed right-10 bottom-10 z-40 inline-flex h-13 items-center gap-2 rounded-sv-pill bg-sv-text px-5 sv-text-label-15 text-sv-surface shadow-sv-floating-cta hover:opacity-90"
     >
       <MessageCircle aria-hidden className="size-5" />

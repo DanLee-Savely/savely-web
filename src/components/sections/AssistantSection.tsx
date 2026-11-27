@@ -1,5 +1,5 @@
 import { MessageCircleQuestion, ShoppingCart, Smile, Sparkles, Utensils } from "lucide-react";
-import Link from "next/link";
+import { DemoLink } from "@/components/analytics/HomeFunnelProvider";
 import { AppButton } from "@/components/common/AppButton";
 import { BreakText } from "@/components/common/BreakText";
 import { Section } from "@/components/common/Section";
@@ -27,10 +27,10 @@ export function AssistantSection() {
               <BreakText text={assistant.desc} />
             </p>
             <AppButton asChild size="l" className="mt-10 hidden h-13 lg:inline-flex">
-              <Link href={assistant.cta.href}>
+              <DemoLink placement="assistant" href={assistant.cta.href}>
                 <Sparkles aria-hidden className="size-4.5" />
                 {assistant.cta.label}
-              </Link>
+              </DemoLink>
             </AppButton>
           </div>
           <ChatPreview />

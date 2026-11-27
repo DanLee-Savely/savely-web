@@ -41,7 +41,7 @@ function ChatLink({ dirty, date, locked, discard }: RecordFormHeaderState) {
     setAsking(false);
     discard();
     // 폼의 날짜가 비었거나 받을 수 없는 날짜면 오늘로 연다
-    void assistant.open(DomainError.codeOf(() => RecordDate.create(date, clock)) === null ? date : today);
+    void assistant.open(DomainError.codeOf(() => RecordDate.create(date, clock)) === null ? date : today, "form_button");
   };
 
   return (

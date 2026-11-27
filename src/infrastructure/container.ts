@@ -1,3 +1,6 @@
+import type { AnalyticsPort } from "@/application/analytics/AnalyticsPort";
+import { AssistantFunnel } from "@/application/analytics/AssistantFunnel";
+import { HomeFunnel } from "@/application/analytics/HomeFunnel";
 import { AnswerRecordQueryService } from "@/application/assistant/AnswerRecordQueryService";
 import { GetAssistantEntryService } from "@/application/assistant/GetAssistantEntryService";
 import { InterpretSentenceService } from "@/application/assistant/InterpretSentenceService";
@@ -14,6 +17,13 @@ import { ListRecordsService } from "@/application/record/ListRecordsService";
 import { UpdateRecordService } from "@/application/record/UpdateRecordService";
 import { RegisterWaitlistService } from "@/application/waitlist/RegisterWaitlistService";
 import type { ImageStorage } from "@/domain/record/ImageStorage";
+import { ANALYTICS_HOSTNAME, GA_DEBUG_PARAM, GOOGLE_TAG_ID, INTERNAL_PARAM, NAVER_ANALYTICS_ID } from "@/lib/analytics/config";
+import { AnalyticsLoader } from "./analytics/AnalyticsLoader";
+import { GtagAnalytics, type GtagWindow } from "./analytics/GtagAnalytics";
+import { InternalTraffic } from "./analytics/InternalTraffic";
+import { NaverAnalyticsScript, type NaverWindow } from "./analytics/NaverAnalyticsScript";
+import { NoopAnalytics } from "./analytics/NoopAnalytics";
+import { VisitGate } from "./analytics/VisitGate";
 import { D1AssistantUsage } from "./assistant/D1AssistantUsage";
 import { D1CardRepository } from "./assistant/D1CardRepository";
 import { D1RecurringItemRepository } from "./assistant/D1RecurringItemRepository";
@@ -29,6 +39,33 @@ import { RateLimitKey } from "./waitlist/RateLimitKey";
 import { WaitlistApiClient } from "./waitlist/WaitlistApiClient";
 
 // 구현체 조립은 이 파일에서만 한다 (CLAUDE.md §5)
+
+// 방문 통계 (90-measurement-search §2-2). ID가 비어 있으면 Noop — 아무것도 불러오지 않고 보내지 않는다.
+// ID가 있어도 실서비스 주소에서만 보낸다(개발 서버에서는 `?sv_ga_debug=1`을 붙였을 때만 DebugView로 보낸다).
+// 쿠키 · 사이트 저장소를 쓸 수 없는 브라우저와 본인 방문 표시가 있는 브라우저에서는 스크립트를 아예 불러오지 않는다(VisitGate, §2-9)
+const browser = (): (Window & GtagWindow & NaverWindow) | null => (typeof window === "undefined" ? null : (window as Window & GtagWindow & NaverWindow));
+const search = (): string => browser()?.location.search ?? "";
+const onProduction = (): boolean => browser()?.location.hostname === ANALYTICS_HOSTNAME;
+const gaDebug = (): boolean => process.env.NODE_ENV === "development" && new URLSearchParams(search()).get(GA_DEBUG_PARAM) === "1";
+const internalTraffic = new InternalTraffic(INTERNAL_PARAM, () => window.localStorage);
+const visitGate = new VisitGate(internalTraffic, { search, cookieEnabled: () => browser()?.navigator.cookieEnabled === true, storage: () => window.localStorage });
+const gtagAnalytics = GOOGLE_TAG_ID
+  ? new GtagAnalytics({
+      tagId: GOOGLE_TAG_ID,
+      window: browser,
+      enabled: () => (onProduction() || gaDebug()) && visitGate.open,
+      debug: gaDebug,
+    })
+  : null;
+const naverAnalytics = NAVER_ANALYTICS_ID ? new NaverAnalyticsScript(NAVER_ANALYTICS_ID, browser) : null;
+
+export const analytics: AnalyticsPort = gtagAnalytics ?? new NoopAnalytics();
+/** 루트 레이아웃의 스크립트 로더가 쓴다 */
+export const analyticsLoader = new AnalyticsLoader(gtagAnalytics, naverAnalytics, visitGate, { onProduction });
+/** 소개 사이트 한 페이지의 흐름. 페이지를 열 때마다 새로 만든다. [guideSlug]는 가이드 글 화면일 때만 */
+export const createHomeFunnel = (guideSlug: string | null = null): HomeFunnel => new HomeFunnel(analytics, guideSlug);
+/** 체험판 대화 패널의 흐름 */
+export const assistantFunnel = new AssistantFunnel(analytics);
 
 // 브라우저: 실서비스는 같은 도메인(상대 경로), Vercel 배포본은 실서비스 주소로 보낸다
 export const waitlistApiClient = new WaitlistApiClient(

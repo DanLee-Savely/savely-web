@@ -95,13 +95,13 @@
 | 브라우저 제목 | `<글 제목> | 세이블리` |
 
 - **§4-9 들어가는 길:** 푸터에만 넣는다(대표 확인 2026-11-26). 상단에는 「소개」와 「출시 알림 신청」만 둔다는 규칙(CLAUDE.md §7)이 있다. 게시한 글이 1편 이상일 때만 보인다(0편이면 목록 주소가 404다).
-- **§4-6 측정은 아직 붙이지 않았다.** 90(측정 구조)이 구현되기 전이라 `demo_click`(`placement=guide`) · `guide_slug`를 보낼 곳이 없다. 안내 상자에 `data-guide-slug`를 달아 두었고, 90을 구현할 때 `GuideEndBox`에 붙인다. D1의 `source = guide`는 지금부터 저장된다.
+- **§4-6 측정 (2026-11-26, 90 §2-7과 함께 구현).** 글 화면을 `HomeFunnelProvider guideSlug`로 감싸서, 안내 상자의 버튼이 `waitlist_open` · `generate_lead`(`source=guide`) · `demo_click`(`placement=guide`)에 `guide_slug`를 함께 보낸다. 측정 ID가 비어 있는 동안은 아무것도 보내지 않는다. D1의 `source = guide`는 측정과 상관없이 저장된다.
 - **원고에서 보인 것(바꾸지 않음):** 첫 원고의 마지막 문장 「세이블리 앱은 iOS · Android로 출시될 예정이에요. 출시 소식을 먼저 받아 보세요.」가 바로 아래 안내 상자 본문과 겹친다 → 대표 결정.
 - **공개 저장소 주의:** 이 저장소는 공개다. `src/content/guide/`의 초안과 `docs/content-drafts/`는 푸시하면 게시 전에도 GitHub에서 보인다(사이트에서는 404).
 
 ## 5. 네이버 블로그
 
-1. **개설 (대표):** 네이버 아이디마다 블로그가 있고 주소가 아이디를 따라가는 것으로 알고 있음(개설 화면에서 확인). 대표 개인 아이디를 쓸지, 세이블리용 아이디를 새로 만들지 대표 결정.
+1. **개설 (대표, 2026-11-26 완료):** 세이블리 명의 아이디로 개설 — `https://blog.naver.com/savelyglobal`. 첫 글(1번 주제) 게시 2026-11-26: `https://blog.naver.com/savelyglobal/224493415957`
 2. **설정:** 블로그 이름 「세이블리」, 소개글 한 줄, 프로필 링크 → `https://www.savelyglobal.com/home?utm_source=naver_blog&utm_medium=blog&utm_campaign=launch_waitlist&utm_content=profile`
 3. **글 속 링크:** `utm_content=post<번호>_<slug>` (예: `post01_gagyebu_habit`).
 4. 블로그 주소가 생기면 소개 사이트 Organization `sameAs`에 넣는다(90 §3-2).

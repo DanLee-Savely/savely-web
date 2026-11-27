@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DemoLink } from "@/components/analytics/HomeFunnelProvider";
 import { AppButton } from "@/components/common/AppButton";
 import { BreakText } from "@/components/common/BreakText";
 import { Section } from "@/components/common/Section";
@@ -33,7 +33,7 @@ export function HeroSection() {
             </WaitlistButton>
             {/* 웹 체험은 PC만 (M10 · M16 — 모바일은 앱이 담당) */}
             <AppButton asChild variant="outline" size="l" className="hidden lg:inline-flex">
-              <Link href={hero.secondaryCta.href}>{hero.secondaryCta.label}</Link>
+              <DemoLink placement="hero" href={hero.secondaryCta.href}>{hero.secondaryCta.label}</DemoLink>
             </AppButton>
           </div>
           <p className="sv-text-support-13 text-sv-text-3">{hero.note}</p>

@@ -13,7 +13,7 @@ const c = assistantContent;
 export function AssistantOpenButton() {
   const { assistant, today } = useAssistantContext();
   return (
-    <AppButton onClick={() => void assistant.open(today)}>
+    <AppButton onClick={() => void assistant.open(today, "home_button")}>
       <Sparkles aria-hidden className="size-4" />
       {c.launcher}
     </AppButton>
@@ -33,7 +33,7 @@ export function HomeAssistantEntry() {
         className="flex items-center gap-2.5"
         onSubmit={(e) => {
           e.preventDefault();
-          if (assistant.openWith(today, text)) setText("");
+          if (assistant.openWith(today, text, "home_composer")) setText("");
         }}
       >
         <label className="flex h-13 min-w-0 flex-1 items-center gap-2.5 rounded-sv-md border border-sv-accent bg-sv-surface px-4">
@@ -64,7 +64,7 @@ export function HomeAssistantEntry() {
             <button
               type="button"
               disabled={busy}
-              onClick={() => void assistant.openWith(today, chip)}
+              onClick={() => void assistant.openWith(today, chip, "example_chip")}
               className="inline-flex h-9 items-center gap-1.5 rounded-sv-pill border border-sv-border-2 bg-sv-surface px-3.5 sv-text-support-13 text-sv-text hover:bg-sv-surface-2 disabled:opacity-60"
             >
               <Pencil aria-hidden className="size-3.5 text-sv-text-2" />
