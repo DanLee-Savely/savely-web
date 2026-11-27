@@ -2,7 +2,7 @@
 
 작성 2026-11-26 · 상태: **§4 문구 · §2-6 개인정보처리방침 문안 대표 승인 (2026-11-26). 배포는 대표 요청 시에만, 측정 코드와 방침 변경은 같은 배포로.**
 
-> **구현 상태 (2026-11-27):** **배포함**(PR #6, §2-10). GA4만 켜져 있고 네이버 애널리틱스는 꺼 두었다(§2-9). Amplitude는 구현 · 로컬 확인까지 했고 **아직 배포하지 않았다**(§2-11). 쿠키 · 사이트 저장소를 쓸 수 없는 브라우저와 본인 방문 표시가 있는 브라우저에서는 통계 스크립트를 불러오지 않는다. 아래 §2-7 ~ §2-9의 「배포하지 않았다」는 그 절을 쓴 때의 상태다.
+> **구현 상태 (2026-11-27):** **배포함**(PR #6, §2-10). GA4만 켜져 있고 네이버 애널리틱스는 꺼 두었다(§2-9). Amplitude도 **배포했다**(2026-11-27, PR #10, §2-11). 쿠키 · 사이트 저장소를 쓸 수 없는 브라우저와 본인 방문 표시가 있는 브라우저에서는 통계 스크립트를 불러오지 않는다. 아래 §2-7 ~ §2-9의 「배포하지 않았다」는 그 절을 쓴 때의 상태다.
 
 ## 0. 목적과 범위
 
@@ -314,7 +314,7 @@ Chromium의 「모든 쿠키 차단」 프로필 설정으로 확인했다(쿠�
 - Safari · Firefox에서 쿠키를 막았을 때 수집 요청이 없는지(§6 U5)
 - 네이버 애널리틱스는 꺼 둔 상태다(§6 U7 · 다시 켜는 방법은 §2-9)
 
-### 2-11. Amplitude (2026-11-27) — 구현 · 로컬 확인 완료, 배포 전
+### 2-11. Amplitude (2026-11-27) — 배포함 (PR #10)
 
 대표 요청으로 Amplitude(프로젝트 `default` · 미국 리전)를 붙였다. Amplitude의 설치 안내(`amp skills get integrating-amplitude` → `first-event-next`)에서 시작했고, 이 저장소의 규칙과 부딪치는 곳은 대표가 정했다. 그래서 설치 안내의 기본값(`initAll` · 자동 수집 전체 · 세션 리플레이 100%)과 다르다.
 
@@ -408,9 +408,30 @@ Chromium의 「모든 쿠키 차단」 프로필 설정으로 확인했다(쿠�
 - Cloudflare 대시보드의 GitHub 연결(40-deploy §4)은 저장소에서 볼 수 없다. 연결해 쓰게 되면 빌드 환경의 Node 버전을 26으로 맞춘다.
 - Node 버전 고정: `.nvmrc`(26.13.1)와 `package.json`의 `engines.node`(`>=26`)를 넣었다(대표 결정 10). `nvm use`로 맞춘다. `engines`는 버전이 다르면 `npm install` 때 경고를 낸다.
 
-**배포 전 할 일**
-1. Claude Code: 방침 개정일을 배포하는 날로 맞춘다(2026-11-27에 배포하면 그대로).
-2. 배포 뒤: 실서비스에서 §2-9와 같은 방법으로 확인한다 — 평소 브라우저에서 Amplitude 요청이 나가는지, 쿠키를 막은 브라우저 · `sv_internal` 브라우저에서 SDK를 불러오지 않는지, 누른 요소 이벤트가 나가지 않는지, 요청 본문에 이메일 · 문장 · 기록 내용이 없는지.
+**배포 기록 (2026-11-27)**
+
+대표 요청으로 `feat/amplitude-first-event`를 `master`에 합치고(PR #10, 병합 커밋 `14be532`) 배포했다. Node 26.13.1에서 `npm run deploy`, Worker 버전 `b43420f5-f704-4cdf-b4b0-d742dda04ee7`. 방침 개정일은 2026-11-27 그대로다. 배포 뒤에도 Worker의 비밀 값 `OPENAI_API_KEY`는 그대로 있다(이름으로 확인).
+
+배포 뒤 실서비스 확인 (Chromium. Amplitude · GA4 수집 요청은 가로채 기록만 했다 — 이 확인의 방문은 통계에 남지 않는다. 신청 · 문장 보내기 · 저장 같은 쓰기는 하지 않았다)
+
+| 항목 | 결과 |
+|---|---|
+| `/home` · `/home/privacy` · `/app` · `/app/records` · `/sitemap.xml` · `/robots.txt` | 200 |
+| 방침 | 받는 곳 ④ Amplitude, Inc. (미국) · 보유 기간 「수집일로부터 1년(365일)이 지나면 자동으로 지워져요」 · 2번 · 6번의 Amplitude 문장 · 개정일 2026년 11월 27일 모두 있음 |
+| 평소 브라우저 — Amplitude | SDK 묶음을 내려받고 이벤트가 나간다: `[Amplitude] Page Viewed` 8건(/home → /app?chat=1 → /app/records → /app/calendar → /app/report → /app/records → /app/records/<id> → /app/calendar. 해시 · 쿼리만 바뀐 이동은 0건) · `section_view` 9건 · `waitlist_open`(source=gnb · last_section=empathy) · `demo_click`(placement=hero) · `assistant_open`(entry=deeplink) · `$identify` · `session_start` |
+| 평소 브라우저 — 나가면 안 되는 것 | 누른 요소 · 답답한 클릭 · Guides-Surveys 이벤트 0건, `user_id` 0건, 원격 설정 · Guides and Surveys · 세션 리플레이 요청 0건. 기록 목록에 보인 글자를 나가는 요청에서 찾았고 없었다 |
+| 평소 브라우저 — GA4 | 그대로 나간다: `page_view` · `section_view` 9건 · `scroll` · `waitlist_open` · `demo_click` · `assistant_open` (여러 도구로 보내게 바꾼 뒤에도 같다) |
+| 평소 브라우저 — 쿠키 | `_ga` · `_ga_2ZNQ5RB05K` · `AMP_50d6b2bcc5` · `AMP_MKTG_50d6b2bcc5` |
+| 쿠키 · 사이트 저장소를 쓸 수 없는 브라우저 | Amplitude SDK 묶음을 내려받지 않는다. Amplitude · Google 요청 0건, 쿠키 없음, 페이지 오류 없음 |
+| `sv_internal` (`/home?sv_internal=1`로 들어온 방문과 그 뒤 표시 없이 다시 연 페이지) | Amplitude SDK 묶음을 내려받지 않는다. Amplitude · Google 요청 0건, 쿠키 없음 |
+
+- 쓰기를 하지 않아 `generate_lead` · `waitlist_error` · `assistant_send` · `assistant_save` · `assistant_limit`는 실서비스에서 보지 않았다(앞의 네 개는 개발 서버에서 확인).
+- 쿠키를 막은 조건은 브라우저 설정이 아니라, `navigator.cookieEnabled`를 거짓으로 하고 사이트 저장소에 닿으면 오류가 나게 만들어 확인했다(§2-7 확인 7과 같은 방법).
+
+**남은 확인**
+- Amplitude 화면에 실제로 들어오는지 — 대표 계정에서, 본인 방문 표시가 없는 브라우저(시크릿 창)로 `/home`을 연 뒤 본다.
+- `assistant_limit`가 Amplitude에 들어오는지(요청 제한 안내가 실제로 뜰 때).
+- ⚠️ **이 확인 중 모든 조건(쿠키를 막은 브라우저 · `sv_internal` 포함)에서 `static.cloudflareinsights.com`으로 가는 요청이 보였다.** Cloudflare가 넣는 방문 통계 스크립트(Web Analytics)로 보인다. 이 저장소의 코드가 넣는 것이 아니고 이번 변경과도 무관하다. 언제부터 켜져 있었는지, 무엇을 보내는지는 확인하지 못했다(이 확인에서는 요청을 막았다). 방침 6번 「쿠키를 막으면 방문 통계에 포함되지 않아요」와 맞는지 대표가 Cloudflare 대시보드(Analytics → Web Analytics)에서 확인하고 정한다 → §6 U8.
 
 ## 3. 검색엔진 등록과 기술 점검 (1단계)
 
@@ -508,6 +529,7 @@ Chromium의 「모든 쿠키 차단」 프로필 설정으로 확인했다(쿠�
 | U4 | 하루 상한(OpenAI 300회)에 걸린 횟수를 잴지 — 지금은 화면에 안내가 없어 `assistant_limit kind=daily`가 나가지 않는다 | 필요하면 서버가 「이번 문장은 상한 때문에 규칙만 썼다」를 응답에 실어 주게 고친다(문구 변경 없음) |
 | U5 | 방침 6번 「쿠키를 막으면 방문 통계에 포함되지 않아요」가 사실인지 | **정함(2026-11-27, §2-9):** 쿠키 · 사이트 저장소를 쓸 수 없는 브라우저에서는 통계 스크립트를 불러오지 않는다 — Chromium에서 요청 0건 확인. **남은 것:** Safari · Firefox에서 쿠키를 막았을 때도 0건인지 실기기 확인 |
 | U6 | 본인 방문 제외 — `traffic_type=internal`이 우리 이벤트에만 붙고 Google 태그의 `page_view`에는 붙지 않는다 | **정함(2026-11-27, §2-9):** `sv_internal` 표시가 있는 브라우저에서는 통계 스크립트를 불러오지 않는다 — 요청 0건 확인 |
+| U8 | `static.cloudflareinsights.com` 요청(Cloudflare Web Analytics로 보임)이 모든 방문에서 나간다 — VisitGate를 거치지 않는다(2026-11-27 Amplitude 배포 뒤 확인 중 발견, §2-11) | 대표: Cloudflare 대시보드에서 켜져 있는지 확인. 끄거나, 켜 둔다면 방침 2 · 6번에 맞게 적는다 |
 | U7 | 네이버 스크립트가 부르는 `nam.veta.naver.com/nac/2`가 무엇인지 — 방침의 「맞춤형 광고에는 쓰지 않아요」와 맞는지 | 네이버 애널리틱스 고객센터 · 도움말 확인. **확인할 때까지 네이버 애널리틱스를 꺼 둔다(대표 2026-11-27).** 다시 켜는 방법은 §2-9 |
 
 ## 7. 일정 (제안)
