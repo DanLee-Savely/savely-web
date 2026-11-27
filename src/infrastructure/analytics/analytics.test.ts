@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { AMPLITUDE_DEMO_APP_URL, AMPLITUDE_INIT_OPTIONS, AmplitudeAnalytics, type AmplitudeSdk } from "./AmplitudeAnalytics";
+import { AMPLITUDE_INIT_OPTIONS, AmplitudeAnalytics, type AmplitudeClient } from "./AmplitudeAnalytics";
 import { AnalyticsLoader, NO_SCRIPTS } from "./AnalyticsLoader";
+import { FanoutAnalytics } from "./FanoutAnalytics";
 import { GtagAnalytics, type GtagWindow } from "./GtagAnalytics";
 import { InternalTraffic } from "./InternalTraffic";
 import { NaverAnalyticsScript, type NaverWindow } from "./NaverAnalyticsScript";
@@ -250,58 +251,76 @@ describe("AnalyticsLoader — 스크립트를 넣을지", () => {
   });
 });
 
-describe("AmplitudeAnalytics — 화면 진입(page_view)", () => {
-  /** 가짜 SDK — 부른 순서를 적어 둔다 */
-  const amplitudeOf = (over: { enabled?: () => boolean; load?: () => Promise<AmplitudeSdk>; initAll?: AmplitudeSdk["initAll"] } = {}) => {
+describe("AmplitudeAnalytics — 이벤트 → Amplitude 호출", () => {
+  /** 가짜 클라이언트 — 부른 순서를 적어 둔다 */
+  const amplitudeOf = (over: { enabled?: () => boolean; load?: () => Promise<AmplitudeClient>; init?: AmplitudeClient["init"] } = {}) => {
     const calls: unknown[][] = [];
-    const sdk: AmplitudeSdk = {
-      initAll: over.initAll ?? (async (...args) => void calls.push(["initAll", ...args])),
-      track: (name) => void calls.push(["track", name]),
+    const client: AmplitudeClient = {
+      init: over.init ?? ((...args) => ({ promise: Promise.resolve(void calls.push(["init", ...args])) })),
+      track: (...args) => void calls.push(["track", ...args]),
     };
-    const load = vi.fn(over.load ?? (async () => sdk));
+    const load = vi.fn(over.load ?? (async () => client));
     const amplitude = new AmplitudeAnalytics({ apiKey: "test-key", enabled: over.enabled ?? (() => true), load });
     /** 불러오기 · 켜기가 끝나기를 기다린다 */
     const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
     return { amplitude, calls, load, settle };
   };
 
-  it("처음 한 번 SDK를 불러와 켜고 — 키는 첫 번째 인자 — 화면 진입마다 page_view를 보낸다", async () => {
+  it("페이지를 열 때 한 번 SDK를 불러와 통계만 켠다(init) — 화면 진입은 우리가 따로 보내지 않는다(SDK가 스스로 보낸다)", async () => {
     const { amplitude, calls, load, settle } = amplitudeOf();
-    amplitude.pageView();
-    amplitude.pageView();
+    amplitude.start();
+    amplitude.start();
     await settle();
     expect(load).toHaveBeenCalledTimes(1);
-    expect(calls).toEqual([["initAll", "test-key", AMPLITUDE_INIT_OPTIONS], ["track", "page_view"], ["track", "page_view"]]);
+    // 설정은 세 번째 인자다 — 두 번째(사용자 ID)는 비운다. 두 번째로 넘기면 설정이 user_id가 되고 무시된다
+    expect(calls).toEqual([["init", "test-key", undefined, AMPLITUDE_INIT_OPTIONS]]);
   });
 
-  it("설정: 미국 리전, 자동 수집은 전부 켜고, 세션 리플레이는 끄고, /app에서는 누른 요소 · 답답한 클릭을 수집하지 않는다 (방침 2번)", () => {
-    const off = { pageUrlExcludelist: [AMPLITUDE_DEMO_APP_URL] };
+  it("이벤트는 GA4와 같은 이름 · 같은 매개변수로, 보낸 순서대로 보낸다. 값이 없는 칸은 뺀다", async () => {
+    const { amplitude, calls, load, settle } = amplitudeOf();
+    amplitude.start();
+    amplitude.track({ name: "section_view", section: "hero" });
+    amplitude.track({ name: "waitlist_open", source: "floating", last_section: "reward", guide_slug: undefined });
+    amplitude.track({ name: "generate_lead", source: "floating", last_section: "reward" });
+    amplitude.track({ name: "waitlist_error", source: "hero", code: "RATE_LIMITED" });
+    amplitude.track({ name: "demo_click", placement: "guide", guide_slug: "first-post" });
+    amplitude.track({ name: "assistant_open", entry: "deeplink" });
+    amplitude.track({ name: "assistant_send", drafts: 2 });
+    amplitude.track({ name: "assistant_save", count: 1 });
+    amplitude.track({ name: "assistant_limit", kind: "rate" });
+    await settle();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(calls.slice(1)).toEqual([
+      ["track", "section_view", { section: "hero" }],
+      ["track", "waitlist_open", { source: "floating", last_section: "reward" }],
+      ["track", "generate_lead", { source: "floating", last_section: "reward" }],
+      ["track", "waitlist_error", { source: "hero", code: "RATE_LIMITED" }],
+      ["track", "demo_click", { placement: "guide", guide_slug: "first-post" }],
+      ["track", "assistant_open", { entry: "deeplink" }],
+      ["track", "assistant_send", { drafts: 2 }],
+      ["track", "assistant_save", { count: 1 }],
+      ["track", "assistant_limit", { kind: "rate" }],
+    ]);
+  });
+
+  it("설정: 미국 리전, 누른 요소 · 답답한 클릭 자동 수집 끔, 페이지뷰는 경로가 바뀔 때만 (방침 2번)", () => {
     expect(AMPLITUDE_INIT_OPTIONS).toEqual({
       serverZone: "US",
-      analytics: {
-        autocapture: { attribution: true, fileDownloads: true, formInteractions: true, pageViews: true, sessions: true, networkTracking: true, webVitals: true, elementInteractions: off, frustrationInteractions: off },
+      autocapture: {
+        attribution: true, fileDownloads: true, formInteractions: true, sessions: true, networkTracking: true, webVitals: true,
+        pageViews: { trackHistoryChanges: "pathOnly" },
+        elementInteractions: false,
+        frustrationInteractions: false,
       },
-      sessionReplay: { sampleRate: 0 },
     });
-  });
-
-  it("/app 주소 판별 — 체험판의 모든 화면이 걸리고, 소개 사이트는 걸리지 않는다", () => {
-    const origin = "https://www.savelyglobal.com";
-    for (const path of ["/app", "/app?chat=1", "/app/records", "/app/records/3f2a/edit", "/app/calendar?month=2026-11", "/app#top"]) {
-      expect(AMPLITUDE_DEMO_APP_URL.test(origin + path), path).toBe(true);
-    }
-    for (const path of ["/home", "/home/privacy", "/home/guide/app", "/application", "/home?next=/app"]) {
-      expect(AMPLITUDE_DEMO_APP_URL.test(origin + path), path).toBe(false);
-    }
-    expect(AMPLITUDE_DEMO_APP_URL.test("http://localhost:3000/app/report")).toBe(true);
   });
 
   it("보내면 안 되는 방문이면 SDK를 불러오지도 않는다 — 방문마다 한 번만 정한다", async () => {
     let allowed = false;
     const { amplitude, calls, load, settle } = amplitudeOf({ enabled: () => allowed });
-    amplitude.pageView();
+    amplitude.start();
     allowed = true;
-    amplitude.pageView();
+    amplitude.track({ name: "section_view", section: "hero" });
     await settle();
     expect(load).not.toHaveBeenCalled();
     expect(calls).toEqual([]);
@@ -316,7 +335,8 @@ describe("AmplitudeAnalytics — 화면 진입(page_view)", () => {
     for (const { search, storage } of closed) {
       const gate = new VisitGate(new InternalTraffic("sv_internal", storage), { search: () => search, cookieEnabled: () => true, storage });
       const { amplitude, load, settle } = amplitudeOf({ enabled: () => gate.open });
-      amplitude.pageView();
+      amplitude.start();
+      amplitude.track({ name: "generate_lead", source: "hero" });
       await settle();
       expect(load).not.toHaveBeenCalled();
     }
@@ -325,12 +345,24 @@ describe("AmplitudeAnalytics — 화면 진입(page_view)", () => {
   it("SDK를 불러오지 못하거나 켜지 못해도 오류를 밖으로 내지 않고, 그 방문에서는 보내지 않는다", async () => {
     const failures = [
       amplitudeOf({ load: async () => Promise.reject(new Error("chunk load failed")) }),
-      amplitudeOf({ initAll: async () => Promise.reject(new Error("init failed")) }),
+      amplitudeOf({ init: () => ({ promise: Promise.reject(new Error("init failed")) }) }),
     ];
     for (const { amplitude, calls, settle } of failures) {
-      amplitude.pageView();
+      amplitude.start();
+      amplitude.track({ name: "section_view", section: "hero" });
       await settle();
       expect(calls).toEqual([]);
     }
+  });
+});
+
+describe("FanoutAnalytics — 같은 이벤트를 켜진 도구 모두로", () => {
+  it("이벤트를 받은 그대로, 넣은 순서대로 모든 도구에 넘긴다", () => {
+    const seen: string[] = [];
+    const port = (label: string) => ({ track: (event: { name: string }) => void seen.push(`${label}:${event.name}`) });
+    const fanout = new FanoutAnalytics([port("ga4"), port("amplitude")]);
+    fanout.track({ name: "section_view", section: "hero" });
+    fanout.track({ name: "assistant_save", count: 3 });
+    expect(seen).toEqual(["ga4:section_view", "amplitude:section_view", "ga4:assistant_save", "amplitude:assistant_save"]);
   });
 });

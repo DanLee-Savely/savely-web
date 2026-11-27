@@ -24,16 +24,11 @@ export function AnalyticsScripts() {
     analyticsLoader.naverPageView();
   }, [pathname]);
 
-  /** Amplitude로 마지막에 화면 진입을 보낸 경로 */
-  const amplitudePath = useRef<string | null>(null);
-
-  // Amplitude로 화면 진입(page_view)을 보낸다 — 처음 들어올 때와 화면 안에서 경로가 바뀔 때 한 번씩. 쿼리만 바뀐 것은 세지 않는다.
+  // Amplitude를 켠다 — 페이지를 열 때 한 번. 화면 진입(`[Amplitude] Page Viewed`)은 SDK가 스스로 보낸다(화면 안 이동 포함).
   // 보내면 안 되는 방문(실서비스 주소가 아님 · 쿠키를 못 쓰는 브라우저 · 본인 방문)이면 SDK를 불러오지도 않는다
   useEffect(() => {
-    if (amplitudePath.current === pathname) return;
-    amplitudePath.current = pathname;
-    amplitudeAnalytics?.pageView();
-  }, [pathname]);
+    amplitudeAnalytics?.start();
+  }, []);
 
   return (
     <>

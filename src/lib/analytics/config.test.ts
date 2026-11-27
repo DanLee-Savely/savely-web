@@ -44,8 +44,12 @@ describe("방문 통계 설정", () => {
     expect(text(2).includes("Google 애널리틱스 · Amplitude의 쿠키로")).toBe(on);
     expect(text(2).includes("Amplitude에는 접속 IP 주소도 기록돼요.")).toBe(on);
     expect(text(5).includes("받는 곳 ④: Amplitude, Inc. (미국)")).toBe(on);
+    // 받는 곳 ④ 바로 아래 네 줄 — 보유 기간은 Amplitude 조직의 보관 기간 설정(365일, 2026-11-27)과 같아야 한다
+    const items: readonly string[] = sections.find((s) => s.title.startsWith("5. "))?.items ?? [];
+    const at = items.indexOf("받는 곳 ④: Amplitude, Inc. (미국)");
+    expect(at >= 0 && items[at + 3] === "보유 기간: 수집일로부터 1년(365일)이 지나면 자동으로 지워져요.").toBe(on);
     expect(text(6).includes("Google 애널리틱스 · Amplitude가 브라우저에 쿠키를 저장해")).toBe(on);
-    // 세션 리플레이를 끄고 /app에서 누른 요소를 수집하지 않는 동안에만 사실인 문장 — 설정을 바꾸면 이 문장도 함께 고친다
+    // 세션 리플레이와 누른 요소 · 답답한 클릭 자동 수집을 쓰지 않는 동안에만 사실인 문장 — 설정을 바꾸면 이 문장도 함께 고친다
     expect(text(2)).toContain("이메일 · 대화로 적은 문장 · 기록 내용은 보내지 않아요.");
   });
 });

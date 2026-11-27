@@ -20,7 +20,7 @@ export const NAVER_ANALYTICS_ID: string = "";
 /**
  * Amplitude 프로젝트 API 키(프로젝트 default · 미국 리전). 공개 값이다 — 수집 전용이고 브라우저 번들에 그대로 실린다.
  * 비우면 Amplitude SDK를 불러오지 않고 아무것도 보내지 않는다.
- * ⚠️ 자동 수집을 켠다 — 세션 리플레이는 끄고 /app에서는 누른 요소를 수집하지 않는다(대표 결정 2026-11-27, 명세 §2-11).
+ * ⚠️ 통계만 켠다(세션 리플레이 · Guides and Surveys 없음). 누른 요소 · 답답한 클릭 자동 수집은 끈다(대표 결정 2026-11-27, 명세 §2-11).
  *    값과 방침의 Amplitude 문장은 **함께** 있어야 한다(config.test.ts)
  */
 export const AMPLITUDE_API_KEY: string = "50d6b2bcc565669568956341d8cbf1b1";
