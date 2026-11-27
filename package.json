@@ -2,6 +2,9 @@
   "name": "savely-web",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -15,6 +18,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@amplitude/unified": "^1.2.9",
     "@opennextjs/cloudflare": "^1.20.13",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",

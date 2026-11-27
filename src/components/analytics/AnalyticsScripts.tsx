@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { NO_SCRIPTS } from "@/infrastructure/analytics/AnalyticsLoader";
-import { analyticsLoader } from "@/infrastructure/container";
+import { amplitudeAnalytics, analyticsLoader } from "@/infrastructure/container";
 
 const never = () => () => {};
 
@@ -23,6 +23,12 @@ export function AnalyticsScripts() {
     sentPath.current = pathname;
     analyticsLoader.naverPageView();
   }, [pathname]);
+
+  // Amplitude를 켠다 — 페이지를 열 때 한 번. 화면 진입(`[Amplitude] Page Viewed`)은 SDK가 스스로 보낸다(화면 안 이동 포함).
+  // 보내면 안 되는 방문(실서비스 주소가 아님 · 쿠키를 못 쓰는 브라우저 · 본인 방문)이면 SDK를 불러오지도 않는다
+  useEffect(() => {
+    amplitudeAnalytics?.start();
+  }, []);
 
   return (
     <>

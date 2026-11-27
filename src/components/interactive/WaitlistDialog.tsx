@@ -99,7 +99,8 @@ function WaitlistForm({ source, onClose, emailRef, pc }: FormProps) {
           <CheckIcon className="size-6" strokeWidth={2.25} />
         </span>
         <Title className="sv-text-title-section-20 text-sv-text">{copy.doneTitle}</Title>
-        <Description className="sv-text-body-15 text-sv-text-2">
+        {/* 이메일이 글자로 보이는 곳 — Amplitude 가림 표시(자동 수집 data-amp-mask · 세션 리플레이 amp-mask). 지금은 둘 다 꺼져 있지만 켜더라도 이메일은 나가지 않게 둔다(90 §2-11) */}
+        <Description className="sv-text-body-15 text-sv-text-2 amp-mask" data-amp-mask>
           <BreakText text={copy.doneDesc.replace("{email}", () => flow.email.trim())} />
         </Description>
         <AppButton variant="secondary" size="l" className="w-full" onClick={onClose} autoFocus>
