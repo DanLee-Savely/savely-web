@@ -30,10 +30,13 @@ export type AmplitudeOptions = {
  *   ① 누른 요소 · 답답한 클릭 자동 수집 — 누른 요소의 글자와 속성(예: 달력 칸의 금액이 든 aria-label)이 실린다.
  *      무엇을 눌렀는지는 우리가 보내는 이벤트(§2-3)로 본다
  *   ② 세션 리플레이 — 통계만 켜서(init) 플러그인 자체가 붙지 않는다
- * 페이지뷰는 경로가 바뀔 때만 센다(쿼리 · 해시만 바뀐 것은 세지 않는다)
+ * 페이지뷰는 경로가 바뀔 때만 센다(쿼리 · 해시만 바뀐 것은 세지 않는다).
+ * 원격 설정은 받아 오지 않는다 — Amplitude 관리 화면의 자동 수집 설정이 이 값을 덮어쓰지 못하게 한다
+ * (관리 화면에서 누른 요소 수집을 켜면 ①이 풀려 방침 2번이 사실과 달라진다)
  */
 export const AMPLITUDE_INIT_OPTIONS: AmplitudeInitOptions = {
   serverZone: "US",
+  remoteConfig: { fetchRemoteConfig: false },
   autocapture: {
     attribution: true,
     fileDownloads: true,

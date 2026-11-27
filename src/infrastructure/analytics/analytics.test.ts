@@ -303,9 +303,11 @@ describe("AmplitudeAnalytics — 이벤트 → Amplitude 호출", () => {
     ]);
   });
 
-  it("설정: 미국 리전, 누른 요소 · 답답한 클릭 자동 수집 끔, 페이지뷰는 경로가 바뀔 때만 (방침 2번)", () => {
+  it("설정: 미국 리전, 원격 설정 받지 않음, 누른 요소 · 답답한 클릭 자동 수집 끔, 페이지뷰는 경로가 바뀔 때만 (방침 2번)", () => {
     expect(AMPLITUDE_INIT_OPTIONS).toEqual({
       serverZone: "US",
+      // 관리 화면의 자동 수집 설정이 아래 값을 덮어쓰지 못하게 한다
+      remoteConfig: { fetchRemoteConfig: false },
       autocapture: {
         attribution: true, fileDownloads: true, formInteractions: true, sessions: true, networkTracking: true, webVitals: true,
         pageViews: { trackHistoryChanges: "pathOnly" },
