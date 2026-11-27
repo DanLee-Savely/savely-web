@@ -421,8 +421,8 @@ Chromium의 「모든 쿠키 차단」 프로필 설정으로 확인했다(쿠�
 | A1 | **완료 2026-11-26** — SAVELY 계정에 속성 「세이블리 웹」(대한민국 시간 · 원화, 업종 금융) 생성, 웹 스트림 「세이블리 웹사이트」 `https://www.savelyglobal.com` (스트림 ID 16420614674) | 측정 ID `G-2ZNQ5RB05K`, 설치 코드의 Google 태그 ID `GTM-5MBT2278` (설치 코드: `gtm.js?id=GTM-5MBT2278` + dataLayer + `gtag('js', new Date())`, config 없음) |
 | A2 | **완료 2026-11-26** — Google 신호 꺼짐 확인 · 데이터 보관 이벤트 2개월 · 사용자 데이터 2개월(기본 14개월에서 변경) · 「새 사용자 활동 시 재설정」 끔 · 광고 개인 최적화 307개 지역 모두 차단 · 내부 트래픽 필터(traffic_type=internal) 활성 · `generate_lead` 핵심 이벤트(값 없음, 이벤트당 1회) · 맞춤 측정기준 8개(section · source · last_section · code · placement · entry · kind · guide_slug) · 맞춤 측정항목 2개(drafts · count, 일반) | — |
 | A3 | **완료 2026-11-26** — 네이버 애널리틱스 사이트 등록 | 발급 ID `8b75e2a9bc0b00`. 네이버가 준 공통 스크립트 주소는 `//wcs.pstatic.net/wcslog.js` (명세 작성 때 쓴 `wcs.naver.net`과 다름 — 네이버가 준 주소를 따른다) |
-| A4 | 구글 서치콘솔: 「도메인」 속성 `savelyglobal.com`으로 등록, Cloudflare DNS에 TXT 레코드 추가로 소유 확인 (코드 수정 없음. www와 survey 하위 도메인까지 함께 확인됨) | 소유 확인 |
-| A5 | 서치콘솔: 사이트맵 `https://www.savelyglobal.com/sitemap.xml` 제출, URL 검사로 `/home` 색인 요청 | — |
+| A4 | **이미 되어 있었음 (2026-11-27 확인)** — 구글 서치콘솔 도메인 속성 `sc-domain:savelyglobal.com` 등록 · 소유 확인 완료 상태 | — |
+| A5 | **완료 2026-11-27** — 사이트맵 `https://www.savelyglobal.com/sitemap.xml` 다시 제출(첫 제출 2026-11-04, 마지막 읽음 11-25, 성공 · 발견 2), URL 검사 `/home` 「URL이 Google에 등록되어 있음」 → 색인 생성 다시 요청. 기준값(11-03~11-24): 클릭 2 · 노출 9 · 평균 게재순위 11.9, 공개된 검색어 「모아불리 가계부」 노출 2 · 「세이프딜리버리」 노출 1. 색인 3 / 미색인 3(404 1 · 리디렉션 1 · 글꼴 파일 1) | — |
 | A6 | 네이버 서치어드바이저: `https://www.savelyglobal.com` 등록 상태 확인(코드에 확인 태그는 이미 있음), 사이트맵 제출, robots.txt 수집 확인, 웹페이지 수집 요청 `/home` | — |
 | A7 | (선택) GA4 ↔ 서치콘솔 연결 | 검색어 보고서를 GA4에서 보기 |
 
