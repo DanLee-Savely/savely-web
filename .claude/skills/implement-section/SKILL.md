@@ -45,5 +45,5 @@ description: 세이블리 HOME의 섹션 하나(예 03-problem)를 Figma 프로�
 - `docs/spec/50-acceptance.md`의 해당 섹션 항목을 체크한다.
 - 콘솔 에러 0을 확인한다.
 - 문구 금지어 점검 명령을 실행한다.
-- README 「검수 기록」에 「무엇이 달랐고 어떻게 고쳤는지」를 한 줄로 남긴다.
+- 검수 기록(`docs/overview/review-log.md`)에 「무엇이 달랐고 어떻게 고쳤는지」를 한 줄로 남긴다.
 - 커밋은 사용자 승인 후 `feat: <섹션> 구현` 형식으로 한다.
