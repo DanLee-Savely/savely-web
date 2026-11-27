@@ -4,6 +4,7 @@ import { GtagAnalytics, type GtagWindow } from "./GtagAnalytics";
 import { InternalTraffic } from "./InternalTraffic";
 import { NaverAnalyticsScript, type NaverWindow } from "./NaverAnalyticsScript";
 import { NoopAnalytics } from "./NoopAnalytics";
+import { VisitGate } from "./VisitGate";
 
 // 방문 통계 구현체 (90-measurement-search §2-2 · §5). 가짜 window로 확인한다 — 실제로는 아무 곳에도 보내지 않는다
 const memory = () => {
@@ -15,7 +16,7 @@ const blocked = () => {
 };
 const gtagOf = (over: Partial<ConstructorParameters<typeof GtagAnalytics>[0]> = {}) => {
   const win: GtagWindow = {};
-  const gtag = new GtagAnalytics({ tagId: "GTM-TEST123", window: () => win, enabled: () => true, internal: () => false, debug: () => false, ...over });
+  const gtag = new GtagAnalytics({ tagId: "GTM-TEST123", window: () => win, enabled: () => true, debug: () => false, ...over });
   /** 큐에 쌓인 호출(arguments 객체를 배열로) */
   const calls = () => (win.dataLayer ?? []).map((args) => Array.from(args as ArrayLike<unknown>));
   return { win, gtag, calls };
@@ -49,14 +50,11 @@ describe("GtagAnalytics — 이벤트 → GA4 호출", () => {
     expect(calls().at(-1)).toEqual(["event", "waitlist_open", { source: "gnb" }]);
   });
 
-  it("본인 방문이면 traffic_type=internal, 개발 중 확인이면 debug_mode를 이벤트마다 싣는다", () => {
-    const internal = gtagOf({ internal: () => true });
-    internal.gtag.track({ name: "section_view", section: "hero" });
-    expect(internal.calls()).toHaveLength(2); // js + 이벤트 — set은 쓰지 않는다
-    expect(internal.calls()[1]).toEqual(["event", "section_view", { section: "hero", traffic_type: "internal" }]);
-    const debug = gtagOf({ debug: () => true, internal: () => true });
+  it("개발 중 확인이면 debug_mode를 이벤트마다 싣는다", () => {
+    const debug = gtagOf({ debug: () => true });
     debug.gtag.track({ name: "assistant_save", count: 2 });
-    expect(debug.calls()[1]).toEqual(["event", "assistant_save", { count: 2, traffic_type: "internal", debug_mode: true }]);
+    expect(debug.calls()).toHaveLength(2); // js + 이벤트 — set은 쓰지 않는다
+    expect(debug.calls()[1]).toEqual(["event", "assistant_save", { count: 2, debug_mode: true }]);
     const plain = gtagOf();
     plain.gtag.track({ name: "section_view", section: "hero" });
     expect(plain.calls()[1]).toEqual(["event", "section_view", { section: "hero" }]);
@@ -71,12 +69,12 @@ describe("GtagAnalytics — 이벤트 → GA4 호출", () => {
     expect(calls().slice(1).map((c) => (c[2] as Record<string, unknown>).debug_mode)).toEqual([true, true]);
   });
 
-  it("보내면 안 되는 방문(실서비스 주소가 아님)과 서버에서는 큐도 만들지 않는다", () => {
+  it("보내면 안 되는 방문(실서비스 주소가 아님 · 쿠키를 못 쓰는 브라우저 · 본인 방문)과 서버에서는 큐도 만들지 않는다", () => {
     const off = gtagOf({ enabled: () => false });
     off.gtag.track({ name: "section_view", section: "hero" });
     expect(off.win).toEqual({});
     expect(off.gtag.start()).toBe(false);
-    const server = new GtagAnalytics({ tagId: "GTM-TEST123", window: () => null, enabled: () => true, internal: () => false, debug: () => false });
+    const server = new GtagAnalytics({ tagId: "GTM-TEST123", window: () => null, enabled: () => true, debug: () => false });
     expect(() => server.track({ name: "section_view", section: "hero" })).not.toThrow();
   });
 
@@ -113,10 +111,60 @@ describe("InternalTraffic — ?sv_internal=1", () => {
     expect(new InternalTraffic("sv_internal", () => store).marked).toBe(true);
   });
 
-  it("저장소를 쓸 수 없는 브라우저(쿠키를 모두 막은 경우)에서도 멈추지 않는다", () => {
+  it("저장소를 쓸 수 없는 브라우저(쿠키를 모두 막은 경우)에서도 멈추지 않는다 — 표시는 남지 않지만 이 방문은 본인 방문이다", () => {
     const flag = new InternalTraffic("sv_internal", blocked);
-    expect(() => flag.capture("?sv_internal=1")).not.toThrow();
     expect(flag.marked).toBe(false);
+    expect(() => flag.capture("?sv_internal=1")).not.toThrow();
+    expect(flag.marked).toBe(true);
+    expect(new InternalTraffic("sv_internal", blocked).marked).toBe(false);
+  });
+});
+
+describe("VisitGate — 이 방문을 통계에 넣어도 되는가", () => {
+  const gateOf = (opts: { search?: string; cookieEnabled?: boolean; storage?: () => ReturnType<typeof memory> } = {}) => {
+    const store = memory();
+    const storage = opts.storage ?? (() => store);
+    const internal = new InternalTraffic("sv_internal", storage);
+    return { store, internal, gate: new VisitGate(internal, { search: () => opts.search ?? "", cookieEnabled: () => opts.cookieEnabled ?? true, storage }) };
+  };
+
+  it("쿠키와 사이트 저장소를 쓸 수 있고 본인 방문 표시가 없으면 열린다", () => {
+    expect(gateOf().gate.open).toBe(true);
+    expect(gateOf({ search: "?utm_source=naver_blog" }).gate.open).toBe(true);
+  });
+
+  it("쿠키를 받지 않는 브라우저면 닫힌다", () => {
+    expect(gateOf({ cookieEnabled: false }).gate.open).toBe(false);
+  });
+
+  it("사이트 저장소에 닿을 수 없는 브라우저면 닫힌다", () => {
+    expect(gateOf({ storage: blocked }).gate.open).toBe(false);
+  });
+
+  it("쿠키를 받는지 물을 수조차 없으면 닫힌다", () => {
+    const internal = new InternalTraffic("sv_internal", memory);
+    expect(new VisitGate(internal, { search: () => "", cookieEnabled: blocked, storage: memory }).open).toBe(false);
+  });
+
+  it("주소에 본인 방문 표시가 있으면 그 방문부터 닫히고, 표시를 브라우저에 남긴다", () => {
+    const first = gateOf({ search: "?sv_internal=1" });
+    expect(first.gate.open).toBe(false);
+    expect(first.store.getItem("sv_internal")).toBe("1");
+  });
+
+  it("표시가 남은 브라우저는 주소에 표시가 없어도 닫힌다", () => {
+    const store = memory();
+    store.setItem("sv_internal", "1");
+    expect(gateOf({ storage: () => store }).gate.open).toBe(false);
+  });
+
+  it("방문마다 한 번만 정한다 — 화면 안 이동으로 주소가 바뀌어도 그대로다", () => {
+    let search = "";
+    const store = memory();
+    const gate = new VisitGate(new InternalTraffic("sv_internal", () => store), { search: () => search, cookieEnabled: () => true, storage: () => store });
+    expect(gate.open).toBe(true);
+    search = "?sv_internal=1";
+    expect(gate.open).toBe(true);
   });
 });
 
@@ -148,13 +196,18 @@ describe("NaverAnalyticsScript", () => {
 });
 
 describe("AnalyticsLoader — 스크립트를 넣을지", () => {
-  const loader = (opts: { ga: boolean; naver: boolean; production: boolean; search?: string }) => {
+  // container.ts와 같은 꼴로 조립한다 — GA4의 enabled에 VisitGate가 들어간다
+  const loader = (opts: { ga: boolean; naver: boolean; production: boolean; search?: string; cookieEnabled?: boolean; marked?: boolean; storageBlocked?: boolean }) => {
     const store = memory();
-    const internal = new InternalTraffic("sv_internal", () => store);
+    if (opts.marked) store.setItem("sv_internal", "1");
+    const storage = opts.storageBlocked ? blocked : () => store;
+    const internal = new InternalTraffic("sv_internal", storage);
+    const gate = new VisitGate(internal, { search: () => opts.search ?? "", cookieEnabled: () => opts.cookieEnabled ?? true, storage });
     const win: GtagWindow = {};
-    const gtag = opts.ga ? new GtagAnalytics({ tagId: "GTM-TEST123", window: () => win, enabled: () => opts.production, internal: () => internal.marked, debug: () => false }) : null;
+    const gtag = opts.ga ? new GtagAnalytics({ tagId: "GTM-TEST123", window: () => win, enabled: () => opts.production && gate.open, debug: () => false }) : null;
     const naver = opts.naver ? new NaverAnalyticsScript("s_test123", () => ({})) : null;
-    return { internal, plan: new AnalyticsLoader(gtag, naver, internal, { onProduction: () => opts.production, search: () => opts.search ?? "" }).plan() };
+    const plan = new AnalyticsLoader(gtag, naver, gate, { onProduction: () => opts.production }).plan();
+    return { internal, win, gtag, plan };
   };
 
   it("ID가 비어 있으면(구현체 없음) 실서비스 주소에서도 아무것도 넣지 않는다", () => {
@@ -171,5 +224,27 @@ describe("AnalyticsLoader — 스크립트를 넣을지", () => {
 
   it("통계 도구가 꺼져 있어도 본인 방문 표시는 남긴다", () => {
     expect(loader({ ga: false, naver: false, production: true, search: "?sv_internal=1" }).internal.marked).toBe(true);
+  });
+
+  it("네이버 ID만 비어 있으면 GA4 스크립트만 넣는다", () => {
+    expect(loader({ ga: true, naver: false, production: true }).plan).toEqual({ gtagSrc: "https://www.googletagmanager.com/gtm.js?id=GTM-TEST123", naverSrc: null });
+  });
+
+  it("쿠키나 사이트 저장소를 쓸 수 없는 브라우저에서는 두 스크립트 모두 넣지 않고, 이벤트를 보내려 해도 큐를 만들지 않는다", () => {
+    for (const off of [{ cookieEnabled: false }, { storageBlocked: true }]) {
+      const { plan, win, gtag } = loader({ ga: true, naver: true, production: true, ...off });
+      expect(plan).toEqual(NO_SCRIPTS);
+      gtag?.track({ name: "section_view", section: "hero" });
+      expect(win).toEqual({});
+    }
+  });
+
+  it("본인 방문 표시가 있는 브라우저에서는 두 스크립트 모두 넣지 않는다 — 표시를 남기는 그 방문부터", () => {
+    for (const mine of [{ marked: true }, { search: "?sv_internal=1" }]) {
+      const { plan, win, gtag } = loader({ ga: true, naver: true, production: true, ...mine });
+      expect(plan).toEqual(NO_SCRIPTS);
+      gtag?.track({ name: "generate_lead", source: "hero" });
+      expect(win).toEqual({});
+    }
   });
 });

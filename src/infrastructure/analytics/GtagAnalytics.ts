@@ -7,10 +7,8 @@ export type GtagOptions = {
   tagId: string;
   /** 브라우저의 window. 서버에서는 null */
   window: () => GtagWindow | null;
-  /** 지금 이 방문에서 보내도 되는가 — 실서비스 주소인가(또는 개발 중 확인을 켰는가) */
+  /** 지금 이 방문에서 보내도 되는가 — 실서비스 주소이고(또는 개발 중 확인을 켰고) 통계에 넣어도 되는 방문인가(VisitGate) */
   enabled: () => boolean;
-  /** 대표 본인 방문인가 — 우리가 보내는 이벤트에 traffic_type=internal을 붙인다 */
-  internal: () => boolean;
   /** GA4 DebugView로 보낼 것인가(개발 중 확인) */
   debug: () => boolean;
 };
@@ -22,7 +20,7 @@ export type GtagOptions = {
 export class GtagAnalytics implements AnalyticsPort {
   private started = false;
   /** 이벤트마다 함께 싣는 표시 */
-  private marks: Record<string, string | boolean> = {};
+  private marks: Record<string, boolean> = {};
 
   constructor(private readonly options: GtagOptions) {}
 
@@ -33,14 +31,14 @@ export class GtagAnalytics implements AnalyticsPort {
 
   /**
    * 보내도 되는 방문이면 큐를 만들고 처음 한 번 js를 넣는다. 보낼 수 있으면 true.
-   * 보낼지와 표시(본인 방문 · 디버그)는 방문마다 한 번만 정한다 — 화면 안에서 주소가 바뀌어도(예: `/app?chat=1` → `/app`) 도중에 끊기거나 바뀌지 않는다
+   * 보낼지와 디버그 표시는 방문마다 한 번만 정한다 — 화면 안에서 주소가 바뀌어도(예: `/app?chat=1` → `/app`) 도중에 끊기거나 바뀌지 않는다
    */
   start(): boolean {
     if (this.started) return true;
     const w = this.options.window();
     if (!w || !this.options.enabled()) return false;
     this.started = true;
-    this.marks = { ...(this.options.internal() && { traffic_type: "internal" }), ...(this.options.debug() && { debug_mode: true }) };
+    this.marks = this.options.debug() ? { debug_mode: true } : {};
     const layer = (w.dataLayer ??= []);
     // Google 태그는 배열이 아니라 arguments 객체가 큐에 들어오기를 기대한다(설치 코드의 정의 그대로)
     w.gtag ??= function gtag() {
@@ -53,9 +51,10 @@ export class GtagAnalytics implements AnalyticsPort {
 
   /**
    * 이벤트 이름과 매개변수를 그대로 보낸다. 값이 없는 칸은 뺀다.
-   * 본인 방문 · 디버그 표시는 이벤트마다 매개변수로 싣는다 — 이 설치 코드(gtm.js)에서는 gtag('set')으로 넣은 debug_mode가
-   * 요청에 붙지 않았다(2026-11-26 나가는 요청으로 확인: 이벤트마다 넣으면 tt=internal · ep.debug_mode=true가 붙는다).
-   * ⚠️ Google 태그가 스스로 보내는 이벤트(page_view · scroll · form_start)에는 이 표시가 붙지 않는다
+   * 디버그 표시는 이벤트마다 매개변수로 싣는다 — 이 설치 코드(gtm.js)에서는 gtag('set')으로 넣은 debug_mode가
+   * 요청에 붙지 않았다(2026-11-26 나가는 요청으로 확인: 이벤트마다 넣으면 ep.debug_mode=true가 붙는다).
+   * ⚠️ Google 태그가 스스로 보내는 이벤트(page_view · scroll · form_start)에는 이 표시가 붙지 않는다.
+   *    그래서 본인 방문은 표시를 붙여 거르지 않고, 스크립트를 아예 불러오지 않는 것으로 뺀다(VisitGate, 명세 §2-9)
    */
   track(event: AnalyticsEvent): void {
     if (!this.start()) return;

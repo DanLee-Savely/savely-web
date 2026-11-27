@@ -14,7 +14,7 @@ describe("방문 통계 설정", () => {
     expect(ANALYTICS_HOSTNAME).toBe(homeContent.footer.site);
   });
 
-  it("개인정보처리방침에 방문 통계 · 받는 곳(Google · 네이버) · 쿠키 거부 방법이 있다 — ID를 넣는 배포에 반드시 함께 있어야 한다", () => {
+  it("개인정보처리방침에 방문 통계 · 받는 곳(Google) · 쿠키 거부 방법이 있다 — ID를 넣는 배포에 반드시 함께 있어야 한다", () => {
     const sections = homeContent.privacy.sections;
     const text = (n: number) => sections.find((s) => s.title.startsWith(`${n}. `))?.items.join("\n") ?? "";
     expect(sections.map((s) => s.title)).toEqual([
@@ -24,8 +24,15 @@ describe("방문 통계 설정", () => {
     expect(text(2)).toContain("방문 통계:");
     expect(text(2)).not.toContain("쿠키는 저장하지 않아요");
     expect(text(5)).toContain("받는 곳 ③: Google LLC (미국)");
-    expect(text(5)).toContain("받는 곳 ④: 네이버 주식회사 (대한민국)");
     expect(text(6)).toContain("거부 방법:");
+    expect(text(6)).toContain("브라우저 설정에서 이 사이트(savelyglobal.com)의 쿠키를 막으면 방문 통계에 포함되지 않아요.");
     expect(text(6)).toContain("tools.google.com/dlpage/gaoptout");
+  });
+
+  it("네이버 애널리틱스 ID와 방침의 네이버 문장은 함께 있거나 함께 없다 (§2-9 — 꺼 둔 동안에는 방침에 적지 않는다)", () => {
+    const policy = homeContent.privacy.sections.flatMap((s) => s.items).join("\n");
+    const on = NAVER_ANALYTICS_ID !== "";
+    expect(policy.includes("네이버 애널리틱스")).toBe(on);
+    expect(policy.includes("받는 곳 ④: 네이버 주식회사 (대한민국)")).toBe(on);
   });
 });
