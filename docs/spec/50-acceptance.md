@@ -1,7 +1,7 @@
 # 50 · 검수 체크리스트 (시안 일치 · 품질)
 
 각 섹션을 구현한 뒤 `node scripts/compare-design.mjs <섹션>`으로 화면을 찍는다. 그 이미지를 `docs/design/proto-pc/`, `proto-mobile/`의 시안과 나란히 보고 확인한다.
-통과한 항목은 `[x]`로 바꾸고, 차이를 고친 내용은 README 「검수 기록」에 한 줄씩 남긴다.
+통과한 항목은 `[x]`로 바꾸고, 차이를 고친 내용은 검수 기록(`docs/overview/review-log.md`, 2026-11-27 README에서 옮김)에 한 줄씩 남긴다.
 
 > 비교 스크립트는 `prefers-reduced-motion: reduce`로 찍기 때문에, 애니메이션 섹션은 **최종 상태**가 찍힌다. 이 섹션들은 아래 이미지와 비교한다.
 > - 02 공감 → `docs/design/interactions/empathy-bubbles-pc/step-3.png` (모바일 `empathy-bubbles-mobile/step-3@2x.png`)

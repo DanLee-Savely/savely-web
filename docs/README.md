@@ -11,6 +11,7 @@
 | `spec/60-claude-code-guide.md` | Claude Code 단계별 지시문 (사용자용) |
 | `spec/content.json` | 화면 문구 원본 |
 | `spec/tokens.css` | 디자인 토큰 (Figma 변수에서 생성) |
+| `overview/` | 루트 README에서 옮긴 소개 · 구현 기록(2026-11-27): `app-records.md`(기록 체험판) · `record-assistant.md`(대화로 기록하기) · `home-site.md`(소개 사이트) · `decisions-summary.md`(핵심 결정 요약) · `review-log.md`(검수 기록) · `figma-mcp.md`(Figma MCP 활용) |
 | `figma/` | Figma에서 추출한 구조 · 리액션 · 토큰 원본 (MCP 미사용) |
 | `figma-mcp-log.md` | Figma MCP 호출 기록 |
 | `design/proto-pc`, `design/proto-mobile` | **기준 시안** — 프로토타입 섹션 이미지 |

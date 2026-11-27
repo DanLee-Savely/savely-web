@@ -1,7 +1,7 @@
 # Figma MCP 호출 기록
 
 - 무료(Starter) 요금제 한도: 월 20회. 같은 노드는 다시 부르지 않고 `docs/figma/<노드ID>.md`를 재사용한다.
-- 이 기록은 README 「Figma MCP 활용」의 근거가 된다(미션 5 요건 3).
+- 이 기록은 「Figma MCP 활용」(`docs/overview/figma-mcp.md`, 2026-11-27 README에서 옮김)의 근거가 된다(미션 5 요건 3).
 
 | 날짜 | 도구 | 노드 ID | 목적 | 저장 파일 |
 |---|---|---|---|---|
