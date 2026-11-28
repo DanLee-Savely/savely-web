@@ -1,7 +1,7 @@
 import { AssistantOpenButton, HomeAssistantEntry } from "@/components/app/assistant/HomeAssistantEntry";
 import { Last7Card, MonthCard, TodayCard, TopCategoriesCard } from "@/components/app/HomeCards";
 import { PageHeader } from "@/components/app/PageHeader";
-import { appContent, countWord, fill } from "@/content/app.content";
+import { appContent, fill } from "@/content/app.content";
 import { createRecordsServer } from "@/infrastructure/container";
 import { formatDay } from "@/lib/recordFormat";
 
@@ -16,7 +16,7 @@ export default async function HomePage() {
     <>
       <PageHeader
         eyebrow={formatDay(s.today)}
-        title={s.todayCount ? fill(home.titleCount, { n: countWord(s.todayCount) }) : home.titleZero}
+        title={s.todayCount ? fill(home.titleCount, { n: s.todayCount }) : home.titleZero}
         actions={<AssistantOpenButton />}
       />
       <HomeAssistantEntry />
