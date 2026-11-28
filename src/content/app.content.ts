@@ -87,11 +87,11 @@ export const appContent = {
 
   // 홈 · 달력 · 리포트 (§9 H · C · R, 초안 2026-11-10). {M}월 · {n}건 등은 코드에서 채운다
   home: {
-    titleZero: "오늘은 아직 적지 않았어요.", // H1
-    titleCount: "오늘 {n} 적었어요.", // H2 — {n}: 한 번 · 두 번 … 다섯 번, 6건부터 「6번」
-    countWords: ["한 번", "두 번", "세 번", "네 번", "다섯 번"],
-    countN: "{n}번",
-    emptyToday: "한 건만 적어도 오늘이 시작됩니다", // H3
+    // H1~H3: 2026-11-27 문구 정리(대표 확인) — 「~해요」 통일 · 동사는 「기록하다」 · 건수는 숫자 + 「건」.
+    // 앱 홈(app/lib/features/home/home_copy.dart)과 같은 문장이다. 고칠 때 함께 고친다
+    titleZero: "오늘 쓴 돈을 기록해 보세요.", // H1
+    titleCount: "오늘 {n}건 기록했어요.", // H2
+    emptyToday: "쓸 때마다 바로 기록해 두면 빠뜨리지 않아요", // H3 — 체험판에는 정산이 없어 앱의 「정산이 쉬워져요」 대신 쓴다
     emptyCta: "첫 기록 남기기",
     today: "오늘", // H4
     todaySpent: "오늘 쓴 돈",
@@ -205,9 +205,6 @@ export const amountSign = (kind: string): string => (kind === "income" ? "+" : "
 /** 문구의 {이름} 자리를 채운다 */
 export const fill = (text: string, values: Record<string, string | number>): string =>
   text.replace(/\{(\w+)\}/g, (_, k: string) => String(values[k] ?? ""));
-
-/** H2 오늘 기록 건수 말: 1~5건은 「한 번 … 다섯 번」, 6건부터 「6번」 */
-export const countWord = (n: number): string => appContent.home.countWords[n - 1] ?? fill(appContent.home.countN, { n });
 
 /** 「식비예요」 · 「교통이에요」 — 마지막 글자에 받침이 있으면 「이에요」 */
 export const withCopula = (word: string): string => {

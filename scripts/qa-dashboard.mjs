@@ -47,7 +47,7 @@ for (const n of [0, 1, 3, 6]) {
   await go("/app");
   q23.push(`${n}건 「${await h1()}」`);
 }
-log("Q23", q23.join("|") === "0건 「오늘은 아직 적지 않았어요.」|1건 「오늘 한 번 적었어요.」|3건 「오늘 세 번 적었어요.」|6건 「오늘 6번 적었어요.」", q23.join(" · "));
+log("Q23", q23.join("|") === "0건 「오늘 쓴 돈을 기록해 보세요.」|1건 「오늘 1건 기록했어요.」|3건 「오늘 3건 기록했어요.」|6건 「오늘 6건 기록했어요.」", q23.join(" · "));
 
 // 예시 데이터: 이번 달 · 지난달 지출과 오늘 수입
 const seed = ["DELETE FROM records;"];
@@ -130,7 +130,7 @@ await page.screenshot({ path: `${OUT}/qa-q28-report.png`, fullPage: true });
 // Q29 빈 상태
 d1("DELETE FROM records");
 await go("/app");
-const h3 = await page.getByText("한 건만 적어도 오늘이 시작됩니다").count();
+const h3 = await page.getByText("쓸 때마다 바로 기록해 두면 빠뜨리지 않아요").count();
 const h5 = await page.getByText("기록이 쌓이면 많이 쓴 곳을 보여 드려요").count();
 await page.screenshot({ path: `${OUT}/qa-q29-home.png` });
 await go("/app/calendar");
